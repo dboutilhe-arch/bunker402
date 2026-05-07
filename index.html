@@ -2,120 +2,174 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal Joueur</title>
+    <title>BUNKER 402 - Console</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { background: #000; color: #2ecc71; font-family: monospace; padding: 10px; text-align: center; margin: 0; overflow-x: hidden; }
-        .mini-board { display: flex; justify-content: space-around; background: #111; padding: 8px; border-radius: 5px; margin-bottom: 10px; }
-        .dot { width: 12px; height: 18px; border: 1px solid #444; margin: 2px; display: inline-block; border-radius: 2px; }
-        .f-s { background: #3498db; } .f-c { background: #e74c3c; }
-        .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 18px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
-        .btn-oui { background: #2ecc71 !important; color: #000 !important; }
-        .btn-non { background: #e74c3c !important; color: #fff !important; border: none; }
-        .card { display: block; padding: 25px; margin: 10px auto; width: 95%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.2em; cursor: pointer; }
-        .S { background: #3498db; } .C { background: #e74c3c; } .F { background: #7f8c8d; }
-        .hidden { display: none; }
-        #death-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #900; color: white; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
-        input { background: #111; color: #2ecc71; border: 1px solid #2ecc71; padding: 15px; width: 85%; margin-bottom: 10px; text-align: center; }
+        body { background: #1a1a1a; color: #e0e0e0; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 10px; }
+        .lobby-code { font-size: 2em; color: #f1c40f; background: #000; padding: 10px; border: 2px solid #444; display: inline-block; margin: 10px; }
+        #oxy-bar { height: 25px; background: #333; border-radius: 15px; border: 2px solid #555; overflow: hidden; width: 80%; margin: 10px auto; }
+        #oxy-level { height: 100%; background: #3498db; width: 100%; transition: 1s; }
+        .critical { animation: blink 1s infinite; background: #e74c3c !important; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .main-layout { display: flex; justify-content: space-around; }
+        .board { background: #2d2d2d; padding: 15px; border-radius: 10px; width: 30%; border: 1px solid #555; }
+        .slot { width: 35px; height: 55px; border: 2px dashed #555; display: inline-block; margin: 5px; border-radius: 4px; position: relative; }
+        .slot::after { content: attr(data-label); position: absolute; bottom: -18px; left: 0; width: 100%; font-size: 8px; color: #888; }
+        .filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; }
+        .filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; }
+        .filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; }
+        .gov-box { background: #333; border: 2px solid #f1c40f; padding: 10px; margin-bottom: 10px; border-radius: 10px; display: none; }
+        #end-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
     </style>
 </head>
 <body>
-    <div id="death-screen"><h1>ÉLIMINÉ</h1></div>
-    <div id="setup">
-        <h2>BUNKER 402</h2>
-        <input type="text" id="p-name" placeholder="NOM">
-        <input type="text" id="r-code" placeholder="CODE CONSOLE">
-        <button class="btn" onclick="connect()">LIER</button>
+    <div id="end-screen">
+        <h1 id="victory-title"></h1>
+        <h2 id="victory-reason" style="color: #f1c40f;"></h2>
+        <button onclick="location.reload()" style="padding: 15px; cursor: pointer;">REDÉMARRER</button>
     </div>
-    <div id="game" class="hidden">
-        <div id="my-name" style="color:#f1c40f; margin-bottom:10px; font-weight:bold;"></div>
-        <div class="mini-board">
-            <div>S <div id="m-s"></div></div>
-            <div>C <div id="m-c"></div></div>
+    <h1>BUNKER 402 - SYSTÈME CENTRAL</h1>
+    <div id="setup-zone">
+        <div class="lobby-code" id="display-id">CONNEXION...</div>
+        <p>Joueurs : <span id="count">0</span></p>
+        <button onclick="initGame()" id="start-btn" disabled style="padding:10px 20px; background:#2ecc71; cursor:pointer; font-weight:bold;">INITIALISER</button>
+    </div>
+    <div id="game-zone" style="display:none">
+        <div id="oxy-bar"><div id="oxy-level"></div></div>
+        <div id="gov-display" class="gov-box">
+            <h3 style="margin:0; color:#f1c40f;">CONSEIL</h3>
+            <p style="font-size:1.5em; margin:5px;"><span id="g-name" style="color:#3498db">?</span> & <span id="s-name" style="color:#f1c40f">?</span></p>
+            <div id="vote-summary">Attente des votes...</div>
         </div>
-        <div id="role-ui" style="border:1px solid yellow; padding:10px; color:yellow; margin-bottom:10px;"></div>
-        <div id="main-ui">En attente...</div>
+        <div class="main-layout">
+            <div class="board"><h4>SURVIE</h4><div id="slots-s"></div></div>
+            <div class="board"><h4>SUFFRAGE</h4><div id="slots-f"></div></div>
+            <div class="board"><h4>CRISE</h4><div id="slots-c"></div></div>
+        </div>
     </div>
     <script>
         const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
-        let conn, myName, currentHand = [], allPlayers = [];
+        let players = [], deck = [], curG = 0, curSIdx = -1;
+        let votes = { oui: 0, non: 0, total: 0 };
+        let state = { survie: 0, crisis: 0, oxy: 3, gameOver: false, suffrage: "Aucun" };
+        let isProcessingAction = false;
 
-        function connect() {
-            myName = document.getElementById('p-name').value;
-            const code = document.getElementById('r-code').value;
-            if(!myName || !code) return;
-            conn = peer.connect(code);
-            conn.on('open', () => {
-                conn.send({ type: 'JOIN', name: myName });
-                document.getElementById('setup').classList.add('hidden');
-                document.getElementById('game').classList.remove('hidden');
-                document.getElementById('my-name').innerText = myName.toUpperCase();
+        peer.on('open', id => document.getElementById('display-id').innerText = id);
+        peer.on('connection', conn => {
+            conn.on('data', data => {
+                if (state.gameOver) return;
+                if (data.type === 'JOIN') {
+                    players.push({ name: data.name, conn: conn, alive: true });
+                    document.getElementById('count').innerText = players.length;
+                    if(players.length >= 5) document.getElementById('start-btn').disabled = false;
+                    conn.send({ type: 'CONNECTED' });
+                }
+                if (data.type === 'SENT_CHOICE') {
+                    curSIdx = players.findIndex(p => p.name === data.sName);
+                    showGov(data.gName, data.sName);
+                }
+                if (data.type === 'VOTE_DONE') {
+                    votes[data.choice.toLowerCase()]++; votes.total++;
+                    let active = players.filter(p => p.alive).length;
+                    document.getElementById('vote-summary').innerText = `Votes : ${votes.total} / ${active}`;
+                    if(votes.total === active) resolveVote();
+                }
+                if (data.type === 'DISCARD_DONE') {
+                    players[curSIdx].conn.send({ type: 'S_PICK', cards: data.remaining });
+                }
+                if (data.type === 'FINAL_CHOICE' && !isProcessingAction) { 
+                    isProcessingAction = true; applyDecree(data.card);
+                }
+                if (data.type === 'DO_TEST') {
+                    let target = players.find(p => p.name === data.target);
+                    let res = (target.role === 'S') ? "SAIN" : "INFECTE";
+                    players[curG].conn.send({ type: 'T_RES', name: target.name, result: res });
+                    isProcessingAction = false; nextTurn();
+                }
+                if (data.type === 'DO_EXEC') {
+                    let target = players.find(p => p.name === data.target);
+                    target.alive = false; target.conn.send({ type: 'DEAD' });
+                    if(target.role === 'A') triggerWin("SURVIVANTS", "L'Alpha a été éliminé.");
+                    else { isProcessingAction = false; nextTurn(); }
+                }
             });
-            conn.on('data', handleData);
+        });
+
+        function initGame() {
+            deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
+            const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
+            players.forEach((p, i) => {
+                p.role = roles[i] || 'S';
+                p.conn.send({ type: 'INIT', role: p.role, all: players.map(pl => pl.name) });
+            });
+            document.getElementById('setup-zone').style.display = 'none';
+            document.getElementById('game-zone').style.display = 'block';
+            nextTurn();
         }
 
-        function handleData(data) {
-            const ui = document.getElementById('main-ui');
-            if (data.type === 'INIT') {
-                allPlayers = data.all;
-                document.getElementById('role-ui').innerText = "RÔLE : " + (data.role === 'S' ? 'SURVIVANT' : (data.role === 'I' ? 'INFECTÉ' : 'ALPHA'));
-            }
-            if (data.type === 'SYNC') {
-                let s = ""; for(let i=0; i<5; i++) s += `<div class="dot ${i < data.state.survie ? 'f-s' : ''}"></div>`;
-                document.getElementById('m-s').innerHTML = s;
-                let c = ""; for(let i=0; i<6; i++) c += `<div class="dot ${i < data.state.crisis ? 'f-c' : ''}"></div>`;
-                document.getElementById('m-c').innerHTML = c;
-            }
-            if (data.type === 'G_TURN') {
-                ui.innerHTML = "<h3>CHOIX SENTINELLE</h3>";
-                allPlayers.forEach(p => { if(p !== myName) ui.innerHTML += `<button class="btn" onclick="sendS('${p}')">${p}</button>`; });
-            }
-            if (data.type === 'V_START') {
-                ui.innerHTML = `<h3>VOTE CONSEIL</h3><p>${data.g} & ${data.s}</p>`;
-                ui.innerHTML += `<button class="btn btn-oui" onclick="sendV('OUI')">OUI</button>`;
-                ui.innerHTML += `<button class="btn btn-non" onclick="sendV('NON')">NON</button>`;
-            }
-            if (data.type === 'G_PICK') {
-                currentHand = data.cards; ui.innerHTML = "<h3>GARDIEN : ÉCARTEZ</h3>";
-                currentHand.forEach((c, i) => {
-                    let label = (c === 'S') ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
-                    ui.innerHTML += `<button class="card ${c}" onclick="gDiscard(${i})">${label}</button>`;
-                });
-            }
-            if (data.type === 'S_PICK') {
-                currentHand = data.cards; ui.innerHTML = "<h3>SENTINELLE : CHOISISSEZ</h3>";
-                currentHand.forEach((c, i) => {
-                    let label = (c === 'S') ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
-                    ui.innerHTML += `<button class="card ${c}" onclick="sChoice(${i})">${label}</button>`;
-                });
-            }
-            if (data.type === 'REQ_P') {
-                ui.innerHTML = `<h3>POUVOIR : ${data.power}</h3>`;
-                data.targets.forEach(p => ui.innerHTML += `<button class="btn" style="border-color:red" onclick="usePower('${data.power}', '${p}')">${p}</button>`);
-            }
-            if (data.type === 'T_RES') {
-                ui.innerHTML = `<div style="background:#fff; color:#000; padding:20px; border-radius:10px;"><h3>TEST</h3><p>${data.name} est ${data.result}</p><button class="btn" onclick="this.parentElement.remove()">OK</button></div>`;
-            }
-            if (data.type === 'DEAD') document.getElementById('death-screen').style.display = "flex";
-            if (data.type === 'CLEAN') ui.innerHTML = "Attente...";
-            if (data.type === 'END') ui.innerHTML = `<h2>FIN : ${data.team}</h2><p>${data.reason}</p>`;
+        function showGov(g, s) {
+            document.getElementById('gov-display').style.display = 'block';
+            document.getElementById('g-name').innerText = g; document.getElementById('s-name').innerText = s;
+            players.filter(p => p.alive).forEach(p => p.conn.send({ type: 'V_START', g: g, s: s }));
         }
 
-        function sendS(s) { conn.send({ type: 'SENT_CHOICE', gName: myName, sName: s }); }
-        function sendV(v) { document.getElementById('main-ui').innerHTML = "Voté."; conn.send({ type: 'VOTE_DONE', choice: v }); }
-        function gDiscard(idx) { 
-            let cs = [...currentHand]; 
-            cs.splice(idx, 1); 
-            document.getElementById('main-ui').innerHTML = "Transmis.";
-            conn.send({ type: 'DISCARD_DONE', remaining: cs }); 
+        function resolveVote() {
+            if(votes.oui > votes.non) {
+                if(state.crisis >= 3 && players[curSIdx].role === 'A') { triggerWin("INFECTÉS", "L'Alpha est au pouvoir."); return; }
+                state.oxy = 3;
+                players[curG].conn.send({ type: 'G_PICK', cards: [deck.pop(), deck.pop(), deck.pop()] });
+            } else {
+                state.oxy--;
+                if(state.oxy <= 0) applyForced();
+                else { moveGardien(); nextTurn(); }
+            }
+            sync(); render();
         }
-        function sChoice(idx) { 
-            let card = currentHand[idx];
-            document.getElementById('main-ui').innerHTML = "Promulgué."; 
-            conn.send({ type: 'FINAL_CHOICE', card: card }); 
+
+        function applyDecree(type) {
+            if(type === 'S') state.survie++;
+            else if(type === 'C') {
+                state.crisis++;
+                if(state.crisis === 3) {
+                    players[curG].conn.send({ type: 'REQ_P', power: 'TEST', targets: players.filter(p => p.name !== players[curG].name && p.alive).map(p => p.name) });
+                    sync(); render(); return;
+                }
+                if(state.crisis === 4 || state.crisis === 5) {
+                    players[curG].conn.send({ type: 'REQ_P', power: 'EXEC', targets: players.filter(p => p.name !== players[curG].name && p.alive).map(p => p.name) });
+                    sync(); render(); return;
+                }
+            }
+            else if(type === 'F') state.suffrage = "Actif";
+            if(state.survie >= 5) triggerWin("SURVIVANTS", "Bunker sauvé.");
+            else if(state.crisis >= 6) triggerWin("INFECTÉS", "Infection totale.");
+            else { moveGardien(); isProcessingAction = false; nextTurn(); }
+            sync(); render();
         }
-        function usePower(p, t) { conn.send({ type: p === 'TEST' ? 'DO_TEST' : 'DO_EXEC', target: t }); }
+
+        function moveGardien() { do { curG = (curG + 1) % players.length; } while (!players[curG].alive); }
+        function triggerWin(team, res) {
+            state.gameOver = true; document.getElementById('end-screen').style.display = "flex";
+            document.getElementById('victory-title').innerText = team; document.getElementById('victory-reason').innerText = res;
+            players.forEach(p => p.conn.send({ type: 'END', team: team, reason: res }));
+        }
+        function nextTurn() {
+            votes = { oui: 0, non: 0, total: 0 }; document.getElementById('gov-display').style.display = 'none';
+            players.forEach(p => p.conn.send({ type: 'CLEAN' }));
+            players[curG].conn.send({ type: 'G_TURN' });
+            sync(); render();
+        }
+        function sync() { players.forEach(p => p.conn.send({ type: 'SYNC', state: state })); }
+        function render() {
+            const oxyBar = document.getElementById('oxy-level'); oxyBar.style.width = (state.oxy/3*100) + "%";
+            oxyBar.className = (state.oxy <= 1) ? "critical" : "";
+            let s = ""; for(let i=0; i<5; i++) s += `<div class="slot ${i < state.survie ? 'filled-s' : ''}"></div>`;
+            document.getElementById('slots-s').innerHTML = s;
+            let c = ""; const labels = ["", "", "TEST", "EXEC", "EXEC", "VETO"];
+            for(let i=0; i<6; i++) c += `<div class="slot ${i < state.crisis ? 'filled-c' : ''}" data-label="${labels[i]}"></div>`;
+            document.getElementById('slots-c').innerHTML = c;
+            document.getElementById('slots-f').innerHTML = `<div class="slot ${state.suffrage !== "Aucun" ? 'filled-f' : ''}"></div>`;
+        }
+        function applyForced() { let c = deck.pop(); while(c === 'F') c = deck.pop(); applyDecree(c); state.oxy = 3; }
     </script>
 </body>
 </html>
