@@ -13,41 +13,39 @@
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .main-layout { display: flex; justify-content: space-around; }
         .board { background: #2d2d2d; padding: 15px; border-radius: 10px; width: 30%; border: 1px solid #555; }
-        .slot { width: 40px; height: 60px; border: 2px dashed #555; display: inline-block; margin: 5px; border-radius: 4px; position: relative; }
+        .slot { width: 35px; height: 55px; border: 2px dashed #555; display: inline-block; margin: 5px; border-radius: 4px; position: relative; }
         .slot::after { content: attr(data-label); position: absolute; bottom: -18px; left: 0; width: 100%; font-size: 8px; color: #888; }
         .filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; }
         .filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; }
         .filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; }
         .gov-box { background: #333; border: 2px solid #f1c40f; padding: 10px; margin-bottom: 10px; border-radius: 10px; display: none; }
         #end-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
-        #log { background: #000; color: #00ff00; padding: 10px; height: 80px; overflow-y: auto; width: 90%; margin: 10px auto; text-align: left; font-size: 0.8em; }
     </style>
 </head>
 <body>
     <div id="end-screen">
         <h1 id="victory-title"></h1>
         <h2 id="victory-reason" style="color: #f1c40f;"></h2>
-        <button onclick="location.reload()" style="padding: 15px; cursor: pointer;">REBOOT</button>
+        <button onclick="location.reload()" style="padding: 15px; cursor: pointer;">REDÉMARRER</button>
     </div>
     <h1>BUNKER 402 - SYSTÈME CENTRAL</h1>
     <div id="setup-zone">
         <div class="lobby-code" id="display-id">CONNEXION...</div>
         <p>Joueurs : <span id="count">0</span></p>
-        <button onclick="initGame()" id="start-btn" disabled style="padding:10px 20px; background:#2ecc71; cursor:pointer;">INITIALISER</button>
+        <button onclick="initGame()" id="start-btn" disabled style="padding:10px 20px; background:#2ecc71; cursor:pointer; font-weight:bold;">INITIALISER</button>
     </div>
     <div id="game-zone" style="display:none">
         <div id="oxy-bar"><div id="oxy-level"></div></div>
         <div id="gov-display" class="gov-box">
             <h3 style="margin:0; color:#f1c40f;">CONSEIL</h3>
             <p style="font-size:1.5em; margin:5px;"><span id="g-name" style="color:#3498db">?</span> & <span id="s-name" style="color:#f1c40f">?</span></p>
-            <div id="vote-summary">Attente...</div>
+            <div id="vote-summary">Attente des votes...</div>
         </div>
         <div class="main-layout">
             <div class="board"><h4>SURVIE</h4><div id="slots-s"></div></div>
-            <div class="board"><h4>ORDRE DU JOUR</h4><div id="slots-f"></div></div>
+            <div class="board"><h4>SUFFRAGE</h4><div id="slots-f"></div></div>
             <div class="board"><h4>CRISE</h4><div id="slots-c"></div></div>
         </div>
-        <div id="log"></div>
     </div>
     <script>
         const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
@@ -73,6 +71,7 @@
                 if (data.type === 'VOTE_DONE') {
                     votes[data.choice.toLowerCase()]++; votes.total++;
                     let active = players.filter(p => p.alive).length;
+                    document.getElementById('vote-summary').innerText = `Votes : ${votes.total} / ${active}`;
                     if(votes.total === active) resolveVote();
                 }
                 if (data.type === 'DISCARD_DONE') {
@@ -90,7 +89,7 @@
                 if (data.type === 'DO_EXEC') {
                     let target = players.find(p => p.name === data.target);
                     target.alive = false; target.conn.send({ type: 'DEAD' });
-                    if(target.role === 'A') triggerWin("SURVIVANTS", "Alpha éliminé.");
+                    if(target.role === 'A') triggerWin("SURVIVANTS", "L'Alpha a été éliminé.");
                     else { isProcessingAction = false; nextTurn(); }
                 }
             });
@@ -116,7 +115,7 @@
 
         function resolveVote() {
             if(votes.oui > votes.non) {
-                if(state.crisis >= 3 && players[curSIdx].role === 'A') { triggerWin("INFECTES", "L'Alpha au pouvoir."); return; }
+                if(state.crisis >= 3 && players[curSIdx].role === 'A') { triggerWin("INFECTÉS", "L'Alpha est au pouvoir."); return; }
                 state.oxy = 3;
                 players[curG].conn.send({ type: 'G_PICK', cards: [deck.pop(), deck.pop(), deck.pop()] });
             } else {
@@ -142,7 +141,7 @@
             }
             else if(type === 'F') state.suffrage = "Actif";
             if(state.survie >= 5) triggerWin("SURVIVANTS", "Bunker sauvé.");
-            else if(state.crisis >= 6) triggerWin("INFECTES", "Infection totale.");
+            else if(state.crisis >= 6) triggerWin("INFECTÉS", "Infection totale.");
             else { moveGardien(); isProcessingAction = false; nextTurn(); }
             sync(); render();
         }
@@ -171,7 +170,6 @@
             document.getElementById('slots-f').innerHTML = `<div class="slot ${state.suffrage !== "Aucun" ? 'filled-f' : ''}"></div>`;
         }
         function applyForced() { let c = deck.pop(); while(c === 'F') c = deck.pop(); applyDecree(c); state.oxy = 3; }
-        function log(m) { const l = document.getElementById('log'); l.innerHTML = `<div>> ${m}</div>` + l.innerHTML; }
     </script>
 </body>
 </html>
