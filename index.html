@@ -2,174 +2,161 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>BUNKER 402 - Console</title>
+    <title>BUNKER 402 - Console Centrale</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { background: #1a1a1a; color: #e0e0e0; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 10px; }
         .lobby-code { font-size: 2em; color: #f1c40f; background: #000; padding: 10px; border: 2px solid #444; display: inline-block; margin: 10px; }
         #oxy-bar { height: 25px; background: #333; border-radius: 15px; border: 2px solid #555; overflow: hidden; width: 80%; margin: 10px auto; }
         #oxy-level { height: 100%; background: #3498db; width: 100%; transition: 1s; }
-        .critical { animation: blink 1s infinite; background: #e74c3c !important; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .main-layout { display: flex; justify-content: space-around; }
         .board { background: #2d2d2d; padding: 15px; border-radius: 10px; width: 30%; border: 1px solid #555; }
         .slot { width: 35px; height: 55px; border: 2px dashed #555; display: inline-block; margin: 5px; border-radius: 4px; position: relative; }
-        .slot::after { content: attr(data-label); position: absolute; bottom: -18px; left: 0; width: 100%; font-size: 8px; color: #888; }
         .filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; }
         .filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; }
-        .filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; }
         .gov-box { background: #333; border: 2px solid #f1c40f; padding: 10px; margin-bottom: 10px; border-radius: 10px; display: none; }
-        #end-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
+        #log { background: #000; color: #00ff00; padding: 10px; height: 100px; overflow-y: auto; width: 90%; margin: 10px auto; text-align: left; font-size: 0.8em; }
     </style>
 </head>
 <body>
-    <div id="end-screen">
-        <h1 id="victory-title"></h1>
-        <h2 id="victory-reason" style="color: #f1c40f;"></h2>
-        <button onclick="location.reload()" style="padding: 15px; cursor: pointer;">REDÉMARRER</button>
-    </div>
     <h1>BUNKER 402 - SYSTÈME CENTRAL</h1>
+
     <div id="setup-zone">
         <div class="lobby-code" id="display-id">CONNEXION...</div>
-        <p>Joueurs : <span id="count">0</span></p>
-        <button onclick="initGame()" id="start-btn" disabled style="padding:10px 20px; background:#2ecc71; cursor:pointer; font-weight:bold;">INITIALISER</button>
+        <p>Joueurs connectés : <span id="count">0</span></p>
+        <button onclick="initGame()" id="start-btn" disabled style="padding:15px; background:#2ecc71; cursor:pointer;">INITIALISER LE PROTOCOLE</button>
     </div>
+
     <div id="game-zone" style="display:none">
         <div id="oxy-bar"><div id="oxy-level"></div></div>
         <div id="gov-display" class="gov-box">
-            <h3 style="margin:0; color:#f1c40f;">CONSEIL</h3>
+            <h3 style="margin:0; color:#f1c40f;">CONSEIL EN COURS</h3>
             <p style="font-size:1.5em; margin:5px;"><span id="g-name" style="color:#3498db">?</span> & <span id="s-name" style="color:#f1c40f">?</span></p>
             <div id="vote-summary">Attente des votes...</div>
         </div>
         <div class="main-layout">
-            <div class="board"><h4>SURVIE</h4><div id="slots-s"></div></div>
-            <div class="board"><h4>SUFFRAGE</h4><div id="slots-f"></div></div>
-            <div class="board"><h4>CRISE</h4><div id="slots-c"></div></div>
+            <div class="board"><h4>SURVIE (BLEU)</h4><div id="slots-s"></div></div>
+            <div class="board"><h4>ORDRE DU JOUR</h4><div id="slots-f"></div></div>
+            <div class="board"><h4>CRISE (ROUGE)</h4><div id="slots-c"></div></div>
         </div>
+        <div id="log"></div>
     </div>
+
     <script>
-        const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
+        const peer = new Peer();
         let players = [], deck = [], curG = 0, curSIdx = -1;
         let votes = { oui: 0, non: 0, total: 0 };
-        let state = { survie: 0, crisis: 0, oxy: 3, gameOver: false, suffrage: "Aucun" };
-        let isProcessingAction = false;
+        let state = { survie: 0, crisis: 0, oxy: 3, gameOver: false };
 
+        // 1. GESTION DE LA CONNEXION
         peer.on('open', id => document.getElementById('display-id').innerText = id);
+
         peer.on('connection', conn => {
             conn.on('data', data => {
-                if (state.gameOver) return;
+                // Un joueur rejoint le lobby
                 if (data.type === 'JOIN') {
                     players.push({ name: data.name, conn: conn, alive: true });
                     document.getElementById('count').innerText = players.length;
                     if(players.length >= 5) document.getElementById('start-btn').disabled = false;
-                    conn.send({ type: 'CONNECTED' });
                 }
-                if (data.type === 'SENT_CHOICE') {
+                // Le Gardien a choisi sa Sentinelle
+                if (data.type === 'CHOSE_S') {
                     curSIdx = players.findIndex(p => p.name === data.sName);
-                    showGov(data.gName, data.sName);
+                    startVote(data.gName, data.sName);
                 }
-                if (data.type === 'VOTE_DONE') {
-                    votes[data.choice.toLowerCase()]++; votes.total++;
-                    let active = players.filter(p => p.alive).length;
-                    document.getElementById('vote-summary').innerText = `Votes : ${votes.total} / ${active}`;
-                    if(votes.total === active) resolveVote();
+                // Réception d'un vote
+                if (data.type === 'VOTE_SUBMIT') {
+                    votes[data.choice.toLowerCase()]++;
+                    votes.total++;
+                    updateVoteUI();
                 }
-                if (data.type === 'DISCARD_DONE') {
-                    players[curSIdx].conn.send({ type: 'S_PICK', cards: data.remaining });
+                // Le Gardien défausse une carte
+                if (data.type === 'G_DISCARD') {
+                    players[curSIdx].conn.send({ type: 'S_DECIDE', cards: data.remaining });
                 }
-                if (data.type === 'FINAL_CHOICE' && !isProcessingAction) { 
-                    isProcessingAction = true; applyDecree(data.card);
-                }
-                if (data.type === 'DO_TEST') {
-                    let target = players.find(p => p.name === data.target);
-                    let res = (target.role === 'S') ? "SAIN" : "INFECTE";
-                    players[curG].conn.send({ type: 'T_RES', name: target.name, result: res });
-                    isProcessingAction = false; nextTurn();
-                }
-                if (data.type === 'DO_EXEC') {
-                    let target = players.find(p => p.name === data.target);
-                    target.alive = false; target.conn.send({ type: 'DEAD' });
-                    if(target.role === 'A') triggerWin("SURVIVANTS", "L'Alpha a été éliminé.");
-                    else { isProcessingAction = false; nextTurn(); }
+                // La Sentinelle joue la carte finale
+                if (data.type === 'S_FINAL') {
+                    applyDecree(data.card);
                 }
             });
         });
 
+        // 2. INITIALISATION (Rôles et Deck)
         function initGame() {
+            // Création du deck 29 cartes
             deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
+            // Distribution des rôles
             const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
             players.forEach((p, i) => {
                 p.role = roles[i] || 'S';
-                p.conn.send({ type: 'INIT', role: p.role, all: players.map(pl => pl.name) });
+                p.conn.send({ type: 'GAME_START', role: p.role, all: players.map(pl => pl.name) });
             });
             document.getElementById('setup-zone').style.display = 'none';
             document.getElementById('game-zone').style.display = 'block';
             nextTurn();
         }
 
-        function showGov(g, s) {
+        // 3. LOGIQUE DES TOURS
+        function nextTurn() {
+            votes = { oui: 0, non: 0, total: 0 };
+            document.getElementById('gov-display').style.display = 'none';
+            // On envoie l'ordre au Gardien actuel
+            players[curG].conn.send({ type: 'YOUR_TURN_G' });
+            syncAll();
+            render();
+        }
+
+        function startVote(g, s) {
             document.getElementById('gov-display').style.display = 'block';
-            document.getElementById('g-name').innerText = g; document.getElementById('s-name').innerText = s;
-            players.filter(p => p.alive).forEach(p => p.conn.send({ type: 'V_START', g: g, s: s }));
+            document.getElementById('g-name').innerText = g;
+            document.getElementById('s-name').innerText = s;
+            // On demande à tous les vivants de voter
+            players.filter(p => p.alive).forEach(p => p.conn.send({ type: 'VOTE_REQ', g: g, s: s }));
+        }
+
+        function updateVoteUI() {
+            let active = players.filter(p => p.alive).length;
+            document.getElementById('vote-summary').innerText = `Votes : ${votes.total} / ${active}`;
+            if(votes.total === active) resolveVote();
         }
 
         function resolveVote() {
             if(votes.oui > votes.non) {
-                if(state.crisis >= 3 && players[curSIdx].role === 'A') { triggerWin("INFECTÉS", "L'Alpha est au pouvoir."); return; }
+                log("Gouvernement accepté !");
                 state.oxy = 3;
-                players[curG].conn.send({ type: 'G_PICK', cards: [deck.pop(), deck.pop(), deck.pop()] });
+                // Le Gardien pioche 3
+                players[curG].conn.send({ type: 'G_PICK_3', cards: [deck.pop(), deck.pop(), deck.pop()] });
             } else {
+                log("Gouvernement rejeté...");
                 state.oxy--;
-                if(state.oxy <= 0) applyForced();
-                else { moveGardien(); nextTurn(); }
+                if(state.oxy <= 0) {
+                    forceDecree();
+                } else {
+                    curG = (curG + 1) % players.length;
+                    nextTurn();
+                }
             }
-            sync(); render();
+            syncAll(); render();
         }
 
         function applyDecree(type) {
             if(type === 'S') state.survie++;
-            else if(type === 'C') {
-                state.crisis++;
-                if(state.crisis === 3) {
-                    players[curG].conn.send({ type: 'REQ_P', power: 'TEST', targets: players.filter(p => p.name !== players[curG].name && p.alive).map(p => p.name) });
-                    sync(); render(); return;
-                }
-                if(state.crisis === 4 || state.crisis === 5) {
-                    players[curG].conn.send({ type: 'REQ_P', power: 'EXEC', targets: players.filter(p => p.name !== players[curG].name && p.alive).map(p => p.name) });
-                    sync(); render(); return;
-                }
-            }
-            else if(type === 'F') state.suffrage = "Actif";
-            if(state.survie >= 5) triggerWin("SURVIVANTS", "Bunker sauvé.");
-            else if(state.crisis >= 6) triggerWin("INFECTÉS", "Infection totale.");
-            else { moveGardien(); isProcessingAction = false; nextTurn(); }
-            sync(); render();
+            if(type === 'C') state.crisis++;
+            log(`Décret ${type} posé.`);
+            curG = (curG + 1) % players.length;
+            nextTurn();
         }
 
-        function moveGardien() { do { curG = (curG + 1) % players.length; } while (!players[curG].alive); }
-        function triggerWin(team, res) {
-            state.gameOver = true; document.getElementById('end-screen').style.display = "flex";
-            document.getElementById('victory-title').innerText = team; document.getElementById('victory-reason').innerText = res;
-            players.forEach(p => p.conn.send({ type: 'END', team: team, reason: res }));
-        }
-        function nextTurn() {
-            votes = { oui: 0, non: 0, total: 0 }; document.getElementById('gov-display').style.display = 'none';
-            players.forEach(p => p.conn.send({ type: 'CLEAN' }));
-            players[curG].conn.send({ type: 'G_TURN' });
-            sync(); render();
-        }
-        function sync() { players.forEach(p => p.conn.send({ type: 'SYNC', state: state })); }
+        // Utilitaires
+        function syncAll() { players.forEach(p => p.conn.send({ type: 'SYNC', state: state })); }
+        function log(m) { const l = document.getElementById('log'); l.innerHTML = `<div>> ${m}</div>` + l.innerHTML; }
         function render() {
-            const oxyBar = document.getElementById('oxy-level'); oxyBar.style.width = (state.oxy/3*100) + "%";
-            oxyBar.className = (state.oxy <= 1) ? "critical" : "";
+            document.getElementById('oxy-level').style.width = (state.oxy/3*100) + "%";
             let s = ""; for(let i=0; i<5; i++) s += `<div class="slot ${i < state.survie ? 'filled-s' : ''}"></div>`;
             document.getElementById('slots-s').innerHTML = s;
-            let c = ""; const labels = ["", "", "TEST", "EXEC", "EXEC", "VETO"];
-            for(let i=0; i<6; i++) c += `<div class="slot ${i < state.crisis ? 'filled-c' : ''}" data-label="${labels[i]}"></div>`;
+            let c = ""; for(let i=0; i<6; i++) c += `<div class="slot ${i < state.crisis ? 'filled-c' : ''}"></div>`;
             document.getElementById('slots-c').innerHTML = c;
-            document.getElementById('slots-f').innerHTML = `<div class="slot ${state.suffrage !== "Aucun" ? 'filled-f' : ''}"></div>`;
         }
-        function applyForced() { let c = deck.pop(); while(c === 'F') c = deck.pop(); applyDecree(c); state.oxy = 3; }
     </script>
 </body>
 </html>
