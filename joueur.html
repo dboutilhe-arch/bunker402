@@ -6,14 +6,13 @@
     <title>Terminal Joueur</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        body { background: #000; color: #2ecc71; font-family: monospace; padding: 10px; text-align: center; margin: 0; }
+        body { background: #000; color: #2ecc71; font-family: monospace; padding: 10px; text-align: center; margin: 0; overflow-x: hidden; }
         .mini-board { display: flex; justify-content: space-around; background: #111; padding: 8px; border-radius: 5px; margin-bottom: 10px; }
         .dot { width: 12px; height: 18px; border: 1px solid #444; margin: 2px; display: inline-block; border-radius: 2px; }
-        .f-s { background: #3498db; }
-        .f-c { background: #e74c3c; }
-        .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 18px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .f-s { background: #3498db; } .f-c { background: #e74c3c; }
+        .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 18px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
         .btn-oui { background: #2ecc71 !important; color: #000 !important; }
-        .btn-non { background: #e74c3c !important; color: #fff !important; }
+        .btn-non { background: #e74c3c !important; color: #fff !important; border: none; }
         .card { display: block; padding: 25px; margin: 10px auto; width: 95%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.2em; cursor: pointer; }
         .S { background: #3498db; } .C { background: #e74c3c; } .F { background: #7f8c8d; }
         .hidden { display: none; }
@@ -32,8 +31,8 @@
     <div id="game" class="hidden">
         <div id="my-name" style="color:#f1c40f; margin-bottom:10px; font-weight:bold;"></div>
         <div class="mini-board">
-            <div>SURVIE <div id="m-s"></div></div>
-            <div>CRISE <div id="m-c"></div></div>
+            <div>S <div id="m-s"></div></div>
+            <div>C <div id="m-c"></div></div>
         </div>
         <div id="role-ui" style="border:1px solid yellow; padding:10px; color:yellow; margin-bottom:10px;"></div>
         <div id="main-ui">En attente...</div>
@@ -79,11 +78,17 @@
             }
             if (data.type === 'G_PICK') {
                 currentHand = data.cards; ui.innerHTML = "<h3>GARDIEN : ÉCARTEZ</h3>";
-                currentHand.forEach((c, i) => ui.innerHTML += `<button class="card ${c}" onclick="gDiscard(${i})">${c === 'S' ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE')}</button>`);
+                currentHand.forEach((c, i) => {
+                    let label = (c === 'S') ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
+                    ui.innerHTML += `<button class="card ${c}" onclick="gDiscard(${i})">${label}</button>`;
+                });
             }
             if (data.type === 'S_PICK') {
                 currentHand = data.cards; ui.innerHTML = "<h3>SENTINELLE : CHOISISSEZ</h3>";
-                currentHand.forEach((c, i) => ui.innerHTML += `<button class="card ${c}" onclick="sChoice(${i})">${c === 'S' ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE')}</button>`);
+                currentHand.forEach((c, i) => {
+                    let label = (c === 'S') ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
+                    ui.innerHTML += `<button class="card ${c}" onclick="sChoice(${i})">${label}</button>`;
+                });
             }
             if (data.type === 'REQ_P') {
                 ui.innerHTML = `<h3>POUVOIR : ${data.power}</h3>`;
@@ -98,9 +103,18 @@
         }
 
         function sendS(s) { conn.send({ type: 'SENT_CHOICE', gName: myName, sName: s }); }
-        function sendV(v) { ui.innerHTML = "Voté."; conn.send({ type: 'VOTE_DONE', choice: v }); }
-        function gDiscard(idx) { let cs = [...currentHand]; cs.splice(idx, 1); conn.send({ type: 'DISCARD_DONE', remaining: cs }); }
-        function sChoice(idx) { ui.innerHTML = "Promulgué."; conn.send({ type: 'FINAL_CHOICE', card: currentHand[idx] }); }
+        function sendV(v) { document.getElementById('main-ui').innerHTML = "Voté."; conn.send({ type: 'VOTE_DONE', choice: v }); }
+        function gDiscard(idx) { 
+            let cs = [...currentHand]; 
+            cs.splice(idx, 1); 
+            document.getElementById('main-ui').innerHTML = "Transmis.";
+            conn.send({ type: 'DISCARD_DONE', remaining: cs }); 
+        }
+        function sChoice(idx) { 
+            let card = currentHand[idx];
+            document.getElementById('main-ui').innerHTML = "Promulgué."; 
+            conn.send({ type: 'FINAL_CHOICE', card: card }); 
+        }
         function usePower(p, t) { conn.send({ type: p === 'TEST' ? 'DO_TEST' : 'DO_EXEC', target: t }); }
     </script>
 </body>
