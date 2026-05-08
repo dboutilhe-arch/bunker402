@@ -136,7 +136,13 @@
 
                 // Gestion de l'entrée des joueurs
                 if (data.type === 'JOIN') {
-
+                    
+                    // Sécurité supplémentaire sur la longueur du nom
+                    if (data.name.length > 12) {
+                        conn.send({ type: 'CLEAN_UI' }); // Ou un message d'erreur
+                        return;
+                    }
+                    
                     // Vérifier si le nom existe déjà (on ignore la casse : dylan = DYLAN)
                     const nameExists = players.some(p => p.name.toLowerCase() === data.name.toLowerCase());
 
