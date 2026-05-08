@@ -114,7 +114,7 @@
                 
                 // On utilise data.eligible (la liste filtrée envoyée par le PC)
                 data.eligible.forEach(name => {
-                    ui.innerHTML += `<button class="btn" onclick="sendS('${name}')">${name}</button>`;
+                    ui.innerHTML += `<button class="btn" onclick="SentinelleChoisie('${name}')">${name}</button>`;
                 });
             
                 // Optionnel : un petit message si la liste est vide (peu probable)
