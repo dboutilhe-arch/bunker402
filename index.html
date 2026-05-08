@@ -94,116 +94,82 @@
                     
                     // Mise à jour visuelle du Lobby
                     const playerList = document.getElementById('player-list');
+                    // Création étiquette
                     const nameTag = document.createElement('div');
                     nameTag.innerText = data.name.toUpperCase();
                     playerList.appendChild(nameTag);
 
                     document.getElementById('count').innerText = players.length;
+                    // Au delà de 5 joueur la partie peut se lancer 
                     if(players.length >= 5) document.getElementById('start-btn').disabled = false;
+                    // Message envoyé au téléphone pour lui signalé qu'il est connecté
                     conn.send({ type: 'CONNECTED' });
                 }
 
-                // Logique de jeu
+                // Le Gardien a choisi sa Sentinelle
                 if (data.type === 'SENTINELLE_CHOISIE') {
+                    //Stockage du nom de la Sentinelle
                     curSIdx = players.findIndex(p => p.name === data.sentinelleName);
+                    // Affichage du binôme Gardien / Sentinelle
                     showGov(data.gardienName, data.sentinelleName);
                 }
+
+                // Dès qu'un joueur à voté
                 if (data.type === 'VOTE_DONE') {
+                    // Augmente le compteur de votes
                     votes[data.choice.toLowerCase()]++; votes.total++;
+                    // Si tout le monde a voté, on lance la résolution du vote
                     if(votes.total === players.length) resolveVote();
                 }
+
+                // Le Gardien vient de défausser sa carte
                 if (data.type === 'DISCARD_DONE') {
+                    //Mise a jour de l'affichage principal
+                    document.getElementById('vote-summary').innerText = "DÉCRET REÇU : La Sentinelle choisit la loi finale";
+                    document.getElementById('vote-summary').style.color = "#f1c40f";
+                
+                    // On prévient TOUT LE MONDE que c'est au tour de la Sentinelle
+                    players.forEach(p => {
+                        p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' });
+                    });
+
+                    // Envoi des cartes restantes à la Sentinelle
                     players[curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: data.remaining });
                 }
+
+                // La Sentinelle a choisi le décret à appliquer
                 if (data.type === 'FINAL_CHOICE' && !isProcessingAction) { 
+                    //Empêche de poser 2 cartes d'un coup
                     isProcessingAction = true;
+                    // Appel fonction qui pose la carte sur le plateau
                     applyDecree(data.card);
                 }
             });
         });
 
+        // Initialisation de la partie
         function initGame() {
+            // Création du deck => 29 Cartes dont 10 bleus, 15 rouges et 4 grises
             deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
+            // Création des rôles
             const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
+            // Création des métiers
             const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
-            
+
+            // Atribution d'un rôle et d'un métier à chaque joueur
             players.forEach((p, i) => {
                 p.role = roles[i] || 'S';
                 p.conn.send({ type: 'INIT', role: p.role, metier: metiers[i], all: players.map(pl => pl.name) });
             });
+
+            // Cache le lobby
             document.getElementById('setup-zone').style.display = 'none';
+            // Affiche le plateau de jeu
             document.getElementById('game-zone').style.display = 'block';
             nextTurn();
         }
 
-        function syncTerminals() {
-            players.forEach(p => p.conn.send({ type: 'SYNC_STATE', state: state }));
-        }
-
-        function showGov(g, s) {
-            document.getElementById('gov-display').style.display = 'block';
-            document.getElementById('g-name').innerText = g; document.getElementById('s-name').innerText = s;
-            players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
-        }
-
-      function resolveVote() {
-        if(votes.oui > votes.non) {
-            document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ : Le Gardien choisit le décret à défausser";
-            document.getElementById('vote-summary').style.color = "#2ecc71"; // Optionnel : mettre en vert
-        
-            if(state.crise >= 3 && players[curSIdx].role === 'A') {
-                triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
-                return;
-            }
-            state.oxy = 3;
-            players[curG].conn.send({ type: 'GARDIEN_PICK', cards: [deck.pop(), deck.pop(), deck.pop()] });
-        } else {
-            // Si le vote échoue, on peut aussi marquer :
-            document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
-            document.getElementById('vote-summary').style.color = "#e74c3c"; // Optionnel : mettre en rouge
-        
-            state.oxy--;
-            if(state.oxy <= 0) applyForced();
-            else { curG = (curG + 1) % players.length; nextTurn(); }
-            }
-            syncTerminals(); render();
-        }
-
-        function applyDecree(type) {
-            if(type === 'S') state.survie++;
-            else if(type === 'C') state.crise++;
-            else if(type === 'F') state.suffrage = "Actif";
-            
-            if(state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
-            else if(state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
-            else { 
-                curG = (curG + 1) % players.length; 
-                setTimeout(() => { isProcessingAction = false; nextTurn(); }, 500);
-            }
-            syncTerminals(); render();
-        }
-
-        function triggerWin(team, reason) {
-            state.gameOver = true;
-            document.getElementById('end-screen').style.display = "flex";
-            document.getElementById('victory-title').innerText = "VICTOIRE : " + team;
-            document.getElementById('victory-reason').innerText = reason;
-            players.forEach(p => p.conn.send({ type: 'END_GAME', team: team, reason: reason }));
-        }
-
-        function nextTurn() {
-            votes = { oui: 0, non: 0, total: 0 };
-            document.getElementById('gov-display').style.display = 'none';
-            players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
-            players[curG].conn.send({ type: 'YOUR_TURN' });
-            syncTerminals(); render();
-        }
-
-        function applyForced() {
-            let card = deck.pop(); while(card === 'F') card = deck.pop();
-            applyDecree(card); state.oxy = 3;
-        }
-
+        // Gestion de la barre d'oxygène
         function render() {
             const oxyBar = document.getElementById('oxy-level');
             oxyBar.style.width = (state.oxy/3*100) + "%";
@@ -218,6 +184,101 @@
             let f = `<div class="slot ${state.suffrage !== "Aucun" ? 'filled-f' : ''}"></div>`;
             document.getElementById('slots-f').innerHTML = f;
         }
+
+        // Envoi des informations de la barre d'oxygène aux joueurs
+        function syncTerminals() {
+            players.forEach(p => p.conn.send({ type: 'SYNC_STATE', state: state }));
+        }
+
+        // Affichage du Gouvernement proposé
+        function showGov(g, s) {
+            document.getElementById('gov-display').style.display = 'block';
+            document.getElementById('g-name').innerText = g; document.getElementById('s-name').innerText = s;
+            // Lancement du vote
+            players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
+        }
+
+        // Résolution du vote
+        function resolveVote() {
+            // Majorité de OUI
+            if(votes.oui > votes.non) {
+                // Phase de législation
+                document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ : Le Gardien choisit le décret à défausser";
+                document.getElementById('vote-summary').style.color = "#2ecc71";
+                
+                // On prévient TOUT LE MONDE que la phase de défausse commence
+                players.forEach(p => {
+                    p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
+                });
+
+                // Victoire des infectés si l'Alpha est élu avec 3 décrets ou + d'appliqués
+                if(state.crise >= 3 && players[curSIdx].role === 'A') {
+                    triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
+                    return;
+                }
+                // Oxygène remis au niveau 3
+                state.oxy = 3;
+                // Le Gardien pioche 3 cartes
+                players[curG].conn.send({ type: 'GARDIEN_PICK', cards: [deck.pop(), deck.pop(), deck.pop()] });
+            } else {
+                    // Vote échoué
+                    document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
+                    document.getElementById('vote-summary').style.color = "#e74c3c"; // Optionnel : mettre en rouge
+
+                    // Diminution du Niveau d'Oxygène
+                    state.oxy--;
+                    // Si l'Oxygène est à 0, on lance la fonction pour appliquer de force un décret bleu ou rouge
+                    if(state.oxy <= 0) applyForced();
+                    else { curG = (curG + 1) % players.length; nextTurn(); }
+            }
+            syncTerminals(); render();
+        }
+
+        // Protocole de Sécurité
+        function applyForced() {
+            // Tirage de carte à appliqué, si Suffrage => tirer une nouvelle carte
+            let card = deck.pop(); while(card === 'F') card = deck.pop();
+            applyDecree(card); state.oxy = 3;
+        }
+        
+        // Application du décret choisi par la Sentinelle
+        function applyDecree(type) {
+            if(type === 'S') state.survie++;                // Ajout décret bleu
+            else if(type === 'C') state.crise++;            // Ajout décret rouge
+            else if(type === 'F') state.suffrage = "Actif"; // Ajout décret gris
+
+            // Vérification conditions de victoire (6 décrets rouges ou 5 décrets bleus d'appliqués)
+            if(state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
+            else if(state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
+            else {
+                // Nouveau Gardien
+                curG = (curG + 1) % players.length;
+                // Nouveau tour de jeu
+                setTimeout(() => { isProcessingAction = false; nextTurn(); }, 500);
+            }
+            syncTerminals(); render();
+        }
+
+        // Nouveau tour
+        function nextTurn() {
+            votes = { oui: 0, non: 0, total: 0 };                            // Réinitialisation des votes
+            document.getElementById('gov-display').style.display = 'none';   // Suppression de l'affichage du gouvernement index
+            players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));         // Nettoyage affiche joueurs
+            players[curG].conn.send({ type: 'YOUR_TURN' });                  // Donne la main au nouveau Gardien
+            syncTerminals(); render();
+        }
+
+        // Fin de jeu
+        function triggerWin(team, reason) {
+            // Affichage écran de fin index
+            state.gameOver = true;
+            document.getElementById('end-screen').style.display = "flex";
+            document.getElementById('victory-title').innerText = "VICTOIRE : " + team;
+            document.getElementById('victory-reason').innerText = reason;
+            // Déclenche l'écran de fin pour les joueurs
+            players.forEach(p => p.conn.send({ type: 'END_GAME', team: team, reason: reason }));
+        }
+
     </script>
 </body>
 </html>
