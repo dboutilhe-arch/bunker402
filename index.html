@@ -302,6 +302,23 @@
             votes = { oui: 0, non: 0, total: 0, list: [] }; // On vide aussi la liste des noms
             document.getElementById('vote-details').innerHTML = ""; // On efface les étiquettes de l'écran
 
+            //On affiche qui est le Gardien sur l'écran central
+            document.getElementById('gov-display').style.display = 'block';
+            document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...";
+            document.getElementById('vote-summary').style.color = "#3498db";
+            document.getElementById('g-name').innerText = players[curG].name;
+            document.getElementById('s-name').innerText = "?"; // La sentinelle n'est pas encore connue
+  
+            // Nettoyage écran joueur
+            players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
+        
+            // On prévient les autres
+            players.forEach((p, index) => {
+                if(index !== curG) {
+                    p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[curG].name });
+                }
+            });
+            
             // Liste des joueurs éligibles au prochain choix de la Sentinelle
             let eligiblePlayers = players.map(p => p.name).filter(name => {
                 // 1. On s'exclut toujours soi-même (le Gardien actuel)
@@ -319,23 +336,6 @@
                 type: 'YOUR_TURN', 
                 eligible: eligiblePlayers 
             });
-            //On affiche qui est le Gardien sur l'écran central
-            document.getElementById('gov-display').style.display = 'block';
-            document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...";
-            document.getElementById('vote-summary').style.color = "#3498db";
-            document.getElementById('g-name').innerText = players[curG].name;
-            document.getElementById('s-name').innerText = "?"; // La sentinelle n'est pas encore connue
-  
-            // Nettoyage écran joueur
-            players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
-        
-            // On prévient les autres
-            players.forEach((p, index) => {
-                if(index !== curG) {
-                    p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[curG].name });
-                }
-            });
-        
             syncTerminals(); render();
         }
 
