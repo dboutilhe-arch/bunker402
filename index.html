@@ -47,11 +47,13 @@
         .player-tag {
             background: #333;
             color: #2ecc71;
-            padding: 10px 20px;
+            padding: 5px 15px;
             border: 1px solid #2ecc71;
             border-radius: 5px;
             font-weight: bold;
-            transition: all 0.3s ease; /* Pour une transition douce des couleurs */
+            min-width: 100px; /* pour que les tags aient tous une taille similaire */
+            line-height: 1.2;  /* Pour que les deux lignes soient proches */
+            transition: all 0.3s ease;
         }
         
         /* Coloration des étiquettes */
@@ -253,11 +255,15 @@
             // Création des métiers
             const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
 
-            // Atribution d'un rôle et d'un métier à chaque joueur
+            // Attribution d'un rôle et d'un métier à chaque joueur
             players.forEach((p, i) => {
                 p.role = roles[i] || 'S';
-                p.conn.send({ type: 'INIT', role: p.role, metier: metiers[i], all: players.map(pl => pl.name) });
+                p.metier = metiers[i];
+                p.conn.send({ type: 'INIT', role: p.role, metier: p.metier, all: players.map(pl => pl.name) });
             });
+            
+            // Une fois que tous les métiers sont attribués, on met à jour les étiquettes
+            updateTagsWithJobs();
 
             // Cache le lobby
             document.getElementById('setup-zone').style.display = 'none';
@@ -266,6 +272,16 @@
             nextTurn();
         }
 
+        function updateTagsWithJobs() {
+            players.forEach(p => {
+                const tag = document.getElementById(`tag-${p.name.toLowerCase()}`);
+                if (tag) {
+                    // On ajoute le métier en petit sous le nom
+                    tag.innerHTML = `${p.name.toUpperCase()}<br><span style="font-size: 0.6em; opacity: 0.8; font-weight: normal;">${p.metier}</span>`;
+                }
+            });
+        }
+        
         // Gestion couleur des étiquettes de nom
         function resetTagColors() {
             players.forEach(p => {
