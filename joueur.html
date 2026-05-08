@@ -107,6 +107,17 @@
                 ui.innerHTML = "Système opérationnel.";
             }
 
+            // Le nombre max de joueur est déjà atteint
+            if (data.type === 'ERROR_BUNKER_FULL') {
+                alert("Le bunker est complet ! Impossible de rejoindre cette session.");
+                // On ré-affiche le menu de connexion
+                document.getElementById('setup').classList.remove('hidden');
+                document.getElementById('game').classList.add('hidden');
+                if(conn) conn.close();
+                return;
+            }
+
+            // Le nom de joueur est déjà pris
             if (data.type === 'ERROR_NAME_TAKEN') {
                 alert("Ce nom est déjà utilisé dans le bunker. Choisis une autre identité !");
                 // On ré-affiche le menu de connexion pour qu'il puisse changer de nom
