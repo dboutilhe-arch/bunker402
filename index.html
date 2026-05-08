@@ -136,6 +136,12 @@
 
                 // Gestion de l'entrée des joueurs
                 if (data.type === 'JOIN') {
+
+                    // Vérification de la capacité MAX => 10 joueurs
+                    if (players.length >= 10) {
+                        conn.send({ type: 'ERROR_BUNKER_FULL' });
+                        return; // On stoppe l'entrée
+                    }
                     
                     // Sécurité supplémentaire sur la longueur du nom
                     if (data.name.length > 12) {
