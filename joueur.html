@@ -122,6 +122,11 @@
                 ui.innerHTML += `<button class="btn" style="background:#e74c3c; color:black" onclick="sendV('NON')">NON</button>`;
             }
 
+            // Message d'information pour indiquer que le Gardien choisi sa Sentinelle
+            if (data.type === 'WAIT_SENTINELLE') {
+                ui.innerHTML = `<h3>FORMATION DU CONSEIL</h3><p>Le Gardien <b>${data.gardienName}</b> choisit sa Sentinelle...</p>`;
+            }
+
             // Message d'information pour les joueurs de la phase de réflexion du Gardien et de la Sentinelle
             if (data.type === 'WAIT_LEGISLATION') {
                 if (data.step === 'GARDIEN') {
