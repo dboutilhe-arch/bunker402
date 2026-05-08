@@ -54,10 +54,18 @@
     <h1>BUNKER 402 - SYSTÈME CENTRAL</h1>
 
     <div id="setup-zone">
-        <div class="lobby-code" id="display-id">CONNEXION...</div>
-        <p>Joueurs connectés : <span id="count">0</span> / 10</p>
-        <div id="player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px auto; max-width: 600px;"></div>
-        <button onclick="initGame()" id="start-btn" disabled style="padding:15px 30px; background:#2ecc71; cursor:pointer; font-weight:bold; border-radius:10px;">INITIALISER LA PARTIE</button>
+        <div id="server-creation" style="margin: 20px 0;">
+            <input type="text" id="custom-id" placeholder="NOM DE LA PARTIE (ex: BUNKER-402)" 
+                   style="padding: 15px; width: 300px; background: #000; color: #f1c40f; border: 2px solid #444; font-family: 'Courier New';">
+            <button onclick="startServer()" style="padding: 15px 25px; background: #444; color: white; cursor: pointer; border: none; font-weight: bold;">CRÉER LE SERVEUR</button>
+        </div>
+    
+        <div id="lobby-active" style="display: none;">
+            <div class="lobby-code" id="display-id"></div>
+            <p>Joueurs connectés : <span id="count">0</span> / 10</p>
+            <div id="player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px auto; max-width: 600px;"></div>
+            <button onclick="initGame()" id="start-btn" disabled style="padding:15px 30px; background:#2ecc71; cursor:pointer; font-weight:bold; border-radius:10px; border:none;">INITIALISER LA PARTIE</button>
+        </div>
     </div>
 
     <div id="game-zone" style="display:none">
@@ -99,18 +107,20 @@
             });
         
             peer.on('open', id => {
-                document.getElementById('display-id').innerText = "CODE CONSOLE : " + id;
-                document.getElementById('display-id').style.display = 'inline-block';
-                document.getElementById('custom-id').parentElement.style.display = 'none';
-            });
+                    // On bascule l'affichage
+                    document.getElementById('server-creation').style.display = 'none';
+                    document.getElementById('lobby-active').style.display = 'block';
+                    document.getElementById('display-id').innerText = "CODE CONSOLE : " + id;
+                });
         
             peer.on('error', err => {
-                if (err.type === 'unavailable-id') {
-                    alert("Ce code est déjà utilisé !");
-                } else {
-                    alert("Erreur PeerJS : " + err.type);
-                }
-            });
+                    if (err.type === 'unavailable-id') {
+                        alert("Ce code est déjà utilisé. Essayez une autre combinaison (ajoutez des chiffres) !");
+                    } else {
+                        alert("Erreur fatale : " + err.type);
+                        location.reload(); // On reboot en cas d'erreur
+                    }
+                });
         
             // Écouteur de connexion déplacé ici
             peer.on('connection', conn => {
