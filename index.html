@@ -7,19 +7,41 @@
     <style>
         body { background: #1a1a1a; color: #e0e0e0; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 10px; }
         .lobby-code { font-size: 2em; color: #f1c40f; background: #000; padding: 10px; border: 2px solid #444; display: inline-block; margin: 10px; }
+        
+        /* Jauge d'Oxygène */
         #oxy-bar { height: 25px; background: #333; border-radius: 15px; border: 2px solid #555; overflow: hidden; width: 80%; margin: 10px auto; }
         #oxy-level { height: 100%; background: #3498db; width: 100%; transition: 1s; }
         .critical { animation: blink 1s infinite; background: #e74c3c !important; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Mise en page des Plateaux */
         .main-layout { display: flex; justify-content: space-around; align-items: flex-start; }
         .board { background: #2d2d2d; padding: 15px; border-radius: 10px; width: 30%; border: 1px solid #555; }
         .slot { width: 40px; height: 60px; border: 2px dashed #555; display: inline-block; margin: 5px; border-radius: 4px; }
         .filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; }
         .filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; }
         .filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; }
+
+        /* Conseil et Fin de partie */
         .gov-box { background: #333; border: 2px solid #f1c40f; padding: 10px; margin-bottom: 10px; border-radius: 10px; display: none; }
         #end-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
         #log { background: #000; color: #00ff00; padding: 10px; height: 80px; overflow-y: auto; width: 90%; margin: 10px auto; text-align: left; font-size: 0.8em; }
+
+        /* Animations Lobby */
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        #player-list div {
+            background: #333; 
+            color: #2ecc71; 
+            padding: 10px 20px; 
+            border: 1px solid #2ecc71; 
+            border-radius: 5px; 
+            font-weight: bold; 
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.2); 
+            animation: fadeIn 0.5s ease-out forwards;
+        }
     </style>
 </head>
 <body>
@@ -34,6 +56,7 @@
     <div id="setup-zone">
         <div class="lobby-code" id="display-id">CONNEXION...</div>
         <p>Joueurs connectés : <span id="count">0</span> / 10</p>
+        <div id="player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px auto; max-width: 600px;"></div>
         <button onclick="initGame()" id="start-btn" disabled style="padding:15px 30px; background:#2ecc71; cursor:pointer; font-weight:bold; border-radius:10px;">INITIALISER LA PARTIE</button>
     </div>
 
@@ -60,16 +83,27 @@
         let isProcessingAction = false;
 
         peer.on('open', id => document.getElementById('display-id').innerText = id);
-
+        
         peer.on('connection', conn => {
             conn.on('data', data => {
                 if (state.gameOver) return;
+
+                // Gestion de l'entrée des joueurs
                 if (data.type === 'JOIN') {
                     players.push({ name: data.name, conn: conn });
+                    
+                    // Mise à jour visuelle du Lobby
+                    const playerList = document.getElementById('player-list');
+                    const nameTag = document.createElement('div');
+                    nameTag.innerText = data.name.toUpperCase();
+                    playerList.appendChild(nameTag);
+
                     document.getElementById('count').innerText = players.length;
                     if(players.length >= 5) document.getElementById('start-btn').disabled = false;
                     conn.send({ type: 'CONNECTED' });
                 }
+
+                // Logique de jeu
                 if (data.type === 'SENTINELLE_CHOISIE') {
                     curSIdx = players.findIndex(p => p.name === data.sentinelleName);
                     showGov(data.gardienName, data.sentinelleName);
@@ -92,6 +126,7 @@
             deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
             const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
             const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
+            
             players.forEach((p, i) => {
                 p.role = roles[i] || 'S';
                 p.conn.send({ type: 'INIT', role: p.role, metier: metiers[i], all: players.map(pl => pl.name) });
@@ -166,10 +201,13 @@
             const oxyBar = document.getElementById('oxy-level');
             oxyBar.style.width = (state.oxy/3*100) + "%";
             oxyBar.className = (state.oxy <= 1) ? "critical" : "";
+            
             let s = ""; for(let i=0; i<5; i++) s += `<div class="slot ${i < state.survie ? 'filled-s' : ''}"></div>`;
             document.getElementById('slots-s').innerHTML = s;
+            
             let c = ""; for(let i=0; i<6; i++) c += `<div class="slot ${i < state.crise ? 'filled-c' : ''}"></div>`;
             document.getElementById('slots-c').innerHTML = c;
+            
             let f = `<div class="slot ${state.suffrage !== "Aucun" ? 'filled-f' : ''}"></div>`;
             document.getElementById('slots-f').innerHTML = f;
         }
