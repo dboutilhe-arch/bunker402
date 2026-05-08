@@ -92,7 +92,7 @@
         function startServer() {
             const customId = document.getElementById('custom-id').value.trim();
             if (!customId) return alert("Veuillez saisir un code !");
-                // On initialise Peer avec ton ID personnalisé
+                // On initialise Peer avec un code personnalisé
                 peer = new Peer(customId, { 
                 config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} 
                 })
@@ -182,7 +182,7 @@
                     applyDecret(data.card);
                 }
             });
-        });
+        };
 
         // Initialisation de la partie
         function initGame() {
