@@ -261,10 +261,26 @@
 
         // Nouveau tour
         function nextTurn() {
-            votes = { oui: 0, non: 0, total: 0 };                            // Réinitialisation des votes
-            document.getElementById('gov-display').style.display = 'none';   // Suppression de l'affichage du gouvernement index
-            players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));         // Nettoyage affiche joueurs
-            players[curG].conn.send({ type: 'YOUR_TURN' });                  // Donne la main au nouveau Gardien
+            votes = { oui: 0, non: 0, total: 0 };   // Réinitialisation des votes
+            
+            //On affiche qui est le Gardien sur l'écran central
+            document.getElementById('gov-display').style.display = 'block';
+            document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...";
+            document.getElementById('vote-summary').style.color = "#3498db";
+            document.getElementById('g-name').innerText = players[curG].name;
+            document.getElementById('s-name').innerText = "?"; // La sentinelle n'est pas encore connue
+            // Nettoyage écran joueur
+            players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
+            
+            // On prévient tous les joueurs que le Gardien réfléchit (sauf le Gardien lui-même)
+            players.forEach((p, index) => {
+                if(index !== curG) {
+                    p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[curG].name });
+                }
+            });
+
+            // Donne la main au nouveau Gardien
+            players[curG].conn.send({ type: 'YOUR_TURN' });
             syncTerminals(); render();
         }
 
