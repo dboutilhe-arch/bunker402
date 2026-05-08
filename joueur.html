@@ -112,14 +112,14 @@
             if (data.type === 'YOUR_TURN') {
                 ui.innerHTML = "<h3>TOUR DU GARDIEN</h3>";
                 // Création d'un bouton pour chaque joueur (sauf soi-même)
-                allPlayers.forEach(p => { if(p !== myName) ui.innerHTML += `<button class="btn" onclick="sendS('${p}')">${p}</button>`; });
+                allPlayers.forEach(p => { if(p !== myName) ui.innerHTML += `<button class="btn" onclick="SentinelleChoisie('${p}')">${p}</button>`; });
             }
 
             // Phase de Vote (Pour tout le monde)
             if (data.type === 'VOTE_START') {
                 ui.innerHTML = `<h3>VOTE CONSEIL</h3><p>${data.g} & ${data.s}</p>`;
-                ui.innerHTML += `<button class="btn" style="background:#2ecc71; color:black" onclick="sendV('OUI')">OUI</button>`;
-                ui.innerHTML += `<button class="btn" style="background:#e74c3c; color:black" onclick="sendV('NON')">NON</button>`;
+                ui.innerHTML += `<button class="btn" style="background:#2ecc71; color:black" onclick="EnvoiDuVote('OUI')">OUI</button>`;
+                ui.innerHTML += `<button class="btn" style="background:#e74c3c; color:black" onclick="EnvoiDuVote('NON')">NON</button>`;
             }
 
             // Message d'information pour indiquer que le Gardien choisi sa Sentinelle
@@ -180,10 +180,10 @@
         }
 
         // --- ACTIONS ENVOYÉES AU PC ---
-        function sendS(s) { conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: myName, sentinelleName: s }); }
+        function SentinelleChoisie(s) { conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: myName, sentinelleName: s }); }
 
         // Envoi du vote
-        function sendV(v) { 
+        function EnvoiDuVote(v) { 
             document.getElementById('main-ui').innerHTML = "Vote " + v + " transmis. En attente des autres joueurs..."; 
             // On envoie le type, le choix ET le nom du joueur
             conn.send({ type: 'VOTE_DONE', choice: v, playerName: myName }); 
