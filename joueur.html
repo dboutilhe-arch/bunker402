@@ -102,6 +102,15 @@
                 ui.innerHTML = "Système opérationnel.";
             }
 
+            if (data.type === 'ERROR_NAME_TAKEN') {
+                alert("Ce nom est déjà utilisé dans le bunker. Choisis une autre identité !");
+                // On ré-affiche le menu de connexion pour qu'il puisse changer de nom
+                document.getElementById('setup').classList.remove('hidden');
+                document.getElementById('game').classList.add('hidden');
+                // On ferme la connexion actuelle pour repartir sur de bonnes bases
+                if(conn) conn.close(); 
+            }
+            
             // Nettoyage (Entre les phases)
             if (data.type === 'CLEAN_UI') { ui.innerHTML = "En attente..."; }
 
