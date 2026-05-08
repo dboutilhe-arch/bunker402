@@ -91,24 +91,31 @@
     </div>
 
     <div id="game-zone" style="display:none">
+        <!-- Barre d'Oxygène -->
         <div id="oxy-bar"><div id="oxy-level"></div></div>
-        <!-- <div id="active-player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px auto;"></div> -->
+    
+        <!-- Zone du Conseil -->
         <div id="gov-display" class="gov-box">
             <h3 style="margin:0; color:#f1c40f;">CONSEIL ACTUEL</h3>
             <p style="font-size:1.5em; margin:5px;"><span id="g-name" style="color:#3498db">?</span> & <span id="s-name" style="color:#f1c40f">?</span></p>
-            <div id="vote-summary">SCRUTIN EN COURS : Approuvez-vous ce conseil ?</div>
-            <div id="vote-details" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px;">
-    </div>
+            <div id="vote-summary">DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...</div>
+            <div id="vote-details" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px;"></div>
         </div>
-        <div class="main-layout">
+    
+        <!-- Plateaux de décrets (Largeur complète) -->
+        <div class="main-layout" style="margin-bottom: 30px;">
             <div class="board"><h4>PROTOCOLES DE SURVIE</h4><div id="slots-s"></div></div>
             <div class="board"><h4>ORDRE DU JOUR</h4><div id="slots-f"></div></div>
             <div class="board"><h4>DIRECTIVES DE CRISE</h4><div id="slots-c"></div></div>
-            <div id="active-player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px auto;"></div>
         </div>
-
-        <h3 style="margin-top: 20px; color: #555; font-size: 0.8em;">PERSONNEL DU BUNKER</h3>
-        <div id="active-player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px auto; padding: 10px; border-top: 1px solid #333;"></div>
+    
+        <!-- LISTE DES JOUEURS (Sous les plateaux) -->
+        <div style="border-top: 1px solid #444; padding-top: 20px;">
+            <h4 style="color: #7f8c8d; margin-bottom: 15px; letter-spacing: 2px;">PERSONNEL DU BUNKER</h4>
+            <div id="active-player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 1000px; margin: 0 auto;"></div>
+        </div>
+    
+        <div id="log"></div>
     </div>
 
     <script>
