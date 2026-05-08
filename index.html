@@ -83,7 +83,8 @@
         let votes = { oui: 0, non: 0, total: 0, list: [] };
         let state = { survie: 0, crise: 0, oxy: 3, gameOver: false, suffrage: "Aucun" };
         let isProcessingAction = false;
-        let lastGov = { g: null, s: null }; // Stocke les noms des anciens dirigeants
+        let lastSentinelle = null; // Sentinelle précédente
+        let lastGardien = null;    // Gardien précédent
 
         peer.on('open', id => document.getElementById('display-id').innerText = id);
         
@@ -286,10 +287,8 @@
             else if(state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
             else {
                 // On mémorise le gouvernement qui vient de finir
-                lastGov = { 
-                    g: players[curG].name, 
-                    s: players[curSIdx].name 
-                };
+                lastSentinelle = players[curSIdx].name;
+                lastGardien = players[curG].name;
                 // Nouveau Gardien
                 curG = (curG + 1) % players.length;
                 // Nouveau tour de jeu
@@ -302,7 +301,24 @@
         function nextTurn() {
             votes = { oui: 0, non: 0, total: 0, list: [] }; // On vide aussi la liste des noms
             document.getElementById('vote-details').innerHTML = ""; // On efface les étiquettes de l'écran
+
+            // Liste des joueurs éligibles au prochain choix de la Sentinelle
+            let eligiblePlayers = players.map(p => p.name).filter(name => {
+                // 1. On s'exclut toujours soi-même (le Gardien actuel)
+                if (name === players[curG].name) return false;
+                // 2. La Sentinelle du tour précédent est TOUJOURS interdite
+                if (name === lastSentinelle) return false;
+                // 3. Le Gardien du tour précédent est interdit SEULEMENT si > 5 joueurs
+                if (players.length > 5 && name === lastGardien) return false;
+                
+                return true;
+            });
             
+            // Envoi au Gardien du choix de sa Sentinelle
+            players[curG].conn.send({ 
+                type: 'YOUR_TURN', 
+                eligible: eligiblePlayers 
+            });
             //On affiche qui est le Gardien sur l'écran central
             document.getElementById('gov-display').style.display = 'block';
             document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...";
@@ -312,11 +328,6 @@
   
             // Nettoyage écran joueur
             players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
-            
-            // On enlève : Soi-même (le Gardien) + l'Ancien Gardien + l'Ancienne Sentinelle
-            let eligiblePlayers = players
-                .map(p => p.name)
-                .filter(name => name !== players[curG].name && name !== lastGov.g && name !== lastGov.s);
         
             // On prévient les autres
             players.forEach((p, index) => {
@@ -325,11 +336,6 @@
                 }
             });
         
-            // On envoie la liste filtrée au Gardien
-            players[curG].conn.send({ 
-                type: 'YOUR_TURN', 
-                eligible: eligiblePlayers // On envoie uniquement les noms autorisés
-            });
             syncTerminals(); render();
         }
 
