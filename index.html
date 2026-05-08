@@ -224,19 +224,20 @@
 
                 // Le Gardien a choisi sa Sentinelle
                 if (data.type === 'SENTINELLE_CHOISIE') {
-
-                    resetTagColors(); // Reset des couleurs des étiquettes
+                    resetTagColors(); // On efface les votes du tour précédent
                     
-                    // On remet l'étoile sur le Gardien car le reset l'a enlevée
+                    // On remet l'étoile et la bordure sur le Gardien
                     const gTags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
                     gTags.forEach(tag => {
-                        tag.querySelector('.p-name').innerHTML = `⭐ ${players[curG].name.toUpperCase()}`;
+                        const nameDiv = tag.querySelector('.p-name');
+                        if (nameDiv) nameDiv.innerHTML = `⭐ ${players[curG].name.toUpperCase()}`;
                         tag.style.borderColor = "#f1c40f";
+                        tag.style.borderWidth = "2px";
                     });
                     
-                    //Stockage du nom de la Sentinelle
+                    // Stockage de l'index de la Sentinelle
                     curSIdx = players.findIndex(p => p.name === data.sentinelleName);
-                    // Affichage du binôme Gardien / Sentinelle
+                    // Lancement de l'affichage du conseil
                     showGov(data.gardienName, data.sentinelleName);
                 }
 
@@ -357,16 +358,16 @@
             players.forEach(p => p.conn.send({ type: 'SYNC_STATE', state: state }));
         }
 
-        // Affichage du Gouvernement proposé
+// Affichage du Gouvernement proposé
         function showGov(g, s) {
-
-            const sTag = document.getElementById(`tag-${s.toLowerCase()}`);
+            // Sélection de toutes les étiquettes de la sentinelle (Lobby + Jeu)
+            const sTags = document.querySelectorAll(`[id="tag-${s.toLowerCase()}"]`);
             sTags.forEach(tag => {
                 tag.style.borderColor = "#3498db"; // Contour bleu pour la sentinelle
                 tag.style.borderWidth = "2px";
             });
             
-            // On affiche le bloc du conseil (au cas où il était caché)
+            // On affiche le bloc du conseil
             document.getElementById('gov-display').style.display = 'block';
             
             // On met à jour les noms des deux membres
@@ -375,7 +376,7 @@
             
             // Changement du message principal
             document.getElementById('vote-summary').innerText = "SCRUTIN EN COURS : Approuvez-vous ce conseil ?";
-            document.getElementById('vote-summary').style.color = "#f1c40f"; // On passe en jaune pour attirer l'attention
+            document.getElementById('vote-summary').style.color = "#f1c40f"; 
         
             // On lance le signal de vote aux téléphones
             players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
