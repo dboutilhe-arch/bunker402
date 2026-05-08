@@ -78,17 +78,49 @@
     </div>
 
     <script>
-        const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
+        // 1. On déclare peer sans l'initialiser
+        let peer = null; 
+        
         let players = [], deck = [], curG = 0, curSIdx = -1;
         let votes = { oui: 0, non: 0, total: 0, list: [] };
-        let state = { survie: 0, crise: 0, oxy: 3, gameOver: false, suffrage: "Aucun" };
+        let state = { survie: 0, crisis: 0, oxy: 3, gameOver: false, suffrage: "Aucun" };
         let isProcessingAction = false;
-        let lastSentinelle = null; // Sentinelle précédente
-        let lastGardien = null;    // Gardien précédent
-
-        peer.on('open', id => document.getElementById('display-id').innerText = id);
+        let lastSentinelle = null;
+        let lastGardien = null;
         
-        peer.on('connection', conn => {
+        // 2. La fonction de démarrage (à mettre AVANT tes autres fonctions)
+        function startServer() {
+            const customId = document.getElementById('custom-id').value.trim();
+            if (!customId) return alert("Veuillez saisir un code !");
+        
+            // Initialisation du Peer avec ton code
+            peer = new Peer(customId, { 
+                config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} 
+            });
+        
+            peer.on('open', id => {
+                document.getElementById('display-id').innerText = "CODE CONSOLE : " + id;
+                document.getElementById('display-id').style.display = 'inline-block';
+                document.getElementById('custom-id').parentElement.style.display = 'none';
+            });
+        
+            peer.on('error', err => {
+                if (err.type === 'unavailable-id') {
+                    alert("Ce code est déjà utilisé !");
+                } else {
+                    alert("Erreur PeerJS : " + err.type);
+                }
+            });
+        
+            // Écouteur de connexion déplacé ici
+            peer.on('connection', conn => {
+                // C'est ici que tu appelles ta gestion de données habituelle
+                setupConnection(conn);
+            });
+        }
+        
+        // 3. On enveloppe tes anciens écouteurs dans cette fonction
+        function setupConnection(conn) {
             conn.on('data', data => {
                 if (state.gameOver) return;
 
@@ -153,7 +185,7 @@
                     applyDecret(data.card);
                 }
             });
-        });
+        };
 
         // Initialisation de la partie
         function initGame() {
