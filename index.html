@@ -318,7 +318,10 @@
                     p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[curG].name });
                 }
             });
-            
+
+            console.log("Gardien Actuel:", players[curG].name);
+            console.log("Interdit (Last S):", lastSentinelle);
+            console.log("Interdit (Last G):", lastGardien);
             // Liste des joueurs éligibles au prochain choix de la Sentinelle
             let eligiblePlayers = players.map(p => p.name).filter(name => {
                 // 1. On s'exclut toujours soi-même (le Gardien actuel)
@@ -330,6 +333,7 @@
                 
                 return true;
             });
+            console.log("Eligibles:", eligiblePlayers);
             
             // Envoi au Gardien du choix de sa Sentinelle
             players[curG].conn.send({ 
