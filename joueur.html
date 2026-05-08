@@ -117,9 +117,22 @@
 
             // Phase de Vote (Pour tout le monde)
             if (data.type === 'VOTE_START') {
-                ui.innerHTML = `<h3>VOTE CONSEIL</h3><p>${data.g} & ${data.s}</p>`;
-                ui.innerHTML += `<button class="btn" style="background:#2ecc71; color:black" onclick="EnvoiDuVote('OUI')">OUI</button>`;
-                ui.innerHTML += `<button class="btn" style="background:#e74c3c; color:black" onclick="EnvoiDuVote('NON')">NON</button>`;
+                // 1. On efface tout et on met le titre
+                ui.innerHTML = `<h3>VOTE CONSEIL</h3>`;
+                // 2. On ajoute la consigne personnalisée avec les noms en couleur
+                ui.innerHTML += `
+                    <div style="margin: 15px 0; padding: 10px; border: 1px dashed #555;">
+                        <p>Approuvez-vous ce gouvernement ?</p>
+                        <p style="font-size: 1.1em;">
+                            <span style="color:#3498db; font-weight:bold;">${data.g}</span> (Gardien) <br>
+                            & <br>
+                            <span style="color:#f1c40f; font-weight:bold;">${data.s}</span> (Sentinelle)
+                        </p>
+                    </div>
+                `;
+                // 3. On ajoute les boutons de vote
+                ui.innerHTML += `<button class="btn" style="background:#2ecc71; color:black" onclick="sendV('OUI')">ACCEPTER LE CONSEIL</button>`;
+                ui.innerHTML += `<button class="btn" style="background:#e74c3c; color:black" onclick="sendV('NON')">REFUSER LE CONSEIL</button>`;
             }
 
             // Message d'information pour indiquer que le Gardien choisi sa Sentinelle
