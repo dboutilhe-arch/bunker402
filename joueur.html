@@ -93,7 +93,7 @@
         function handleData(data) {
             const ui = document.getElementById('main-ui');
 
-            // 1. Initialisation (Début de partie)
+            // Initialisation (Début de partie)
             if (data.type === 'INIT') {
                 allPlayers = data.all;
                 const rText = data.role === 'S' ? 'SURVIVANT' : (data.role === 'I' ? 'INFECTE' : 'ALPHA');
@@ -102,27 +102,36 @@
                 ui.innerHTML = "Système opérationnel.";
             }
 
-            // 2. Nettoyage (Entre les phases)
+            // Nettoyage (Entre les phases)
             if (data.type === 'CLEAN_UI') { ui.innerHTML = "En attente..."; }
 
-            // 3. Mise à jour des points (Synchronisation constante avec le PC)
+            // Mise à jour des points (Synchronisation constante avec le PC)
             if (data.type === 'SYNC_STATE') { updateMiniBoard(data.state); }
 
-            // 4. Phase de sélection (Si on est le Gardien)
+            // Phase de sélection (Si on est le Gardien)
             if (data.type === 'YOUR_TURN') {
                 ui.innerHTML = "<h3>TOUR DU GARDIEN</h3>";
                 // Création d'un bouton pour chaque joueur (sauf soi-même)
                 allPlayers.forEach(p => { if(p !== myName) ui.innerHTML += `<button class="btn" onclick="sendS('${p}')">${p}</button>`; });
             }
 
-            // 5. Phase de Vote (Pour tout le monde)
+            // Phase de Vote (Pour tout le monde)
             if (data.type === 'VOTE_START') {
                 ui.innerHTML = `<h3>VOTE CONSEIL</h3><p>${data.g} & ${data.s}</p>`;
                 ui.innerHTML += `<button class="btn" style="background:#2ecc71; color:black" onclick="sendV('OUI')">OUI</button>`;
                 ui.innerHTML += `<button class="btn" style="background:#e74c3c; color:black" onclick="sendV('NON')">NON</button>`;
             }
 
-            // 6. Choix du Gardien (3 cartes reçues, doit en jeter 1)
+            // Message d'information pour les joueurs de la phase de réflexion du Gardien et de la Sentinelle
+            if (data.type === 'WAIT_LEGISLATION') {
+                if (data.step === 'GARDIEN') {
+                    ui.innerHTML = "<h3>LÉGISLATION</h3><p>Le Gardien examine les décrets et en défausse un...</p>";
+                } else if (data.step === 'SENTINELLE') {
+                    ui.innerHTML = "<h3>LÉGISLATION</h3><p>Le Gardien a choisi. La Sentinelle décide du décret final...</p>";
+                }
+            }
+
+            // Choix du Gardien (3 cartes reçues, doit en jeter 1)
             if (data.type === 'GARDIEN_PICK') {
                 currentHand = data.cards;
                 ui.innerHTML = "<h3>LÉGISLATION : GARDIEN</h3>";
@@ -132,7 +141,7 @@
                 });
             }
 
-            // 7. Choix de la Sentinelle (2 cartes reçues, doit en jouer 1)
+            // Choix de la Sentinelle (2 cartes reçues, doit en jouer 1)
             if (data.type === 'SENTINELLE_PICK') {
                 currentHand = data.cards;
                 ui.innerHTML = "<h3>LÉGISLATION : SENTINELLE</h3>";
@@ -142,7 +151,7 @@
                 });
             }
             
-            // 8. Écran de fin
+            // Écran de fin
             if (data.type === 'END_GAME') {
                 ui.innerHTML = `<div style="background:#111; padding:20px; border-radius:10px; margin-top:10px;">
                     <h1 style="color:#f1c40f; margin:0;">FIN DE PARTIE</h1>
@@ -168,15 +177,16 @@
         // --- ACTIONS ENVOYÉES AU PC ---
         function sendS(s) { conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: myName, sentinelleName: s }); }
         function sendV(v) { document.getElementById('main-ui').innerHTML = "Vote transmis."; conn.send({ type: 'VOTE_DONE', choice: v }); }
+
         function gDiscard(idx) { 
-            // Splice retire la carte choisie du tableau. On envoie les 2 autres au PC.
             let cards = [...currentHand]; cards.splice(idx, 1);
-            document.getElementById('main-ui').innerHTML = "Transmission..."; 
+            // Splice retire la carte choisie du tableau. On envoie les 2 autres au PC.
+            document.getElementById('main-ui').innerHTML = "<h3 style='color:#3498db'>TRANSFÉRÉ</h3><p>La Sentinelle examine les décrets...</p>"; 
             conn.send({ type: 'DISCARD_DONE', remaining: cards }); 
         }
         function sChoice(idx) { 
             const card = currentHand[idx];
-            document.getElementById('main-ui').innerHTML = "Décret promulgué !";
+            document.getElementById('main-ui').innerHTML = "<h3 style='color:#f1c40f'>PROMULGUÉ</h3><p>Mise à jour des systèmes du bunker...</p>";
             conn.send({ type: 'FINAL_CHOICE', card: card }); 
         }
     </script>
