@@ -136,6 +136,17 @@
 
                 // Gestion de l'entrée des joueurs
                 if (data.type === 'JOIN') {
+
+                    // Vérifier si le nom existe déjà (on ignore la casse : dylan = DYLAN)
+                    const nameExists = players.some(p => p.name.toLowerCase() === data.name.toLowerCase());
+
+                    if (nameExists) {
+                        // On envoie un message d'erreur spécifique au téléphone
+                        conn.send({ type: 'ERROR_NAME_TAKEN' });
+                        return; // On arrête la fonction ici
+                    }
+                    
+                    // Si le nom est libre, on continue normalement
                     players.push({ name: data.name, conn: conn });
                     
                     // Mise à jour visuelle du Lobby
