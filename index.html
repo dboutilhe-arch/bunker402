@@ -324,15 +324,17 @@
             players.forEach(p => {
                 const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
                 tags.forEach(tag => {
-                    tag.className = 'player-tag'; 
-                    tag.style.borderColor = ""; // Retire la bordure dorée
-                    // On remet le contenu propre sans l'étoile du Gardien
-                    tag.innerHTML = `
-                        <div class="p-name">${p.name.toUpperCase()}</div>
-                        <div class="p-job" style="font-size: 0.65em; opacity: 0.8; font-weight: normal; margin-top: 2px;">
-                            ${p.metier}
-                        </div>
-                    `;
+                    tag.className = 'player-tag'; // Enlève voted-oui/non
+                    tag.style.borderColor = "";   // Enlève les bordures de rôle
+                    tag.style.borderWidth = "1px";
+                    
+                    // On remet le nom PROPRE (sans l'étoile)
+                    const nameDiv = tag.querySelector('.p-name');
+                    if (nameDiv) nameDiv.innerText = p.name.toUpperCase();
+                    
+                    // On s'assure que le job est toujours là
+                    const jobDiv = tag.querySelector('.p-job');
+                    if (jobDiv) jobDiv.innerText = p.metier;
                 });
             });
         }
@@ -384,7 +386,6 @@
 
         // Résolution du vote
         function resolveVote() {
-            // 1. Coloration des votes (Lobby + Jeu)
             votes.list.forEach(v => {
                 const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
                 tags.forEach(t => {
@@ -392,11 +393,9 @@
                 });
             });
         
-            // 2. Traitement du résultat
             if(votes.oui > votes.non) {
                 document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ";
                 document.getElementById('vote-summary').style.color = "#2ecc71";
-                
                 players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
         
                 if(state.crise >= 3 && players[curSIdx].role === 'A') {
@@ -409,11 +408,14 @@
                 document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
                 document.getElementById('vote-summary').style.color = "#e74c3c";
         
+                // LE VOTE A ÉCHOUÉ : On nettoie tout (bordures et étoiles) avant le tour suivant
+                resetTagColors(); 
+                
                 state.oxy--;
                 if(state.oxy <= 0) applyForced();
                 else { 
                     curG = (curG + 1) % players.length; 
-                    setTimeout(nextTurn, 1500); // On laisse 1.5s pour voir les couleurs avant de reset
+                    setTimeout(nextTurn, 1500); 
                 }
             }
             syncTerminals(); render();
@@ -462,56 +464,41 @@
 
         // Nouveau tour
         function nextTurn() {
-
-            // On désigne le Gardien actuel sur son étiquette
+            // On s'assure que le NOUVEAU gardien est marqué
             const tags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
             tags.forEach(tag => {
                 const nameDiv = tag.querySelector('.p-name');
                 if (nameDiv) nameDiv.innerHTML = `⭐ ${players[curG].name.toUpperCase()}`;
-                tag.style.borderColor = "#f1c40f"; // Un petit contour doré discret
+                tag.style.borderColor = "#f1c40f"; 
+                tag.style.borderWidth = "2px";
             });
             
-            votes = { oui: 0, non: 0, total: 0, list: [] }; // On vide aussi la liste des noms
-            document.getElementById('vote-details').innerHTML = ""; // On efface les étiquettes de l'écran
+            votes = { oui: 0, non: 0, total: 0, list: [] };
+            document.getElementById('vote-details').innerHTML = "";
 
-            //On affiche qui est le Gardien sur l'écran central
             document.getElementById('gov-display').style.display = 'block';
             document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...";
             document.getElementById('vote-summary').style.color = "#3498db";
+            
+            // Mise à jour visuelle du conseil en attente
             document.getElementById('g-name').innerText = players[curG].name;
-            document.getElementById('s-name').innerText = "?"; // La sentinelle n'est pas encore connue
-  
-            // Nettoyage écran joueur
+            document.getElementById('g-name').style.color = "#f1c40f"; 
+            document.getElementById('s-name').innerText = "?";
+            document.getElementById('s-name').style.color = "#e0e0e0";
+
             players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
-        
-            // On prévient les autres
             players.forEach((p, index) => {
-                if(index !== curG) {
-                    p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[curG].name });
-                }
+                if(index !== curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[curG].name });
             });
 
-            console.log("Gardien Actuel:", players[curG].name);
-            console.log("Interdit (Last S):", lastSentinelle);
-            console.log("Interdit (Last G):", lastGardien);
-            // Liste des joueurs éligibles au prochain choix de la Sentinelle
             let eligiblePlayers = players.map(p => p.name).filter(name => {
-                // 1. On s'exclut toujours soi-même (le Gardien actuel)
                 if (name === players[curG].name) return false;
-                // 2. La Sentinelle du tour précédent est TOUJOURS interdite
                 if (name === lastSentinelle) return false;
-                // 3. Le Gardien du tour précédent est interdit SEULEMENT si > 5 joueurs
                 if (players.length > 5 && name === lastGardien) return false;
-                
                 return true;
             });
-            console.log("Eligibles:", eligiblePlayers);
             
-            // Envoi au Gardien du choix de sa Sentinelle
-            players[curG].conn.send({ 
-                type: 'YOUR_TURN', 
-                eligible: eligiblePlayers 
-            });
+            players[curG].conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
             syncTerminals(); render();
         }
 
