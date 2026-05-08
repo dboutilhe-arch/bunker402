@@ -152,9 +152,9 @@
             
                 // 1. Ajout d'un bandeau spécial si le joueur est concerné par le conseil
                 if (myName === data.g) {
-                    ui.innerHTML += `<p style="background: #3498db; color: white; padding: 5px;">⚠️ VOUS ÊTES LE GARDIEN PROPOSÉ</p>`;
+                    ui.innerHTML += `<p style="background: #f1c40f; color: black; padding: 5px;">⚠️ VOUS ÊTES LE GARDIEN PROPOSÉ</p>`;
                 } else if (myName === data.s) {
-                    ui.innerHTML += `<p style="background: #f1c40f; color: black; padding: 5px;">⚠️ VOUS ÊTES LA SENTINELLE PROPOSÉE</p>`;
+                    ui.innerHTML += `<p style="background: #3498db; color: white; padding: 5px;">⚠️ VOUS ÊTES LA SENTINELLE PROPOSÉE</p>`;
                 }
             
                 // 2. La consigne de vote standard
@@ -162,9 +162,9 @@
                     <div style="margin: 15px 0; padding: 10px; border: 1px dashed #555;">
                         <p>Approuvez-vous ce gouvernement ?</p>
                         <p style="font-size: 1.1em;">
-                            <span style="color:#3498db; font-weight:bold;">${data.g}</span> (Gardien) <br>
+                            <span style="color:#f1c40f; font-weight:bold;">${data.g}</span> (Gardien) <br>
                             & <br>
-                            <span style="color:#f1c40f; font-weight:bold;">${data.s}</span> (Sentinelle)
+                            <span style="color:#3498db; font-weight:bold;">${data.s}</span> (Sentinelle)
                         </p>
                     </div>
                 `;
