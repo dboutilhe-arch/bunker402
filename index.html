@@ -224,6 +224,16 @@
 
                 // Le Gardien a choisi sa Sentinelle
                 if (data.type === 'SENTINELLE_CHOISIE') {
+
+                    resetTagColors(); // Reset des couleurs des étiquettes
+                    
+                    // On remet l'étoile sur le Gardien car le reset l'a enlevée
+                    const gTags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
+                    gTags.forEach(tag => {
+                        tag.querySelector('.p-name').innerHTML = `⭐ ${players[curG].name.toUpperCase()}`;
+                        tag.style.borderColor = "#f1c40f";
+                    });
+                    
                     //Stockage du nom de la Sentinelle
                     curSIdx = players.findIndex(p => p.name === data.sentinelleName);
                     // Affichage du binôme Gardien / Sentinelle
@@ -349,8 +359,12 @@
 
         // Affichage du Gouvernement proposé
         function showGov(g, s) {
-            // On garde le Gardien en jaune, et on met la Sentinelle en BLEU
+
             const sTag = document.getElementById(`tag-${s.toLowerCase()}`);
+            sTags.forEach(tag => {
+                tag.style.borderColor = "#3498db"; // Contour bleu pour la sentinelle
+                tag.style.borderWidth = "2px";
+            });
             
             // On affiche le bloc du conseil (au cas où il était caché)
             document.getElementById('gov-display').style.display = 'block';
@@ -447,7 +461,6 @@
 
         // Nouveau tour
         function nextTurn() {
-            resetTagColors(); // On remet tout par défaut au début du tour
 
             // On désigne le Gardien actuel sur son étiquette
             const tags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
