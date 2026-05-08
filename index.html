@@ -334,20 +334,33 @@
             if(type === 'S') state.survie++;                // Ajout décret bleu
             else if(type === 'C') state.crise++;            // Ajout décret rouge
             else if(type === 'F') state.suffrage = "Actif"; // Ajout décret gris
-
-            // Vérification conditions de victoire (6 décrets rouges ou 5 décrets bleus d'appliqués)
-            if(state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
-            else if(state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
+        
+            // --- CRITIQUE : ON MET À JOUR L'ÉCRAN TOUT DE SUITE ---
+            render(); 
+            syncTerminals(); 
+        
+            // Vérification conditions de victoire
+            if(state.survie >= 5) {
+                triggerWin("SURVIVANTS", "Protocoles rétablis.");
+            } 
+            else if(state.crise >= 6) {
+                triggerWin("INFECTES", "Infection totale.");
+            } 
             else {
                 // On mémorise le gouvernement qui vient de finir
                 lastSentinelle = players[curSIdx].name;
                 lastGardien = players[curG].name;
+                
                 // Nouveau Gardien
                 curG = (curG + 1) % players.length;
-                // Nouveau tour de jeu
-                setTimeout(() => { isProcessingAction = false; nextTurn(); }, 500);
+                
+                // On laisse un petit délai (1s) pour que les joueurs voient le plateau se remplir 
+                // avant de passer au tour suivant
+                setTimeout(() => { 
+                    isProcessingAction = false; 
+                    nextTurn(); 
+                }, 1000);
             }
-            syncTerminals(); render();
         }
 
         // Nouveau tour
