@@ -1,186 +1,136 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal Joueur</title>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <style>
-        /* Design global : look "ordinateur de bunker" (noir et vert) */
-        body { background: #000; color: #2ecc71; font-family: monospace; padding: 10px; text-align: center; margin: 0; overflow-x: hidden; }
-      
-        /* En-tête : affiche le nom du joueur et l'oxygène en haut de l'écran */
-        .header-ui { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; font-size: 0.8em; }
-
-        /* Petit plateau de rappel : pour voir les scores sans regarder l'écran PC */
-        .mini-board { display: flex; justify-content: space-around; background: #111; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 0.7em; }
-
-        /* Les "dots" : petits carrés qui représentent les cartes posées (Bleu/Rouge) */
-        .dot { width: 10px; height: 15px; border: 1px solid #444; margin: 1px; display: inline-block; border-radius: 2px; }
-        .f-s { background: #3498db; border-color: #3498db; }
-        .f-c { background: #e74c3c; border-color: #e74c3c; }
-
-        /* Barre d'oxygène miniature sous le nom */
-        #oxy-mini { height: 5px; background: #3498db; width: 100%; transition: 0.5s; margin-top: 5px; }
-
-        /* Zone de rôle : encadré jaune pour les infos secrètes */
-        .role-ui { border: 2px solid yellow; color: yellow; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
-
-        /* Boutons standards (Lier, Voter, Choisir Joueur) */
-        .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 15px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; }
-
-        /* Boutons de cartes (Décrets) : plus larges et colorés selon le type */
-        .card { display: block; padding: 20px; margin: 10px auto; width: 90%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.1em; }
-        .S { background: #3498db; } /* Carte Bleue */
-        .C { background: #e74c3c; } /* Carte Rouge */
-        .F { background: #7f8c8d; } /* Carte Grise */
-
-      
-        .hidden { display: none; } /* Pour cacher les écrans non utilisés */
-        input { background: #111; color: #2ecc71; border: 1px solid #2ecc71; padding: 15px; width: 85%; text-align: center; margin-bottom: 10px; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Joueur</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { background: #000; color: #2ecc71; font-family: monospace; padding: 10px; text-align: center; margin: 0; overflow-x: hidden; }
+        .header-ui { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; font-size: 0.8em; }
+        .mini-board { display: flex; justify-content: space-around; background: #111; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 0.7em; }
+        .dot { width: 10px; height: 15px; border: 1px solid #444; margin: 1px; display: inline-block; border-radius: 2px; }
+        .f-s { background: #3498db; border-color: #3498db; }
+        .f-c { background: #e74c3c; border-color: #e74c3c; }
+        #oxy-mini { height: 5px; background: #3498db; width: 100%; transition: 0.5s; margin-top: 5px; }
+        .role-ui { border: 2px solid yellow; color: yellow; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+        .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 15px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; }
+        .card { display: block; padding: 20px; margin: 10px auto; width: 90%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.1em; }
+        .S { background: #3498db; } .C { background: #e74c3c; } .F { background: #7f8c8d; }
+        .hidden { display: none; }
+        input { background: #111; color: #2ecc71; border: 1px solid #2ecc71; padding: 15px; width: 85%; text-align: center; margin-bottom: 10px; }
+    </style>
 </head>
 <body>
-    <div id="setup">
-        <h2>TERMINAL BUNKER</h2>
-        <input type="text" id="p-name" placeholder="NOM">
-        <input type="text" id="r-code" placeholder="CODE CONSOLE">
-        <button class="btn" onclick="connect()" style="background:#2ecc71; color:#000;">LIER LE TERMINAL</button>
-    </div>
+    <div id="setup">
+        <h2>TERMINAL BUNKER</h2>
+        <input type="text" id="p-name" placeholder="NOM">
+        <input type="text" id="r-code" placeholder="CODE CONSOLE">
+        <button class="btn" onclick="connect()" style="background:#2ecc71; color:#000;">LIER LE TERMINAL</button>
+    </div>
 
-    <div id="game" class="hidden">
-        <div class="header-ui">
-            <span id="display-name" style="color: #f1c40f; font-weight:bold;">NOM</span>
-            <span id="oxy-text-mini">OXY: 3/3</span>
-        </div>
-        <div id="oxy-mini"></div>
-        <div class="mini-board">
-            <div>SURVIE: <div id="m-s"></div></div>
-            <div>CRISE: <div id="m-c"></div></div>
-        </div>
-        <div class="role-ui">
-            <div id="role-display" style="font-size: 1.2em;">RÔLE : ???</div>
-            <div id="metier-display" style="color:#3498db; font-size:0.8em;">MÉTIER : ???</div>
-        </div>
-        <div id="main-ui">Synchronisation...</div>
-    </div>
+    <div id="game" class="hidden">
+        <div class="header-ui">
+            <span id="display-name" style="color: #f1c40f; font-weight:bold;">NOM</span>
+            <span id="oxy-text-mini">OXY: 3/3</span>
+        </div>
+        <div id="oxy-mini"></div>
+        <div class="mini-board">
+            <div>SURVIE: <div id="m-s"></div></div>
+            <div>CRISE: <div id="m-c"></div></div>
+        </div>
+        <div class="role-ui">
+            <div id="role-display" style="font-size: 1.2em;">RÔLE : ???</div>
+            <div id="metier-display" style="color:#3498db; font-size:0.8em;">MÉTIER : ???</div>
+        </div>
+        <div id="main-ui">Synchronisation...</div>
+    </div>
 
-    <script>
-        // Initialisation de la connexion Peer
-        const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
-        let conn, myName, currentHand = [], allPlayers = [];
+    <script>
+        const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
+        let conn, myName, currentHand = [], allPlayers = [];
 
-        // FONCTION : Se connecter au PC
-        function connect() {
-            myName = document.getElementById('p-name').value;
-            const code = document.getElementById('r-code').value;
-            if(!myName || !code) return alert("Nom et code requis !");
+        function connect() {
+            myName = document.getElementById('p-name').value;
+            const code = document.getElementById('r-code').value;
+            if(!myName || !code) return alert("Nom et code requis !");
+            conn = peer.connect(code);
+            conn.on('open', () => {
+                conn.send({ type: 'JOIN', name: myName });
+                document.getElementById('setup').classList.add('hidden');
+                document.getElementById('game').classList.remove('hidden');
+                document.getElementById('display-name').innerText = myName.toUpperCase();
+            });
+            conn.on('data', handleData);
+        }
 
-            // On tente la liaison avec le code affiché sur le PC
-            conn = peer.connect(code);
-            conn.on('open', () => {
-                // Dès que c'est ouvert, on envoie notre nom au PC
-                conn.send({ type: 'JOIN', name: myName });
-                document.getElementById('setup').classList.add('hidden');
-                document.getElementById('game').classList.remove('hidden');
-                document.getElementById('display-name').innerText = myName.toUpperCase();
-            });
-            // Écouteur pour les messages venant du PC
-            conn.on('data', handleData);
-        }
+        function handleData(data) {
+            const ui = document.getElementById('main-ui');
+            if (data.type === 'INIT') {
+                allPlayers = data.all;
+                const rText = data.role === 'S' ? 'SURVIVANT' : (data.role === 'I' ? 'INFECTE' : 'ALPHA');
+                document.getElementById('role-display').innerText = "RÔLE : " + rText;
+                document.getElementById('metier-display').innerText = "MÉTIER : " + data.metier;
+                ui.innerHTML = "Système opérationnel.";
+            }
+            if (data.type === 'CLEAN_UI') { ui.innerHTML = "En attente..."; }
+            if (data.type === 'SYNC_STATE') { updateMiniBoard(data.state); }
+            if (data.type === 'YOUR_TURN') {
+                ui.innerHTML = "<h3>TOUR DU GARDIEN</h3>";
+                allPlayers.forEach(p => { if(p !== myName) ui.innerHTML += `<button class="btn" onclick="sendS('${p}')">${p}</button>`; });
+            }
+            if (data.type === 'VOTE_START') {
+                ui.innerHTML = `<h3>VOTE CONSEIL</h3><p>${data.g} & ${data.s}</p>`;
+                ui.innerHTML += `<button class="btn" style="background:#2ecc71; color:black" onclick="sendV('OUI')">OUI</button>`;
+                ui.innerHTML += `<button class="btn" style="background:#e74c3c; color:black" onclick="sendV('NON')">NON</button>`;
+            }
+            if (data.type === 'GARDIEN_PICK') {
+                currentHand = data.cards;
+                ui.innerHTML = "<h3>LÉGISLATION : GARDIEN</h3>";
+                currentHand.forEach((c, i) => {
+                    const label = c === 'S' ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
+                    ui.innerHTML += `<button class="card ${c}" onclick="gDiscard(${i})">${label}</button>`;
+                });
+            }
+            if (data.type === 'SENTINELLE_PICK') {
+                currentHand = data.cards;
+                ui.innerHTML = "<h3>LÉGISLATION : SENTINELLE</h3>";
+                currentHand.forEach((c, i) => {
+                    const label = c === 'S' ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
+                    ui.innerHTML += `<button class="card ${c}" onclick="sChoice(${i})">${label}</button>`;
+                });
+            }
+            if (data.type === 'END_GAME') {
+                ui.innerHTML = `<div style="background:#111; padding:20px; border-radius:10px; margin-top:10px;">
+                    <h1 style="color:#f1c40f; margin:0;">FIN DE PARTIE</h1>
+                    <h2 style="color:#2ecc71; margin:10px 0;">VICTOIRE : ${data.team}</h2>
+                    <p style="color:#888;">${data.reason}</p>
+                </div>`;
+            }
+        }
 
-        // FONCTION CRITIQUE : Gère tout ce que le PC ordonne au téléphone
-        function handleData(data) {
-            const ui = document.getElementById('main-ui');
+        function updateMiniBoard(state) {
+            document.getElementById('oxy-mini').style.width = (state.oxy / 3 * 100) + "%";
+            document.getElementById('oxy-mini').style.background = state.oxy <= 1 ? "#e74c3c" : "#3498db";
+            document.getElementById('oxy-text-mini').innerText = `OXY: ${state.oxy}/3`;
+            let s = ""; for(let i=0; i<5; i++) s += `<div class="dot ${i < state.survie ? 'f-s' : ''}"></div>`;
+            document.getElementById('m-s').innerHTML = s;
+            let c = ""; for(let i=0; i<6; i++) c += `<div class="dot ${i < state.crise ? 'f-c' : ''}"></div>`;
+            document.getElementById('m-c').innerHTML = c;
+        }
 
-            // 1. Initialisation (Début de partie)
-            if (data.type === 'INIT') {
-                allPlayers = data.all;
-                const rText = data.role === 'S' ? 'SURVIVANT' : (data.role === 'I' ? 'INFECTE' : 'ALPHA');
-                document.getElementById('role-display').innerText = "RÔLE : " + rText;
-                document.getElementById('metier-display').innerText = "MÉTIER : " + data.metier;
-                ui.innerHTML = "Système opérationnel.";
-            }
-
-            // 2. Nettoyage (Entre les phases)
-            if (data.type === 'CLEAN_UI') { ui.innerHTML = "En attente..."; }
-
-            // 3. Mise à jour des points (Synchronisation constante avec le PC)
-            if (data.type === 'SYNC_STATE') { updateMiniBoard(data.state); }
-
-            // 4. Phase de sélection (Si on est le Gardien)
-            if (data.type === 'YOUR_TURN') {
-                ui.innerHTML = "<h3>TOUR DU GARDIEN</h3>";
-                // Création d'un bouton pour chaque joueur (sauf soi-même)
-                allPlayers.forEach(p => { if(p !== myName) ui.innerHTML += `<button class="btn" onclick="sendS('${p}')">${p}</button>`; });
-            }
-
-            // 5. Phase de Vote (Pour tout le monde)
-            if (data.type === 'VOTE_START') {
-                ui.innerHTML = `<h3>VOTE CONSEIL</h3><p>${data.g} & ${data.s}</p>`;
-                ui.innerHTML += `<button class="btn" style="background:#2ecc71; color:black" onclick="sendV('OUI')">OUI</button>`;
-                ui.innerHTML += `<button class="btn" style="background:#e74c3c; color:black" onclick="sendV('NON')">NON</button>`;
-            }
-
-            // 6. Choix du Gardien (3 cartes reçues, doit en jeter 1)
-            if (data.type === 'GARDIEN_PICK') {
-                currentHand = data.cards;
-                ui.innerHTML = "<h3>LÉGISLATION : GARDIEN</h3>";
-                currentHand.forEach((c, i) => {
-                    const label = c === 'S' ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
-                    ui.innerHTML += `<button class="card ${c}" onclick="gDiscard(${i})">${label}</button>`;
-                });
-            }
-
-            // 7. Choix de la Sentinelle (2 cartes reçues, doit en jouer 1)
-            if (data.type === 'SENTINELLE_PICK') {
-                currentHand = data.cards;
-                ui.innerHTML = "<h3>LÉGISLATION : SENTINELLE</h3>";
-                currentHand.forEach((c, i) => {
-                    const label = c === 'S' ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
-                    ui.innerHTML += `<button class="card ${c}" onclick="sChoice(${i})">${label}</button>`;
-                });
-            }
-
-            // 8. Écran de fin
-            if (data.type === 'END_GAME') {
-                ui.innerHTML = `<div style="background:#111; padding:20px; border-radius:10px; margin-top:10px;">
-                    <h1 style="color:#f1c40f; margin:0;">FIN DE PARTIE</h1>
-                    <h2 style="color:#2ecc71; margin:10px 0;">VICTOIRE : ${data.team}</h2>
-                    <p style="color:#888;">${data.reason}</p>
-                </div>`;
-            }
-        }
-
-        // FONCTION : Dessiner les points bleus/rouges sur le téléphone
-        function updateMiniBoard(state) {
-            document.getElementById('oxy-mini').style.width = (state.oxy / 3 * 100) + "%";
-            document.getElementById('oxy-mini').style.background = state.oxy <= 1 ? "#e74c3c" : "#3498db";
-            document.getElementById('oxy-text-mini').innerText = `OXY: ${state.oxy}/3`;
-
-            // On boucle pour créer les carrés bleus
-            let s = ""; for(let i=0; i<5; i++) s += `<div class="dot ${i < state.survie ? 'f-s' : ''}"></div>`;
-            document.getElementById('m-s').innerHTML = s;
-
-            // On boucle pour créer les carrés rouges (attention au nom 'crise' vs 'crisis')
-            let c = ""; for(let i=0; i<6; i++) c += `<div class="dot ${i < state.crise ? 'f-c' : ''}"></div>`;
-            document.getElementById('m-c').innerHTML = c;
-        }
-
-        // --- ACTIONS ENVOYÉES AU PC ---
-        function sendS(s) { conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: myName, sentinelleName: s }); }
-        function sendV(v) { document.getElementById('main-ui').innerHTML = "Vote transmis."; conn.send({ type: 'VOTE_DONE', choice: v }); }
-        function gDiscard(idx) { 
-            // Splice retire la carte choisie du tableau. On envoie les 2 autres au PC.
-            let cards = [...currentHand]; cards.splice(idx, 1);
-            document.getElementById('main-ui').innerHTML = "Transmission..."; 
-            conn.send({ type: 'DISCARD_DONE', remaining: cards }); 
-        }
-        function sChoice(idx) { 
-            const card = currentHand[idx];
-            document.getElementById('main-ui').innerHTML = "Décret promulgué !";
-            conn.send({ type: 'FINAL_CHOICE', card: card }); 
-        }
-    </script>
+        function sendS(s) { conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: myName, sentinelleName: s }); }
+        function sendV(v) { document.getElementById('main-ui').innerHTML = "Vote transmis."; conn.send({ type: 'VOTE_DONE', choice: v }); }
+        function gDiscard(idx) { 
+            let cards = [...currentHand]; cards.splice(idx, 1);
+            document.getElementById('main-ui').innerHTML = "Transmission..."; 
+            conn.send({ type: 'DISCARD_DONE', remaining: cards }); 
+        }
+        function sChoice(idx) { 
+            const card = currentHand[idx];
+            document.getElementById('main-ui').innerHTML = "Décret promulgué !";
+            conn.send({ type: 'FINAL_CHOICE', card: card }); 
+        }
+    </script>
 </body>
 </html>
