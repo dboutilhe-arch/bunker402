@@ -146,18 +146,25 @@
             players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
         }
 
-        function resolveVote() {
-            if(votes.oui > votes.non) {
-                if(state.crise >= 3 && players[curSIdx].role === 'A') {
-                    triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
-                    return;
-                }
-                state.oxy = 3;
-                players[curG].conn.send({ type: 'GARDIEN_PICK', cards: [deck.pop(), deck.pop(), deck.pop()] });
-            } else {
-                state.oxy--;
-                if(state.oxy <= 0) applyForced();
-                else { curG = (curG + 1) % players.length; nextTurn(); }
+      function resolveVote() {
+        if(votes.oui > votes.non) {
+            document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ : Le Gardien choisit le décret à défausser";
+            document.getElementById('vote-summary').style.color = "#2ecc71"; // Optionnel : mettre en vert
+        
+            if(state.crise >= 3 && players[curSIdx].role === 'A') {
+                triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
+                return;
+            }
+            state.oxy = 3;
+            players[curG].conn.send({ type: 'GARDIEN_PICK', cards: [deck.pop(), deck.pop(), deck.pop()] });
+        } else {
+            // Si le vote échoue, on peut aussi marquer :
+            document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
+            document.getElementById('vote-summary').style.color = "#e74c3c"; // Optionnel : mettre en rouge
+        
+            state.oxy--;
+            if(state.oxy <= 0) applyForced();
+            else { curG = (curG + 1) % players.length; nextTurn(); }
             }
             syncTerminals(); render();
         }
