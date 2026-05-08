@@ -42,7 +42,8 @@
 <body>
     <div id="setup">
         <h2>TERMINAL BUNKER</h2>
-        <input type="text" id="p-name" placeholder="NOM">
+        <!-- Nom du joueur limité à 12 caractères maximum -->
+        <input type="text" id="p-name" placeholder="NOM (MAX 12)" maxlength="12">
         <input type="text" id="r-code" placeholder="CODE CONSOLE">
         <button class="btn" onclick="connect()" style="background:#2ecc71; color:#000;">LIER LE TERMINAL</button>
     </div>
@@ -71,8 +72,12 @@
 
         // FONCTION : Se connecter au PC
         function connect() {
-            myName = document.getElementById('p-name').value;
+            myName = document.getElementById('p-name').value.trim(); // .trim() enlève les espaces inutiles
             const code = document.getElementById('r-code').value;
+            // Le pseudo doit faire plus de 2 caractères
+            if(myName.length < 2) {
+                return alert("Ton nom est trop court ! (Minimum 2 caractères)");
+            }
             if(!myName || !code) return alert("Nom et code requis !");
 
             // On tente la liaison avec le code affiché sur le PC
