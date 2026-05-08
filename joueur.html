@@ -184,7 +184,7 @@
 
         // Envoi du vote
         function sendV(v) { 
-            document.getElementById('main-ui').innerHTML = "Vous avez voté " + v + "..."; 
+            document.getElementById('main-ui').innerHTML = "Vote transmis."; 
             // On envoie le type, le choix ET le nom du joueur
             conn.send({ type: 'VOTE_DONE', choice: v, playerName: myName }); 
         }
