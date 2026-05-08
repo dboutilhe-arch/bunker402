@@ -294,7 +294,8 @@
 
         // Nouveau tour
         function nextTurn() {
-            votes = { oui: 0, non: 0, total: 0 };   // Réinitialisation des votes
+            votes = { oui: 0, non: 0, total: 0, list: [] }; // On vide aussi la liste des noms
+            document.getElementById('vote-details').innerHTML = ""; // On efface les étiquettes de l'écran
             
             //On affiche qui est le Gardien sur l'écran central
             document.getElementById('gov-display').style.display = 'block';
