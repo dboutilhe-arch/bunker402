@@ -192,13 +192,18 @@
 
         // Affichage du Gouvernement proposé
         function showGov(g, s) {
+            // On affiche le bloc du conseil (au cas où il était caché)
             document.getElementById('gov-display').style.display = 'block';
+            
+            // On met à jour les noms des deux membres
             document.getElementById('g-name').innerText = g; 
             document.getElementById('s-name').innerText = s;
-            // On remet le texte pour le vote
-            document.getElementById('vote-summary').innerText = "Attente des votes...";
-            document.getElementById('vote-summary').style.color = "#e0e0e0"; 
-            // Lancement du vote        
+            
+            // Changement du message principal
+            document.getElementById('vote-summary').innerText = "SCRUTIN EN COURS : Approuvez-vous ce conseil ?";
+            document.getElementById('vote-summary').style.color = "#f1c40f"; // On passe en jaune pour attirer l'attention
+        
+            // On lance le signal de vote aux téléphones
             players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
         }
 
