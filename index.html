@@ -83,6 +83,7 @@
         let votes = { oui: 0, non: 0, total: 0, list: [] };
         let state = { survie: 0, crise: 0, oxy: 3, gameOver: false, suffrage: "Aucun" };
         let isProcessingAction = false;
+        let lastGov = { g: null, s: null }; // Stocke les noms des anciens dirigeants
 
         peer.on('open', id => document.getElementById('display-id').innerText = id);
         
@@ -148,7 +149,7 @@
                     //Empêche de poser 2 cartes d'un coup
                     isProcessingAction = true;
                     // Appel fonction qui pose la carte sur le plateau
-                    applyDecree(data.card);
+                    applyDecret(data.card);
                 }
             });
         });
@@ -271,11 +272,11 @@
         function applyForced() {
             // Tirage de carte à appliqué, si Suffrage => tirer une nouvelle carte
             let card = deck.pop(); while(card === 'F') card = deck.pop();
-            applyDecree(card); state.oxy = 3;
+            applyDecret(card); state.oxy = 3;
         }
         
         // Application du décret choisi par la Sentinelle
-        function applyDecree(type) {
+        function applyDecret(type) {
             if(type === 'S') state.survie++;                // Ajout décret bleu
             else if(type === 'C') state.crise++;            // Ajout décret rouge
             else if(type === 'F') state.suffrage = "Actif"; // Ajout décret gris
@@ -284,6 +285,11 @@
             if(state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
             else if(state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
             else {
+                // On mémorise le gouvernement qui vient de finir
+                lastGov = { 
+                    g: players[curG].name, 
+                    s: players[curSIdx].name 
+                };
                 // Nouveau Gardien
                 curG = (curG + 1) % players.length;
                 // Nouveau tour de jeu
@@ -303,18 +309,27 @@
             document.getElementById('vote-summary').style.color = "#3498db";
             document.getElementById('g-name').innerText = players[curG].name;
             document.getElementById('s-name').innerText = "?"; // La sentinelle n'est pas encore connue
+  
             // Nettoyage écran joueur
             players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
             
-            // On prévient tous les joueurs que le Gardien réfléchit (sauf le Gardien lui-même)
+            // On enlève : Soi-même (le Gardien) + l'Ancien Gardien + l'Ancienne Sentinelle
+            let eligiblePlayers = players
+                .map(p => p.name)
+                .filter(name => name !== players[curG].name && name !== lastGov.g && name !== lastGov.s);
+        
+            // On prévient les autres
             players.forEach((p, index) => {
                 if(index !== curG) {
                     p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[curG].name });
                 }
             });
-
-            // Donne la main au nouveau Gardien
-            players[curG].conn.send({ type: 'YOUR_TURN' });
+        
+            // On envoie la liste filtrée au Gardien
+            players[curG].conn.send({ 
+                type: 'YOUR_TURN', 
+                eligible: eligiblePlayers // On envoie uniquement les noms autorisés
+            });
             syncTerminals(); render();
         }
 
