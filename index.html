@@ -42,6 +42,23 @@
             box-shadow: 0 0 10px rgba(46, 204, 113, 0.2); 
             animation: fadeIn 0.5s ease-out forwards;
         }
+
+        /* État par défaut des étiquettes */
+        .player-tag {
+            background: #333;
+            color: #2ecc71;
+            padding: 10px 20px;
+            border: 1px solid #2ecc71;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease; /* Pour une transition douce des couleurs */
+        }
+        
+        /* Coloration des étiquettes */
+        .is-gardien { background: #f1c40f !important; color: #000 !important; border-color: #f1c40f !important; box-shadow: 0 0 15px #f1c40f; }
+        .is-sentinelle { background: #3498db !important; color: #fff !important; border-color: #3498db !important; box-shadow: 0 0 15px #3498db; }
+        .voted-oui { background: #2ecc71 !important; color: #000 !important; border-color: #FFF !important; }
+        .voted-non { background: #e74c3c !important; color: #fff !important; border-color: #FFF !important; }
     </style>
 </head>
 <body>
@@ -166,6 +183,8 @@
                     // Création étiquette
                     const nameTag = document.createElement('div');
                     nameTag.innerText = data.name.toUpperCase();
+                    nameTag.className = 'player-tag'; // Etiquette par défaut
+                    nameTag.id = `tag-${data.name.toLowerCase()}`; 
                     playerList.appendChild(nameTag);
 
                     document.getElementById('count').innerText = players.length;
@@ -242,6 +261,13 @@
             nextTurn();
         }
 
+        // Gestion couleur des étiquettes de nom
+        function resetTagColors() {
+            players.forEach(p => {
+                const tag = document.getElementById(`tag-${p.name.toLowerCase()}`);
+                if (tag) tag.className = 'player-tag';
+            });
+        }
         // Gestion de la barre d'oxygène
         function render() {
             const oxyBar = document.getElementById('oxy-level');
@@ -265,6 +291,10 @@
 
         // Affichage du Gouvernement proposé
         function showGov(g, s) {
+            // On garde le Gardien en jaune, et on met la Sentinelle en BLEU
+            const sTag = document.getElementById(`tag-${s.toLowerCase()}`);
+            if (sTag) sTag.classList.add('is-sentinelle');
+            
             // On affiche le bloc du conseil (au cas où il était caché)
             document.getElementById('gov-display').style.display = 'block';
             
@@ -282,24 +312,16 @@
 
         // Résolution du vote
         function resolveVote() {
-            const detailsZone = document.getElementById('vote-details');
-            detailsZone.innerHTML = ""; // On vide la zone précédente
-
-            // On crée les étiquettes pour chaque vote
+            // Coloration des étiquettes en fonction du vote
             votes.list.forEach(v => {
-                const tag = document.createElement('div');
-                tag.innerText = v.name.toUpperCase();
-                tag.style.cssText = `
-                    padding: 5px 15px; 
-                    border-radius: 5px; 
-                    font-weight: bold; 
-                    font-size: 0.9em;
-                    color: white;
-                    animation: fadeIn 0.5s ease-out;
-                    background: ${v.choice === 'OUI' ? '#2ecc71' : '#e74c3c'};
-                `;
-                detailsZone.appendChild(tag);
+                const tag = document.getElementById(`tag-${v.name.toLowerCase()}`);
+                if (tag) {
+                    // On retire l'état Gardien/Sentinelle pour afficher le vote
+                    tag.classList.remove('is-gardien', 'is-sentinelle'); 
+                    tag.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non');
+                }
             });
+
             // Majorité de OUI
             if(votes.oui > votes.non) {
                 // Phase de législation
@@ -377,6 +399,12 @@
 
         // Nouveau tour
         function nextTurn() {
+            resetTagColors(); // On remet tout par défaut au début du tour
+
+            // On colorie le Gardien actuel en JAUNE
+            const gTag = document.getElementById(`tag-${players[curG].name.toLowerCase()}`);
+            if (gTag) gTag.classList.add('is-gardien');
+            
             votes = { oui: 0, non: 0, total: 0, list: [] }; // On vide aussi la liste des noms
             document.getElementById('vote-details').innerHTML = ""; // On efface les étiquettes de l'écran
 
