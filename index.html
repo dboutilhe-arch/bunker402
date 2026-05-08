@@ -51,8 +51,11 @@
             border: 1px solid #2ecc71;
             border-radius: 5px;
             font-weight: bold;
-            min-width: 100px; /* pour que les tags aient tous une taille similaire */
-            line-height: 1.2;  /* Pour que les deux lignes soient proches */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 120px; /* pour que les tags aient tous une taille similaire */
+            line-height: 1.1;  /* Pour que les deux lignes soient proches */
             transition: all 0.3s ease;
         }
         
@@ -186,19 +189,20 @@
                     const activeList = document.getElementById('active-player-list');
                     // Création étiquette
                     const createTag = () => {
-                            const nameTag = document.createElement('div');
-                            nameTag.innerText = data.name.toUpperCase();
-                            nameTag.className = 'player-tag';
-                            nameTag.id = `tag-${data.name.toLowerCase()}`;
-                            return nameTag;
-                        };
+                        const nameTag = document.createElement('div');
+                        nameTag.className = 'player-tag';
+                        nameTag.id = `tag-${data.name.toLowerCase()}`;
+                        // Structure : NOM en haut, METIER (vide pour l'instant) en bas
+                        nameTag.innerHTML = `<div class="p-name">${data.name.toUpperCase()}</div><div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal;"></div>`;
+                        return nameTag;
+                    };
                     
-                        lobbyList.appendChild(createTag()); // Pour le lobby
-                        activeList.appendChild(createTag()); // Pour la partie en cours (caché pour l'instant)
-                    
-                        document.getElementById('count').innerText = players.length;
-                        if(players.length >= 5) document.getElementById('start-btn').disabled = false;
-                        conn.send({ type: 'CONNECTED' });
+                    lobbyList.appendChild(createTag()); // Pour le lobby
+                    activeList.appendChild(createTag()); // Pour la partie en cours (caché pour l'instant)
+                
+                    document.getElementById('count').innerText = players.length;
+                    if(players.length >= 5) document.getElementById('start-btn').disabled = false;
+                    conn.send({ type: 'CONNECTED' });
                 }
 
                 // Le Gardien a choisi sa Sentinelle
@@ -248,37 +252,42 @@
 
         // Initialisation de la partie
         function initGame() {
-            // Création du deck => 29 Cartes dont 10 bleus, 15 rouges et 4 grises
+            // Création du deck
             deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
             // Création des rôles
             const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
             // Création des métiers
             const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
 
-            // Attribution d'un rôle et d'un métier à chaque joueur
+            // Attribution des rôles et métiers
             players.forEach((p, i) => {
                 p.role = roles[i] || 'S';
                 p.metier = metiers[i];
                 p.conn.send({ type: 'INIT', role: p.role, metier: p.metier, all: players.map(pl => pl.name) });
             });
             
-            // Une fois que tous les métiers sont attribués, on met à jour les étiquettes
+            // MISE À JOUR VISUELLE UNIQUE DES ÉTIQUETTES
             updateTagsWithJobs();
 
-            // Cache le lobby
+            // Affichage de la zone de jeu
             document.getElementById('setup-zone').style.display = 'none';
-            // Affiche le plateau de jeu
             document.getElementById('game-zone').style.display = 'block';
             nextTurn();
         }
 
         function updateTagsWithJobs() {
             players.forEach(p => {
-                const tag = document.getElementById(`tag-${p.name.toLowerCase()}`);
-                if (tag) {
-                    // On ajoute le métier en petit sous le nom
-                    tag.innerHTML = `${p.name.toUpperCase()}<br><span style="font-size: 0.6em; opacity: 0.8; font-weight: normal;">${p.metier}</span>`;
-                }
+                // On cible TOUTES les étiquettes (Lobby + Jeu) ayant cet ID
+                const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+                tags.forEach(tag => {
+                    // On injecte le nom et le métier proprement
+                    tag.innerHTML = `
+                        <div class="p-name">${p.name.toUpperCase()}</div>
+                        <div class="p-job" style="font-size: 0.65em; opacity: 0.8; font-weight: normal; margin-top: 2px;">
+                            ${p.metier}
+                        </div>
+                    `;
+                });
             });
         }
         
