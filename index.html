@@ -54,13 +54,10 @@
     <h1>BUNKER 402 - SYSTÈME CENTRAL</h1>
 
     <div id="setup-zone">
-        <div style="margin-bottom: 20px;">
-            <input type="text" id="custom-id" placeholder="CHOISIR CODE CONSOLE (ex: BUNKER-XYZ)" 
-                   style="padding: 10px; width: 250px; background: #000; color: #f1c40f; border: 1px solid #444;">
-            <button onclick="startServer()" style="padding: 10px; background: #444; color: white; cursor: pointer;">DÉMARRER</button>
-        </div>
-        
-        <div class="lobby-code" id="display-id" style="display:none"></div>
+        <div class="lobby-code" id="display-id">CONNEXION...</div>
+        <p>Joueurs connectés : <span id="count">0</span> / 10</p>
+        <div id="player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px auto; max-width: 600px;"></div>
+        <button onclick="initGame()" id="start-btn" disabled style="padding:15px 30px; background:#2ecc71; cursor:pointer; font-weight:bold; border-radius:10px;">INITIALISER LA PARTIE</button>
     </div>
 
     <div id="game-zone" style="display:none">
@@ -81,7 +78,7 @@
     </div>
 
     <script>
-        let peer = null; // On ne l'initialise pas tout de suite
+        const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
         let players = [], deck = [], curG = 0, curSIdx = -1;
         let votes = { oui: 0, non: 0, total: 0, list: [] };
         let state = { survie: 0, crise: 0, oxy: 3, gameOver: false, suffrage: "Aucun" };
@@ -89,35 +86,9 @@
         let lastSentinelle = null; // Sentinelle précédente
         let lastGardien = null;    // Gardien précédent
 
-        function startServer() {
-            const customId = document.getElementById('custom-id').value.trim();
-            if (!customId) return alert("Veuillez saisir un code !");
-                // On initialise Peer avec un code personnalisé
-                peer = new Peer(customId, { 
-                config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} 
-                })
-            peer.on('open', id => {
-            document.getElementById('display-id').innerText = "CODE CONSOLE : " + id;
-            document.getElementById('display-id').style.display = 'inline-block';
-            document.getElementById('custom-id').parentElement.style.display = 'none';
-            });
-    
-            peer.on('error', err => {
-                if (err.type === 'unavailable-id') {
-                    alert("Ce code est déjà utilisé par une autre console. Choisissez-en un autre !");
-                } else {
-                    alert("Erreur de connexion : " + err.type);
-                }
-            });
-    
-            // On déplace l'écouteur de connexion ici
-            peer.on('connection', conn => {
-                setupConnection(conn);
-            });
-        }
+        peer.on('open', id => document.getElementById('display-id').innerText = id);
         
-        // Pour plus de clarté, on isole la gestion des données reçues
-        function setupConnection(conn) {
+        peer.on('connection', conn => {
             conn.on('data', data => {
                 if (state.gameOver) return;
 
@@ -182,7 +153,7 @@
                     applyDecret(data.card);
                 }
             });
-        };
+        });
 
         // Initialisation de la partie
         function initGame() {
