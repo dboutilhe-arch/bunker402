@@ -110,9 +110,15 @@
 
             // Phase de sélection (Si on est le Gardien)
             if (data.type === 'YOUR_TURN') {
-                ui.innerHTML = "<h3>TOUR DU GARDIEN</h3>";
-                // Création d'un bouton pour chaque joueur (sauf soi-même)
-                allPlayers.forEach(p => { if(p !== myName) ui.innerHTML += `<button class="btn" onclick="SentinelleChoisie('${p}')">${p}</button>`; });
+                ui.innerHTML = "<h3>TOUR DU GARDIEN</h3><p>Désignez votre Sentinelle :</p>";
+                
+                // On utilise data.eligible (la liste filtrée envoyée par le PC)
+                data.eligible.forEach(name => {
+                    ui.innerHTML += `<button class="btn" onclick="sendS('${name}')">${name}</button>`;
+                });
+            
+                // Optionnel : un petit message si la liste est vide (peu probable)
+                if(data.eligible.length === 0) ui.innerHTML += "<p>Erreur : Aucun joueur éligible.</p>";
             }
 
             // Phase de Vote (Pour tout le monde)
