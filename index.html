@@ -324,17 +324,20 @@
             players.forEach(p => {
                 const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
                 tags.forEach(tag => {
-                    tag.className = 'player-tag'; // Enlève voted-oui/non
-                    tag.style.borderColor = "";   // Enlève les bordures de rôle
+                    // 1. On remet la classe de base (enlève le vert/rouge des votes)
+                    tag.className = 'player-tag'; 
+                    
+                    // 2. On retire les bordures de rôles (dorée/bleue)
+                    tag.style.borderColor = "";   
                     tag.style.borderWidth = "1px";
                     
-                    // On remet le nom PROPRE (sans l'étoile)
-                    const nameDiv = tag.querySelector('.p-name');
-                    if (nameDiv) nameDiv.innerText = p.name.toUpperCase();
-                    
-                    // On s'assure que le job est toujours là
-                    const jobDiv = tag.querySelector('.p-job');
-                    if (jobDiv) jobDiv.innerText = p.metier;
+                    // 3. IMPORTANT : On réinitialise le contenu HTML pour supprimer l'étoile
+                    tag.innerHTML = `
+                        <div class="p-name">${p.name.toUpperCase()}</div>
+                        <div class="p-job" style="font-size: 0.65em; opacity: 0.8; font-weight: normal; margin-top: 2px;">
+                            ${p.metier}
+                        </div>
+                    `;
                 });
             });
         }
@@ -464,7 +467,10 @@
 
         // Nouveau tour
         function nextTurn() {
-            // On s'assure que le NOUVEAU gardien est marqué
+            // --- NETTOYAGE SYSTÉMATIQUE AVANT DE COMMENCER ---
+            resetTagColors(); 
+
+            // On désigne le NOUVEAU gardien uniquement après le reset
             const tags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
             tags.forEach(tag => {
                 const nameDiv = tag.querySelector('.p-name');
@@ -480,11 +486,9 @@
             document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...";
             document.getElementById('vote-summary').style.color = "#3498db";
             
-            // Mise à jour visuelle du conseil en attente
+            // Mise à jour visuelle du conseil (Couleurs inversées selon ta demande)
             document.getElementById('g-name').innerText = players[curG].name;
-            document.getElementById('g-name').style.color = "#f1c40f"; 
             document.getElementById('s-name').innerText = "?";
-            document.getElementById('s-name').style.color = "#e0e0e0";
 
             players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
             players.forEach((p, index) => {
