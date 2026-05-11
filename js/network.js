@@ -27,6 +27,29 @@ function setupConnection(conn) {
     
             // Arrivée d'un joueur
             if (data.type === 'JOIN') {
+                const existingPlayer = players.find(p => p.name.toLowerCase() === data.name.toLowerCase());
+                if (existingPlayer) {
+                    // Si le joueur existe mais est déconnecté (connexion fermée)
+                    if (!existingPlayer.conn.open) {
+                        existingPlayer.conn = conn; // On remplace la connexion
+                        conn.send({ type: 'CONNECTED' });
+                        
+                        // Si la partie est déjà lancée, on lui renvoie ses infos de rôle !
+                        if (document.getElementById('game-zone').style.display === 'block') {
+                            conn.send({ 
+                                type: 'INIT', 
+                                role: existingPlayer.role, 
+                                metier: existingPlayer.metier, 
+                                all: players.map(pl => pl.name) 
+                                // Tu peux ajouter l'alpha ici aussi
+                            });
+                            syncTerminals(); // On met à jour ses points (Oxygène, etc.)
+                        }
+                        return;
+                    } else {
+                        return conn.send({ type: 'ERROR_NAME_TAKEN' });
+                    }
+                }
                 if (players.length >= 10) return conn.send({ type: 'ERROR_BUNKER_FULL' });
                 if (players.some(p => p.name.toLowerCase() === data.name.toLowerCase())) return conn.send({ type: 'ERROR_NAME_TAKEN' });
                 
