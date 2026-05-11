@@ -9,3 +9,6 @@ let state = { survie: 0, crise: 0, oxy: 3, gameOver: false, suffrage: "Aucun" };
 let isProcessingAction = false;
 let lastSentinelle = null;
 let lastGardien = null;
+let currentPhase = "DÉSIGNATION"; // "DÉSIGNATION", "VOTE", "LÉGISLATION_G", "LÉGISLATION_S"
+let currentProposedS = null;      // Nom de la sentinelle proposée
+let currentLegislativeCards = []; // Cartes envoyées au Gardien ou à la Sentinelle
