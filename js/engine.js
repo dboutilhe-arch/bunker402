@@ -128,3 +128,25 @@ function applyForced() {
     let card = deck.pop(); while(card === 'F') card = deck.pop();
     applyDecret(card); state.oxy = 3;
 }
+
+// Restoration de l'écran du joueur en cas de reconnexion
+function restorePlayerAction(player) {
+    // Si un vote est en cours
+    if (document.getElementById('vote-zone').style.display === 'block') {
+        player.conn.send({ type: 'VOTE_START' });
+    }
+    
+    // Si c'est le Gardien et qu'il doit choisir une Sentinelle
+    if (players[curG] === player && document.getElementById('sentinelle-select').style.display === 'block') {
+        player.conn.send({ type: 'CHOISIR_SENTINELLE', candidates: players.map(p => p.name) });
+    }
+
+    // Si c'est le Gardien/Sentinelle et qu'ils doivent choisir un décret
+    if (document.getElementById('decret-zone').style.display === 'block') {
+        // Ici il faudrait stocker les cartes proposées dans une variable globale 'currentCards'
+        // pour pouvoir les renvoyer si l'un des deux déco/reco.
+        if (players[curG] === player || players[curSIdx] === player) {
+             // player.conn.send({ type: 'PICK_DECRET', cards: state.currentCards });
+        }
+    }
+}
