@@ -29,15 +29,11 @@ function setupConnection(conn) {
             if (data.type === 'JOIN') {
                 let p = players.find(pl => pl.name.toLowerCase() === data.name.toLowerCase());
 
-                // CAS 1 : LE JOUEUR EXISTE DÉJÀ
+                // CAS 1 : LE JOUEUR EXISTE DÉJÀ (Tentative de reconnexion)
                 if (p) {
-                    // SÉCURITÉ : Si l'ancienne connexion est toujours ouverte ET que ce n'est pas 
-                    // un rafraîchissement forcé (data.reconnect), on refuse le doublon.
-                    if (p.conn && p.conn.open && !data.reconnect) {
-                        return conn.send({ type: 'ERROR_NAME_TAKEN' });
-                    }
-
-                    console.log(`Reconnexion de ${p.name}`);
+                    console.log(`Tentative de reconnexion de ${p.name}`);
+                    
+                    // On remplace l'ancienne connexion par la nouvelle
                     p.conn = conn; 
                     p.conn.send({ type: 'CONNECTED' });
 
@@ -52,27 +48,30 @@ function setupConnection(conn) {
                         syncTerminals();
                         restorePlayerAction(p);
                     }
-                    return; // Crucial : on ne recrée pas de tag HTML pour une reconnexion !
+                    return; // On s'arrête ici pour une reconnexion
                 }
 
                 // CAS 2 : NOUVEAU JOUEUR
+                // On vérifie la capacité max
                 if (players.length >= 10) {
                     return conn.send({ type: 'ERROR_BUNKER_FULL' });
                 }
 
+                // Tout est bon, on ajoute le joueur
                 players.push({ name: data.name, conn: conn });
                 
-                // On crée les étiquettes une seule fois ici
-                const nameTag = document.createElement('div');
-                nameTag.className = 'player-tag'; 
-                nameTag.id = `tag-${data.name.toLowerCase()}`;
-                nameTag.innerHTML = `<div class="p-name">${data.name.toUpperCase()}</div><div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal;"></div>`;
+                const createTag = () => {
+                    const nameTag = document.createElement('div');
+                    nameTag.className = 'player-tag'; 
+                    nameTag.id = `tag-${data.name.toLowerCase()}`;
+                    nameTag.innerHTML = `<div class="p-name">${data.name.toUpperCase()}</div><div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal;"></div>`;
+                    return nameTag;
+                };
                 
-                // On ajoute le tag au lobby et à la zone de jeu
-                document.getElementById('player-list').appendChild(nameTag);
-                document.getElementById('active-player-list').appendChild(nameTag.cloneNode(true));
-                
+                document.getElementById('player-list').appendChild(createTag());
+                document.getElementById('active-player-list').appendChild(createTag());
                 document.getElementById('count').innerText = players.length;
+                
                 if(players.length >= 5) document.getElementById('start-btn').disabled = false;
                 
                 conn.send({ type: 'CONNECTED' });
