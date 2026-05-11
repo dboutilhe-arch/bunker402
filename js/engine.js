@@ -18,7 +18,6 @@ function initGame() {
 
 // Gestion du changement de tour
 function nextTurn() {
-    resetTagColors(); 
 
     const tags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
     tags.forEach(tag => {
