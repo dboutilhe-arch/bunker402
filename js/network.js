@@ -98,9 +98,12 @@ function setupConnection(conn) {
     
             // Gardien défausse
             if (data.type === 'DISCARD_DONE') {
+                currentPhase = "LÉGISLATION_S"; // On change la phase
+                currentLegislativeCards = data.remaining; // On stocke les 2 cartes restantes
+                
                 document.getElementById('vote-summary').innerText = "DÉCRET REÇU : La Sentinelle choisit le décret final";
                 players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
-                players[curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: data.remaining });
+                players[curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: currentLegislativeCards });
             }
     
             // Choix final de la Sentinelle
