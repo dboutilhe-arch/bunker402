@@ -21,62 +21,93 @@ function startServer() {
 
 // Configuration d'une nouvelle connexion joueur
 function setupConnection(conn) {
-    conn.on('data', data => {
-        if (state.gameOver) return;
-
-        // Arrivée d'un joueur
-        if (data.type === 'JOIN') {
-            if (players.length >= 10) return conn.send({ type: 'ERROR_BUNKER_FULL' });
-            if (players.some(p => p.name.toLowerCase() === data.name.toLowerCase())) return conn.send({ type: 'ERROR_NAME_TAKEN' });
-            
-            players.push({ name: data.name, conn: conn });
-            
-            const createTag = () => {
-                const nameTag = document.createElement('div');
-                nameTag.className = 'player-tag'; nameTag.id = `tag-${data.name.toLowerCase()}`;
-                nameTag.innerHTML = `<div class="p-name">${data.name.toUpperCase()}</div><div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal;"></div>`;
-                return nameTag;
-            };
-            
-            document.getElementById('player-list').appendChild(createTag());
-            document.getElementById('active-player-list').appendChild(createTag());
-            document.getElementById('count').innerText = players.length;
-            if(players.length >= 5) document.getElementById('start-btn').disabled = false;
-            conn.send({ type: 'CONNECTED' });
-        }
-
-        // Gardien choisit sa Sentinelle
-        if (data.type === 'SENTINELLE_CHOISIE') {
-            resetTagColors();
-            const gTags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
-            gTags.forEach(tag => {
-                tag.querySelector('.p-name').innerHTML = `⭐ ${players[curG].name.toUpperCase()}`;
-                tag.style.borderColor = "#f1c40f"; tag.style.borderWidth = "2px";
-            });
-            curSIdx = players.findIndex(p => p.name === data.sentinelleName);
-            showGov(data.gardienName, data.sentinelleName);
-        }
-
-        // Réception d'un vote
-        if (data.type === 'VOTE_DONE') {
-            votes[data.choice.toLowerCase()]++; votes.total++;
-            votes.list.push({ name: data.playerName, choice: data.choice });
-            if(votes.total === players.length) resolveVote();
-        }
-
-        // Gardien défausse
-        if (data.type === 'DISCARD_DONE') {
-            document.getElementById('vote-summary').innerText = "DÉCRET REÇU : La Sentinelle choisit le décret final";
-            players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
-            players[curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: data.remaining });
-        }
-
-        // Choix final de la Sentinelle
-        if (data.type === 'FINAL_CHOICE' && !isProcessingAction) {
-            isProcessingAction = true;
-            applyDecret(data.card);
-        }
+    conn.on('open', () => {
+        conn.on('data', data => {
+            if (state.gameOver) return;
+    
+            // Arrivée d'un joueur
+            if (data.type === 'JOIN') {
+                if (players.length >= 10) return conn.send({ type: 'ERROR_BUNKER_FULL' });
+                if (players.some(p => p.name.toLowerCase() === data.name.toLowerCase())) return conn.send({ type: 'ERROR_NAME_TAKEN' });
+                
+                players.push({ name: data.name, conn: conn });
+                
+                const createTag = () => {
+                    const nameTag = document.createElement('div');
+                    nameTag.className = 'player-tag'; nameTag.id = `tag-${data.name.toLowerCase()}`;
+                    nameTag.innerHTML = `<div class="p-name">${data.name.toUpperCase()}</div><div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal;"></div>`;
+                    return nameTag;
+                };
+                
+                document.getElementById('player-list').appendChild(createTag());
+                document.getElementById('active-player-list').appendChild(createTag());
+                document.getElementById('count').innerText = players.length;
+                if(players.length >= 5) document.getElementById('start-btn').disabled = false;
+                conn.send({ type: 'CONNECTED' });
+            }
+    
+            // Gardien choisit sa Sentinelle
+            if (data.type === 'SENTINELLE_CHOISIE') {
+                resetTagColors();
+                const gTags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
+                gTags.forEach(tag => {
+                    tag.querySelector('.p-name').innerHTML = `⭐ ${players[curG].name.toUpperCase()}`;
+                    tag.style.borderColor = "#f1c40f"; tag.style.borderWidth = "2px";
+                });
+                curSIdx = players.findIndex(p => p.name === data.sentinelleName);
+                showGov(data.gardienName, data.sentinelleName);
+            }
+    
+            // Réception d'un vote
+            if (data.type === 'VOTE_DONE') {
+                votes[data.choice.toLowerCase()]++; votes.total++;
+                votes.list.push({ name: data.playerName, choice: data.choice });
+                if(votes.total === players.length) resolveVote();
+            }
+    
+            // Gardien défausse
+            if (data.type === 'DISCARD_DONE') {
+                document.getElementById('vote-summary').innerText = "DÉCRET REÇU : La Sentinelle choisit le décret final";
+                players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
+                players[curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: data.remaining });
+            }
+    
+            // Choix final de la Sentinelle
+            if (data.type === 'FINAL_CHOICE' && !isProcessingAction) {
+                isProcessingAction = true;
+                applyDecret(data.card);
+            }
+        });
+        // GESTION DE LA DÉCONNEXION
+        conn.on('close', () => {
+            handlePlayerDisconnect(conn);
+        });
     });
+}
+
+function handlePlayerDisconnect(closedConn) {
+    // 1. On trouve le joueur qui s'est déconnecté
+    const index = players.findIndex(p => p.conn === closedConn);
+    if (index === -1) return;
+
+    const player = players[index];
+    console.log(`Déconnexion détectée : ${player.name}`);
+
+    // 2. Si la partie n'a pas commencé, on libère le slot
+    if (document.getElementById('game-zone').style.display === 'none') {
+        players.splice(index, 1); // On le retire du tableau
+        
+        // On met à jour le lobby visuellement
+        const tag = document.getElementById(`tag-${player.name.toLowerCase()}`);
+        if (tag) tag.remove();
+        
+        document.getElementById('count').innerText = players.length;
+        if(players.length < 5) document.getElementById('start-btn').disabled = true;
+    } else {
+        // Si la partie est en cours, on pourrait marquer le joueur comme "DÉCONNECTÉ" 
+        // ou simplement logger l'erreur pour l'instant.
+        console.warn("Joueur déconnecté en pleine partie.");
+    }
 }
 
 // Synchronisation des barres d'oxygène des joueurs
