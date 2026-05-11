@@ -27,26 +27,34 @@ function setupConnection(conn) {
     
             // Arrivée d'un joueur
             if (data.type === 'JOIN') {
-                const existingPlayer = players.find(p => p.name.toLowerCase() === data.name.toLowerCase());
-                if (existingPlayer) {
-                    // Si le joueur existe mais est déconnecté (connexion fermée)
-                    if (!existingPlayer.conn.open) {
-                        existingPlayer.conn = conn; // On remplace la connexion
-                        conn.send({ type: 'CONNECTED' });
-                        
-                        // Si la partie est déjà lancée, on lui renvoie ses infos de rôle !
-                        if (document.getElementById('game-zone').style.display === 'block') {
-                            conn.send({ 
-                                type: 'INIT', 
-                                role: existingPlayer.role, 
-                                metier: existingPlayer.metier, 
-                                all: players.map(pl => pl.name) 
-                                // Tu peux ajouter l'alpha ici aussi
-                            });
-                            syncTerminals(); // On met à jour ses points (Oxygène, etc.)
-                        }
-                        return;
-                    } else {
+                let p = players.find(pl => pl.name.toLowerCase() === data.name.toLowerCase());
+    
+                if (p) {
+                    // Si c'est une reconnexion, on écrase l'ancienne connexion sans poser de questions
+                    console.log(`Reconnexion de ${p.name}`);
+                    p.conn = conn; 
+                    
+                    // On lui confirme qu'il est connecté
+                    p.conn.send({ type: 'CONNECTED' });
+            
+                    if (document.getElementById('game-zone').style.display === 'block') {
+                        // 1. On renvoie les infos de base
+                        p.conn.send({ 
+                            type: 'INIT', 
+                            role: p.role, 
+                            metier: p.metier, 
+                            all: players.map(pl => pl.name),
+                            alphaName: (p.role === 'I' || p.role === 'A') ? players.find(a => a.role === 'A').name : null
+                        });
+            
+                        // 2. IMPORTANT : On synchronise l'état visuel (Oxygène, compteurs)
+                        syncTerminals();
+            
+                        // 3. On lui renvoie l'action en cours
+                        restorePlayerAction(p);
+                    }
+                    return;
+                } else {
                         return conn.send({ type: 'ERROR_NAME_TAKEN' });
                     }
                 }
