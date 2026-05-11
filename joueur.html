@@ -267,6 +267,7 @@
             
             // Écran de fin
             if (data.type === 'END_GAME') {
+                sessionStorage.clear();
                 ui.innerHTML = `<div style="background:#111; padding:20px; border-radius:10px; margin-top:10px;">
                     <h1 style="color:#f1c40f; margin:0;">FIN DE PARTIE</h1>
                     <h2 style="color:#2ecc71; margin:10px 0;">VICTOIRE : ${data.team}</h2>
