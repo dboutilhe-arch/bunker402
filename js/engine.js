@@ -73,7 +73,6 @@ function resolveVote() {
     } else {
         document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
         document.getElementById('vote-summary').style.color = "#e74c3c";
-        resetTagColors();
         state.oxy--;
         if(state.oxy <= 0) applyForced();
         else { 
