@@ -85,17 +85,16 @@ function resolveVote() {
     });
 
     if(votes.oui > votes.non) {
-        currentPhase = "LÉGISLATION_G";
-        currentLegislativeCards = [deck.pop(), deck.pop(), deck.pop()]; // On stocke les cartes
-        players[curG].conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards });
-        document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ";
+        currentPhase = "LÉGISLATION_G"; // Stockage phase en cours
+        currentLegislativeCards = [deck.pop(), deck.pop(), deck.pop()]; // On stocke les cartes piochées
+        players[curG].conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards }); // Envoie des cartes piochées au Gardien
+        document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ"; // Affichage principal que le vote est accepté
         document.getElementById('vote-summary').style.color = "#2ecc71";
-        players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
+        players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' })); // Affichage pour chaque joueur en attente
         
-        if(state.crise >= 3 && players[curSIdx].role === 'A') return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
+        if(state.crise >= 3 && players[curSIdx].role === 'A') return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle."); // Condition de victoire
         
         state.oxy = 3;
-        players[curG].conn.send({ type: 'GARDIEN_PICK', cards: [deck.pop(), deck.pop(), deck.pop()] });
     } else {
         document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
         document.getElementById('vote-summary').style.color = "#e74c3c";
