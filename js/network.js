@@ -28,17 +28,16 @@ function setupConnection(conn) {
             // Arrivée d'un joueur
             if (data.type === 'JOIN') {
                 let p = players.find(pl => pl.name.toLowerCase() === data.name.toLowerCase());
-    
+
+                // CAS 1 : LE JOUEUR EXISTE DÉJÀ (Tentative de reconnexion)
                 if (p) {
-                    // Si c'est une reconnexion, on écrase l'ancienne connexion sans poser de questions
-                    console.log(`Reconnexion de ${p.name}`);
-                    p.conn = conn; 
+                    console.log(`Tentative de reconnexion de ${p.name}`);
                     
-                    // On lui confirme qu'il est connecté
+                    // On remplace l'ancienne connexion par la nouvelle
+                    p.conn = conn; 
                     p.conn.send({ type: 'CONNECTED' });
-            
+
                     if (document.getElementById('game-zone').style.display === 'block') {
-                        // 1. On renvoie les infos de base
                         p.conn.send({ 
                             type: 'INIT', 
                             role: p.role, 
@@ -46,25 +45,25 @@ function setupConnection(conn) {
                             all: players.map(pl => pl.name),
                             alphaName: (p.role === 'I' || p.role === 'A') ? players.find(a => a.role === 'A').name : null
                         });
-            
-                        // 2. IMPORTANT : On synchronise l'état visuel (Oxygène, compteurs)
                         syncTerminals();
-            
-                        // 3. On lui renvoie l'action en cours
                         restorePlayerAction(p);
                     }
-                    return;
-                } else {
-                        return conn.send({ type: 'ERROR_NAME_TAKEN' });
-                        }
-                if (players.length >= 10) return conn.send({ type: 'ERROR_BUNKER_FULL' });
-                if (players.some(p => p.name.toLowerCase() === data.name.toLowerCase())) return conn.send({ type: 'ERROR_NAME_TAKEN' });
-                
+                    return; // On s'arrête ici pour une reconnexion
+                }
+
+                // CAS 2 : NOUVEAU JOUEUR
+                // On vérifie la capacité max
+                if (players.length >= 10) {
+                    return conn.send({ type: 'ERROR_BUNKER_FULL' });
+                }
+
+                // Tout est bon, on ajoute le joueur
                 players.push({ name: data.name, conn: conn });
                 
                 const createTag = () => {
                     const nameTag = document.createElement('div');
-                    nameTag.className = 'player-tag'; nameTag.id = `tag-${data.name.toLowerCase()}`;
+                    nameTag.className = 'player-tag'; 
+                    nameTag.id = `tag-${data.name.toLowerCase()}`;
                     nameTag.innerHTML = `<div class="p-name">${data.name.toUpperCase()}</div><div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal;"></div>`;
                     return nameTag;
                 };
@@ -72,7 +71,9 @@ function setupConnection(conn) {
                 document.getElementById('player-list').appendChild(createTag());
                 document.getElementById('active-player-list').appendChild(createTag());
                 document.getElementById('count').innerText = players.length;
+                
                 if(players.length >= 5) document.getElementById('start-btn').disabled = false;
+                
                 conn.send({ type: 'CONNECTED' });
             }
     
