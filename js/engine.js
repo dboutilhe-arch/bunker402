@@ -41,6 +41,8 @@ async function initGame() {
 // Gestion du changement de tour
 function nextTurn() {
 
+    currentPhase = "DÉSIGNATION"; // Mise à jour phase
+    
     const tags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
     tags.forEach(tag => {
         const nameDiv = tag.querySelector('.p-name');
@@ -83,6 +85,9 @@ function resolveVote() {
     });
 
     if(votes.oui > votes.non) {
+        currentPhase = "LÉGISLATION_G";
+        currentLegislativeCards = [deck.pop(), deck.pop(), deck.pop()]; // On stocke les cartes
+        players[curG].conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards });
         document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ";
         document.getElementById('vote-summary').style.color = "#2ecc71";
         players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
@@ -131,22 +136,42 @@ function applyForced() {
 
 // Restoration de l'écran du joueur en cas de reconnexion
 function restorePlayerAction(player) {
-    // Si un vote est en cours
-    if (document.getElementById('vote-zone').style.display === 'block') {
-        player.conn.send({ type: 'VOTE_START' });
-    }
-    
-    // Si c'est le Gardien et qu'il doit choisir une Sentinelle
-    if (players[curG] === player && document.getElementById('sentinelle-select').style.display === 'block') {
-        player.conn.send({ type: 'CHOISIR_SENTINELLE', candidates: players.map(p => p.name) });
-    }
+    const isGardien = (players[curG] === player);
+    const isSentinelle = (curSIdx !== -1 && players[curSIdx] === player);
 
-    // Si c'est le Gardien/Sentinelle et qu'ils doivent choisir un décret
-    if (document.getElementById('decret-zone').style.display === 'block') {
-        // Ici il faudrait stocker les cartes proposées dans une variable globale 'currentCards'
-        // pour pouvoir les renvoyer si l'un des deux déco/reco.
-        if (players[curG] === player || players[curSIdx] === player) {
-             // player.conn.send({ type: 'PICK_DECRET', cards: state.currentCards });
-        }
+    switch(currentPhase) {
+        case "VOTE":
+            player.conn.send({ type: 'VOTE_START', g: players[curG].name, s: currentProposedS });
+            break;
+        
+        case "LÉGISLATION_G":
+            if (isGardien) {
+                player.conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards });
+            } else {
+                player.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
+            }
+            break;
+
+        case "LÉGISLATION_S":
+            if (isSentinelle) {
+                player.conn.send({ type: 'SENTINELLE_PICK', cards: currentLegislativeCards });
+            } else {
+                player.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' });
+            }
+            break;
+        
+        default: // DÉSIGNATION
+            if (isGardien) {
+                // On recalcule les éligibles pour lui renvoyer son menu
+                let eligible = players.map(p => p.name).filter(name => {
+                    if (name === players[curG].name) return false;
+                    if (name === lastSentinelle) return false;
+                    if (players.length > 5 && name === lastGardien) return false;
+                    return true;
+                });
+                player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
+            } else {
+                player.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[curG].name });
+            }
     }
 }
