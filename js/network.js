@@ -56,8 +56,7 @@ function setupConnection(conn) {
                     return;
                 } else {
                         return conn.send({ type: 'ERROR_NAME_TAKEN' });
-                    }
-                }
+                        }
                 if (players.length >= 10) return conn.send({ type: 'ERROR_BUNKER_FULL' });
                 if (players.some(p => p.name.toLowerCase() === data.name.toLowerCase())) return conn.send({ type: 'ERROR_NAME_TAKEN' });
                 
