@@ -3,11 +3,23 @@ function initGame() {
     deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
     const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
     const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
+    const alphaPlayer = players.find(p => p.role === 'A');
 
     players.forEach((p, i) => {
         p.role = roles[i] || 'S';
         p.metier = metiers[i];
-        p.conn.send({ type: 'INIT', role: p.role, metier: p.metier, all: players.map(pl => pl.name) });
+        
+        // On prépare les infos d'équipe
+        let teamInfo = {
+            type: 'INIT',
+            role: p.role,
+            metier: p.metier,
+            all: players.map(pl => pl.name),
+            // On ajoute le nom de l'Alpha seulement pour les Infectés et l'Alpha lui-même
+            alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
+        };
+        
+        p.conn.send(teamInfo);
     });
 
     updateTagsWithJobs();
