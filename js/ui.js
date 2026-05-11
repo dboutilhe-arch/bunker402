@@ -45,6 +45,8 @@ function render() {
 
 // Affichage du gouvernement proposé (Couleurs : Gardien Jaune, Sentinelle Bleu)
 function showGov(g, s) {
+    currentPhase = "VOTE"; // Mise à jour phase
+    currentProposedS = s;  // On retient qui est proposé
     const sTags = document.querySelectorAll(`[id="tag-${s.toLowerCase()}"]`);
     sTags.forEach(tag => { 
         tag.style.borderColor = "#3498db"; 
