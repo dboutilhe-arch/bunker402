@@ -128,6 +128,12 @@
         function handleData(data) {
             const ui = document.getElementById('main-ui');
 
+            // --- SÉCURITÉ RECONNEXION ---
+            if (data.type === 'CONNECTED' || data.type === 'INIT') {
+                document.getElementById('setup').classList.add('hidden');
+                document.getElementById('game').classList.remove('hidden');
+            }
+
             // Initialisation (Début de partie)
             if (data.type === 'INIT') {
                 allPlayers = data.all;
