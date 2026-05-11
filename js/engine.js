@@ -1,27 +1,37 @@
 // Lancement de la partie
-function initGame() {
+async function initGame() {
+    // 1. Préparation des données
     deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
     const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
     const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
-    const alphaPlayer = players.find(p => p.role === 'A');
+    const alphaPlayer = players[roles.indexOf('A')]; // On trouve l'Alpha via son index futur
 
-    players.forEach((p, i) => {
+    // 2. Envoi progressif
+    for (let i = 0; i < players.length; i++) {
+        let p = players[i];
         p.role = roles[i] || 'S';
         p.metier = metiers[i];
-        
-        // On prépare les infos d'équipe
+
         let teamInfo = {
             type: 'INIT',
             role: p.role,
             metier: p.metier,
             all: players.map(pl => pl.name),
-            // On ajoute le nom de l'Alpha seulement pour les Infectés et l'Alpha lui-même
             alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
         };
-        
-        p.conn.send(teamInfo);
-    });
 
+        // On vérifie si la connexion est ouverte avant d'envoyer
+        if (p.conn && p.conn.open) {
+            p.conn.send(teamInfo);
+        } else {
+            console.error(`Connexion perdue avec ${p.name}`);
+        }
+
+        // On attend 50ms avant le prochain envoi pour laisser respirer le réseau
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    // 3. Lancement visuel
     updateTagsWithJobs();
     document.getElementById('setup-zone').style.display = 'none';
     document.getElementById('game-zone').style.display = 'block';
