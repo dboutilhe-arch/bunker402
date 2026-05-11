@@ -28,52 +28,43 @@ function setupConnection(conn) {
             // Arrivée d'un joueur
             if (data.type === 'JOIN') {
                 let p = players.find(pl => pl.name.toLowerCase() === data.name.toLowerCase());
-
-                // CAS 1 : LE JOUEUR EXISTE DÉJÀ (Tentative de reconnexion)
+            
                 if (p) {
-                    console.log(`Tentative de reconnexion de ${p.name}`);
-                    
-                    // On remplace l'ancienne connexion par la nouvelle
+                    // CAS RECONNEXION : On ne touche pas au HTML (l'étiquette existe déjà)
                     p.conn = conn; 
                     p.conn.send({ type: 'CONNECTED' });
-
+                    
                     if (document.getElementById('game-zone').style.display === 'block') {
                         p.conn.send({ 
-                            type: 'INIT', 
-                            role: p.role, 
-                            metier: p.metier, 
+                            type: 'INIT', role: p.role, metier: p.metier, 
                             all: players.map(pl => pl.name),
                             alphaName: (p.role === 'I' || p.role === 'A') ? players.find(a => a.role === 'A').name : null
                         });
                         syncTerminals();
                         restorePlayerAction(p);
                     }
-                    return; // On s'arrête ici pour une reconnexion
+                    return; 
                 }
-
-                // CAS 2 : NOUVEAU JOUEUR
-                // On vérifie la capacité max
-                if (players.length >= 10) {
-                    return conn.send({ type: 'ERROR_BUNKER_FULL' });
-                }
-
-                // Tout est bon, on ajoute le joueur
+            
+                // CAS NOUVEAU JOUEUR
+                if (players.length >= 10) return conn.send({ type: 'ERROR_BUNKER_FULL' });
+            
                 players.push({ name: data.name, conn: conn });
                 
-                const createTag = () => {
-                    const nameTag = document.createElement('div');
-                    nameTag.className = 'player-tag'; 
-                    nameTag.id = `tag-${data.name.toLowerCase()}`;
-                    nameTag.innerHTML = `<div class="p-name">${data.name.toUpperCase()}</div><div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal;"></div>`;
-                    return nameTag;
-                };
+                // On crée l'étiquette
+                const nameTag = document.createElement('div');
+                nameTag.className = 'player-tag'; 
+                nameTag.id = `tag-${data.name.toLowerCase()}`;
+                nameTag.innerHTML = `<div class="p-name">${data.name.toUpperCase()}</div><div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal;"></div>`;
                 
-                document.getElementById('player-list').appendChild(createTag());
-                document.getElementById('active-player-list').appendChild(createTag());
+                // ON CLONE l'élément pour l'avoir dans les deux listes sans bug de déplacement
+                const nameTagClone = nameTag.cloneNode(true);
+            
+                document.getElementById('player-list').appendChild(nameTag);
+                document.getElementById('active-player-list').appendChild(nameTagClone);
+                
                 document.getElementById('count').innerText = players.length;
-                
                 if(players.length >= 5) document.getElementById('start-btn').disabled = false;
-                
                 conn.send({ type: 'CONNECTED' });
             }
     
@@ -120,26 +111,22 @@ function setupConnection(conn) {
 }
 
 function handlePlayerDisconnect(closedConn) {
-    // 1. On trouve le joueur qui s'est déconnecté
     const index = players.findIndex(p => p.conn === closedConn);
     if (index === -1) return;
 
     const player = players[index];
     console.log(`Déconnexion détectée : ${player.name}`);
 
-    // 2. Si la partie n'a pas commencé, on libère le slot
     if (document.getElementById('game-zone').style.display === 'none') {
-        players.splice(index, 1); // On le retire du tableau
+        players.splice(index, 1);
         
-        // On met à jour le lobby visuellement
-        const tag = document.getElementById(`tag-${player.name.toLowerCase()}`);
-        if (tag) tag.remove();
+        // SUPPRESSION DE TOUTES LES INSTANCES DU TAG (Lobby + Zone de jeu)
+        const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
+        tags.forEach(tag => tag.remove());
         
         document.getElementById('count').innerText = players.length;
         if(players.length < 5) document.getElementById('start-btn').disabled = true;
     } else {
-        // Si la partie est en cours, on pourrait marquer le joueur comme "DÉCONNECTÉ" 
-        // ou simplement logger l'erreur pour l'instant.
         console.warn("Joueur déconnecté en pleine partie.");
     }
 }
