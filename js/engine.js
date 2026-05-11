@@ -89,7 +89,7 @@ function applyDecret(type) {
     else if(type === 'C') state.crise++;
     else if(type === 'F') state.suffrage = "Actif";
 
-    render(); syncTerminals(); resetTagColors();
+    render(); syncTerminals();
 
     if(state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
     else if(state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
