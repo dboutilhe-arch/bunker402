@@ -309,6 +309,11 @@
             document.getElementById('main-ui').innerHTML = "<h3 style='color:#f1c40f'>PROMULGUÉ</h3><p>Mise à jour des systèmes du bunker...</p>";
             conn.send({ type: 'FINAL_CHOICE', card: card }); 
         }
+
+        // Si un joueur actualise sa page
+        window.onbeforeunload = function() {
+            return "Attention, quitter la page peut vous déconnecter du bunker !";
+        };
     </script>
 </body>
 </html>
