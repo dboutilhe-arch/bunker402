@@ -87,28 +87,42 @@
         let conn, myName, currentHand = [], allPlayers = [];
 
         // FONCTION : Se connecter au PC
-        function connect() {
-            myName = document.getElementById('p-name').value.trim(); // .trim() enlève les espaces inutiles
-            const code = document.getElementById('r-code').value;
-            // Le pseudo doit faire plus de 2 caractères
-            if(myName.length < 2) {
-                return alert("Ton nom est trop court ! (Minimum 2 caractères)");
+        function connect(isReconnect = false) {
+            let nameInput = document.getElementById('p-name').value.trim();
+            let codeInput = document.getElementById('r-code').value.trim();
+        
+            // Si c'est une reconnexion automatique
+            if (isReconnect) {
+                nameInput = sessionStorage.getItem('bunker_name');
+                codeInput = sessionStorage.getItem('bunker_code');
+                if (!nameInput || !codeInput) return;
             }
-            if(!myName || !code) return alert("Nom et code requis !");
-
-            // On tente la liaison avec le code affiché sur le PC
-            conn = peer.connect(code);
+        
+            if(nameInput.length < 2 || !codeInput) return alert("Infos manquantes !");
+            
+            myName = nameInput;
+            conn = peer.connect(codeInput);
+        
             conn.on('open', () => {
-                // Dès que c'est ouvert, on envoie notre nom au PC
-                conn.send({ type: 'JOIN', name: myName });
+                // On sauvegarde pour plus tard
+                sessionStorage.setItem('bunker_name', myName);
+                sessionStorage.setItem('bunker_code', codeInput);
+        
+                conn.send({ type: 'JOIN', name: myName, reconnect: isReconnect });
                 document.getElementById('setup').classList.add('hidden');
                 document.getElementById('game').classList.remove('hidden');
                 document.getElementById('display-name').innerText = myName.toUpperCase();
             });
-
-            // Écouteur pour les messages venant du PC
+        
             conn.on('data', handleData);
         }
+        
+        // Au chargement de la page, on vérifie si on peut se reconnecter
+        window.onload = () => {
+            if (sessionStorage.getItem('bunker_name')) {
+                connect(true);
+            }
+        };
 
         // FONCTION CRITIQUE : Gère tout ce que le PC ordonne au téléphone
         function handleData(data) {
