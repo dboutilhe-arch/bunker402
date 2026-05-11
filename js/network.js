@@ -93,8 +93,17 @@ function setupConnection(conn) {
                 currentLegislativeCards = data.remaining; // On stocke les 2 cartes restantes
                 
                 document.getElementById('vote-summary').innerText = "DÉCRET REÇU : La Sentinelle choisit le décret final";
+                
+                // 1. On prévient tout le monde (y compris la sentinelle) de l'étape
                 players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
-                players[curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: currentLegislativeCards });
+            
+                // 2. On envoie les cartes à la Sentinelle après un micro-délai (100ms)
+                // Cela laisse le temps au téléphone de traiter le message précédent
+                setTimeout(() => {
+                    if (players[curSIdx] && players[curSIdx].conn.open) {
+                        players[curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: currentLegislativeCards });
+                    }
+                }, 100);
             }
     
             // Choix final de la Sentinelle
