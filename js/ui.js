@@ -71,3 +71,22 @@ function triggerWin(team, reason) {
     document.getElementById('victory-reason').innerText = reason;
     players.forEach(p => p.conn.send({ type: 'END_GAME', team: team, reason: reason }));
 }
+
+// Retire uniquement l'étoile et la bordure dorée du Gardien actuel
+function clearGardienVisuals() {
+    players.forEach(p => {
+        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+        tags.forEach(tag => {
+            // On retire la bordure dorée
+            if (tag.style.borderColor === "rgb(241, 196, 15)") { // Code RGB de #f1c40f
+                tag.style.borderColor = "";
+                tag.style.borderWidth = "1px";
+            }
+            // On retire l'étoile du nom
+            const nameDiv = tag.querySelector('.p-name');
+            if (nameDiv && nameDiv.innerText.includes("⭐")) {
+                nameDiv.innerText = p.name.toUpperCase();
+            }
+        });
+    });
+}
