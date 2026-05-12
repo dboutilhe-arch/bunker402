@@ -1,34 +1,43 @@
 // Lancement de la partie
 async function initGame() {
-    // 1. Préparation des données
-    deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
-    const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
-    const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
-    const alphaPlayer = players[roles.indexOf('A')]; // On trouve l'Alpha via son index futur
+    // 1. Préparation du deck
+    deck = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
 
-    // 2. Envoi progressif
-    for (let i = 0; i < players.length; i++) {
+    // 2. Logique de répartition des rôles
+    let roles = [];
+    const n = players.length;
+
+    if (n <= 6) {
+        roles = ['S', 'S', 'S', 'S', 'I', 'A']; 
+    } else if (n <= 10) {
+        roles = ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'S']; 
+    } else {
+        // Au-delà de 10 joueurs : Ajout du Mycologue et de l'Immunisé
+        roles = ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'M', 'IM']; // M = Mycologue, IM = Immunisé
+        // Remplir le reste avec des Survivants ou Infectés selon votre souhait d'équilibrage
+        while (roles.length < n) {
+            roles.push(Math.random() > 0.3 ? 'S' : 'I');
+        }
+    }
+    roles.sort(() => Math.random() - 0.5);
+
+    const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile', 'Scientifique', 'Ingénieur', 'Pilote'].sort(() => Math.random() - 0.5);
+    const alphaPlayer = players[roles.indexOf('A')];
+
+    // 3. Envoi progressif
+    for (let i = 0; i < n; i++) {
         let p = players[i];
-        p.role = roles[i] || 'S';
-        p.metier = metiers[i];
+        p.role = roles[i];
+        p.metier = metiers[i % metiers.length];
 
-        let teamInfo = {
+        p.conn.send({
             type: 'INIT',
             role: p.role,
             metier: p.metier,
             all: players.map(pl => pl.name),
-            alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
-        };
-
-        // On vérifie si la connexion est ouverte avant d'envoyer
-        if (p.conn && p.conn.open) {
-            p.conn.send(teamInfo);
-        } else {
-            console.error(`Connexion perdue avec ${p.name}`);
-        }
-
-        // On attend 50ms avant le prochain envoi pour laisser respirer le réseau
-        await new Promise(resolve => setTimeout(resolve, 50));
+            alphaName: (['I', 'A', 'M'].includes(p.role)) ? alphaPlayer.name : null 
+        });
+        await new Promise(r => setTimeout(r, 50));
     }
 
     // 3. Lancement visuel
