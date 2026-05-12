@@ -31,8 +31,14 @@
         .filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; }
         .filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; }
 
-        /* Conseil */
-        .gov-box { background: #333; border: 2px solid #f1c40f; padding: 10px; margin-bottom: 10px; border-radius: 10px; display: none; }
+        .info-box {
+            background: #111;
+            border: 2px solid;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 100px;
+        }
+        
         #log { background: #000; color: #00ff00; padding: 10px; height: 80px; overflow-y: auto; width: 90%; margin: 10px auto; text-align: left; font-size: 0.8em; }
 
         /* Animations Lobby */
@@ -156,13 +162,28 @@
         <!-- Barre d'Oxygène -->
         <div id="oxy-bar"><div id="oxy-level"></div></div>
     
-        <!-- Zone du Conseil -->
-        <div id="gov-display" class="gov-box">
-            <h3 style="margin:0; color:#f1c40f;">CONSEIL ACTUEL</h3>
-            <p style="font-size:1.5em; margin:5px;"><span id="g-name" style="color:#f1c40f">?</span> & <span id="s-name" style="color:#3498db">?</span></p>
-            <div id="vote-summary">DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...</div>
-            <div id="vote-details" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 15px;"></div>
+    <div id="game-info-row" style="display: none; justify-content: space-around; gap: 10px; margin-bottom: 20px;">
+        
+        <!-- BLOC ROUGE : DERNIER CONSEIL -->
+        <div class="info-box" style="border-color: #e74c3c; width: 25%;">
+            <h4 style="color: #e74c3c; margin: 5px 0;">DERNIER CONSEIL</h4>
+            <div id="last-council-display" style="font-size: 0.9em; color: #888;">Aucun</div>
         </div>
+    
+        <!-- BLOC JAUNE : CONSEIL ACTUEL -->
+        <div class="info-box" style="border-color: #f1c40f; width: 45%;">
+            <h4 style="color: #f1c40f; margin: 5px 0;">CONSEIL ACTUEL</h4>
+            <p style="font-size:1.5em; margin:5px;"><span id="g-name" style="color:#f1c40f">?</span> & <span id="s-name" style="color:#3498db">?</span></p>
+            <div id="vote-summary" style="font-size: 0.8em; color: #f1c40f;">DÉSIGNATION DU CONSEIL...</div>
+        </div>
+    
+        <!-- BLOC VERT : COMPOSITION DU BUNKER -->
+        <div class="info-box" style="border-color: #2ecc71; width: 25%;">
+            <h4 style="color: #2ecc71; margin: 5px 0;">COMPOSITION</h4>
+            <div id="composition-display" style="text-align: left; font-size: 0.85em; padding-left: 15px;"></div>
+        </div>
+    
+    </div>
     
         <!-- Plateaux de décrets (Largeur complète) -->
         <div class="main-layout" style="margin-bottom: 30px;">
