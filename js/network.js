@@ -48,7 +48,7 @@ function setupConnection(conn) {
                         p.conn.send({ 
                             type: 'INIT', role: p.role, metier: p.metier, 
                             all: players.map(pl => pl.name),
-                            alphaName: (p.role === 'I' || p.role === 'A') ? players.find(a => a.role === 'A').name : null
+                            alphaName: (['I', 'A', 'M'].includes(p.role)) ? players.find(a => a.role === 'A').name : null
                         });
                         syncTerminals();
                         restorePlayerAction(p);
