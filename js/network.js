@@ -65,7 +65,10 @@ function setupConnection(conn) {
                 const nameTag = document.createElement('div');
                 nameTag.className = 'player-tag'; 
                 nameTag.id = `tag-${data.name.toLowerCase()}`;
-                nameTag.innerHTML = `<div class="p-name">${data.name.toUpperCase()}</div><div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal;"></div>`;
+                nameTag.innerHTML = `
+                    <div class="p-name">${data.name.toUpperCase()}</div>
+                    <div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal; color: #2ecc71;"></div>
+                `;
                 
                 // ON CLONE l'élément pour l'avoir dans les deux listes sans bug de déplacement
                 const nameTagClone = nameTag.cloneNode(true);
