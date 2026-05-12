@@ -114,7 +114,7 @@ function resolveVote() {
     } else {
         document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
         document.getElementById('vote-summary').style.color = "#e74c3c";
-        addLog(`ALERTE : Rejet du conseil. Oxygène à ${state.ox}/3.`);
+        addLog(`ALERTE : Rejet du conseil. Oxygène à ${state.oxy}/3.`);
         
         clearGardienVisuals(); // On enlève l'étoile du gardien déchu
         state.oxy--;  // Diminution de l'oxygène
