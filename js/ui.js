@@ -1,3 +1,68 @@
+// ui.js
+
+function globalReset() {
+    if (!confirm("Réinitialiser la partie et renvoyer tout le monde au lobby ?")) return;
+    
+    // On prévient tous les joueurs
+    players.forEach(p => {
+        p.conn.send({ type: 'RESET_TO_LOBBY' });
+    });
+
+    // On remet l'état local à zéro
+    resetGameState();
+}
+
+function resetGameState() {
+    // 1. Reset des variables de state.js
+    state = { 
+        survie: 0, 
+        crise: 0, 
+        oxy: 3,  
+        gameOver: false, 
+        suffrage: "Aucun",
+        lastSentinelle: null,
+        lastGardien: null
+    };
+    curG = 0;
+    curSIdx = -1;
+    votes = { oui: 0, non: 0, total: 0, list: [] };
+    isProcessingAction = false;
+    currentPhase = "DÉSIGNATION";
+    currentProposedS = null;
+    currentLegislativeCards = [];
+
+    // 2. Reset visuel de l'index
+    document.getElementById('end-screen').style.display = 'none';
+    document.getElementById('game-zone').style.display = 'none';
+    document.getElementById('game-info-row').style.display = 'none';
+    document.getElementById('setup-zone').style.display = 'block';
+    document.getElementById('lobby-active').style.display = 'block';
+    
+    // On vide les logs et les plateaux
+    document.getElementById('log').innerHTML = "<div>[SYSTÈME] : Redémarrage d'urgence effectué.</div>";
+    document.getElementById('last-council-display').innerText = "Aucun";
+    
+    // 3. On réactive le bouton start si on a assez de monde
+    document.getElementById('start-btn').disabled = (players.length < 5);
+    
+    // On remet les étiquettes en mode "Lobby" (sans métiers)
+    resetLobbyVisuals();
+}
+
+function resetLobbyVisuals() {
+    players.forEach(p => {
+        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+        tags.forEach(tag => {
+            tag.className = 'player-tag';
+            tag.style.opacity = "1";
+            tag.innerHTML = `
+                <div class="p-name">${p.name.toUpperCase()}</div>
+                <div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal; color: #2ecc71;"></div>
+            `;
+        });
+    });
+}
+
 // Mise à jour visuelle des étiquettes avec les métiers
 function updateTagsWithJobs() {
     players.forEach(p => {
