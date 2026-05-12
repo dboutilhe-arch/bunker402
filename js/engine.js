@@ -206,12 +206,12 @@ function restorePlayerAction(player) {
             }
             break;
         
-        default: // DÉSIGNATION
+default: // DÉSIGNATION
             if (isGardien) {
                 let eligible = players.map(p => p.name).filter(name => {
                     if (name === players[curG].name) return false;
-                    if (name === lastSentinelle) return false;
-                    if (players.length > 5 && name === lastGardien) return false;
+                    if (name === state.lastSentinelle) return false;
+                    if (players.length > 5 && name === state.lastGardien) return false;
                     return true;
                 });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
