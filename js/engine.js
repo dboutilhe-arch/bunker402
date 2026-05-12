@@ -112,12 +112,14 @@ function resolveVote() {
             players[curG].conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards });
         }, 100);
     } else {
+        state.oxy--;  // Diminution de l'oxygène
+        
         document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
         document.getElementById('vote-summary').style.color = "#e74c3c";
         addLog(`ALERTE : Rejet du conseil. Oxygène à ${state.oxy}/3.`);
         
         clearGardienVisuals(); // On enlève l'étoile du gardien déchu
-        state.oxy--;  // Diminution de l'oxygène
+
         if(state.oxy <= 0) {
             addLog("PROTOCOLE DE SÉCURITÉ ACTIVÉ : Application immédiate du décret d'urgence.");
             const emergencyDecret = deck.shift(); // Pioche la première carte de la pile
