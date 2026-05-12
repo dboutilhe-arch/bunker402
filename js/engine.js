@@ -50,6 +50,8 @@ function nextTurn() {
         tag.style.borderColor = "#f1c40f"; 
         tag.style.borderWidth = "2px";
     });
+
+    addLog(`SYSTÈME : Désignation du nouveau Gardien : ${players[curG].name.toUpperCase()}`);
     
     votes = { oui: 0, non: 0, total: 0, list: [] };
     document.getElementById('gov-display').style.display = 'block';
@@ -84,9 +86,12 @@ function resolveVote() {
         tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
     });
 
+    addLog(`RÉSULTAT DU SCRUTIN : ${votes.oui} OUI vs ${votes.non} NON`);
+    
     if(votes.oui > votes.non) {
         document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ";
         document.getElementById('vote-summary').style.color = "#2ecc71";
+        addLog("VOTE ACCEPTÉ : Le conseil entre en session législative.");
         
         // 1. On prépare l'état AVANT d'envoyer quoi que ce soit
         currentPhase = "LÉGISLATION_G";
@@ -109,6 +114,8 @@ function resolveVote() {
     } else {
         document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
         document.getElementById('vote-summary').style.color = "#e74c3c";
+        addLog("VOTE REJETÉ : Le conseil est dissous. Épuisement de l'oxygène !");
+        
         clearGardienVisuals(); // On enlève l'étoile du gardien déchu
         state.oxy--;  // Diminution de l'oxygène
         if(state.oxy <= 0) applyForced();
