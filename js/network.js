@@ -45,10 +45,14 @@ function setupConnection(conn) {
                     addLog(`RECONNEXION : Signal de ${p.name} rétabli.`);
                     
                     if (document.getElementById('game-zone').style.display === 'block') {
+                        const alpha = players.find(a => a.role === 'A');
                         p.conn.send({ 
-                            type: 'INIT', role: p.role, metier: p.metier, 
+                            type: 'INIT', 
+                            role: p.role, 
+                            roleConfig: ROLES_CONFIG[p.role], // AJOUT INDISPENSABLE
+                            metier: p.metier, 
                             all: players.map(pl => pl.name),
-                            alphaName: (p.role === 'I' || p.role === 'A') ? players.find(a => a.role === 'A').name : null
+                            alphaName: (p.role === 'I' || p.role === 'A') ? (alpha ? alpha.name : null) : null
                         });
                         syncTerminals();
                         restorePlayerAction(p);
