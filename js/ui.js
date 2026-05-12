@@ -59,8 +59,13 @@ function showGov(g, s) {
     document.getElementById('s-name').innerText = s; 
     document.getElementById('s-name').style.color = "#3498db";
     
-    document.getElementById('vote-summary').innerText = "SCRUTIN EN COURS : Approuvez-vous ce conseil ?";
-    document.getElementById('vote-summary').style.color = "#f1c40f"; 
+    document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : 0 / ${players.length}`;
+    document.getElementById('vote-summary').style.color = "#f1c40f";
+    
+    document.getElementById('vote-summary').innerText = `VOTES TRANSMIS : 0 / ${players.length}`;
+    document.getElementById('vote-summary').style.color = "#f1c40f";
+    
+    addLog(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
     
     players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
 }
