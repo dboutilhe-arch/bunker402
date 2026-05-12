@@ -85,21 +85,26 @@ function setupConnection(conn) {
                 // 1. SÉCURITÉ : On vérifie si ce joueur a DÉJÀ voté dans ce tour
                 const dejaVote = votes.list.some(v => v.name.toLowerCase() === data.playerName.toLowerCase());
                 
-                if (dejaVote) {
-                    console.warn(`Tentative de double vote bloquée pour : ${data.playerName}`);
-                    return; // On ignore purement et simplement ce message
-                }
+                if (dejaVote) return; // On ignore purement et simplement ce message
             
-                // 2. Si c'est un nouveau vote, on l'enregistre normalement
+                // Si c'est un nouveau vote, on l'enregistre normalement
                 votes[data.choice.toLowerCase()]++; 
                 votes.total++;
                 votes.list.push({ name: data.playerName, choice: data.choice });
             
                 // Mise à jour de l'interface console pour voir qui a voté
-                console.log(`Vote reçu de ${data.playerName} (${votes.total}/${players.length})`);
+                const summary = document.getElementById('vote-summary');
+                summary.innerText = `VOTES TRANSMIS : ${votes.total} / ${players.length}`;
+                summary.style.color = "#f1c40f"; // Couleur "Alerte" pendant le vote
+
+                // On ajoute une ligne dans le log
+                addLog(`Données de vote reçues de : ${data.playerName}`);
             
-                // 3. Si tout le monde a voté, on résout
-                if(votes.total === players.length) resolveVote();
+                // Si tout le monde a voté, on résout
+                if(votes.total === players.length)  {
+                    addLog("Scrutin terminé. Calcul des résultats...");
+                    resolveVote();
+                }
             }
     
             // Gardien défausse
@@ -139,19 +144,25 @@ function handlePlayerDisconnect(closedConn) {
     if (index === -1) return;
 
     const player = players[index];
-    console.log(`Déconnexion détectée : ${player.name}`);
 
+    // 1. Si on est encore dans le lobby (avant INITIALISER)
     if (document.getElementById('game-zone').style.display === 'none') {
+        addLog(`SORTIE LOBBY : ${player.name} a quitté la session.`);
         players.splice(index, 1);
         
-        // SUPPRESSION DE TOUTES LES INSTANCES DU TAG (Lobby + Zone de jeu)
         const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
         tags.forEach(tag => tag.remove());
         
         document.getElementById('count').innerText = players.length;
         if(players.length < 5) document.getElementById('start-btn').disabled = true;
-    } else {
-        console.warn("Joueur déconnecté en pleine partie.");
+    } 
+    // 2. Si la partie est déjà lancée
+    else {
+        addLog(`SIGNAL PERDU : ${player.name} s'est déconnecté.`);
+        
+        // Optionnel : On peut griser son étiquette sur le PC pour montrer qu'il est déco
+        const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
+        tags.forEach(tag => tag.style.opacity = "0.5");
     }
 }
 
