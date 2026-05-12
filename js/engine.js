@@ -1,3 +1,11 @@
+let initPack = {
+    type: 'INIT',
+    role: p.role, // Juste 'S', 'I' ou 'A'
+    metier: p.metier,
+    all: players.map(pl => pl.name),
+    alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
+};
+
 async function initGame() {
     // 1. Préparation (inchangée)
     deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
