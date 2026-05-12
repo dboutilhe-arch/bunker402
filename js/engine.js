@@ -1,28 +1,25 @@
-// engine.js
 async function initGame() {
-    // 1. Préparation des données
+    // 1. Préparation (inchangée)
     deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
     const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
     const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
     
-    // ÉTAPE CRUCIALE : On assigne les rôles à TOUT LE MONDE d'abord
+    // Assigner les rôles à TOUT LE MONDE avant d'envoyer quoi que ce soit
     players.forEach((p, i) => {
         p.role = roles[i];
         p.metier = metiers[i];
     });
 
-    // Maintenant l'Alpha est garanti d'exister pour tout le monde
     const alphaPlayer = players.find(p => p.role === 'A');
 
-    // 2. Envoi avec un délai de sécurité au démarrage
-    // On attend 500ms pour laisser les connexions se stabiliser
-    await new Promise(r => setTimeout(r, 500));
-
-    for (let p of players) {
+    // 2. Envoi SÉQUENTIEL avec délai
+    for (let i = 0; i < players.length; i++) {
+        let p = players[i];
+        
         let initPack = {
             type: 'INIT',
             role: p.role,
-            roleConfig: ROLES_CONFIG[p.role], // Utilise la config définie dans state.js
+            roleConfig: ROLES_CONFIG[p.role],
             metier: p.metier,
             all: players.map(pl => pl.name),
             alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
@@ -30,12 +27,16 @@ async function initGame() {
 
         if (p.conn && p.conn.open) {
             p.conn.send(initPack);
-            addLog(`Transmission : ${p.name}`);
+            addLog(`Transmission : ${p.name} (${i+1}/${players.length})`);
         }
         
-        // On laisse 200ms entre chaque joueur pour ne pas saturer le canal PeerJS
-        await new Promise(r => setTimeout(r, 200));
+        // PAUSE : On laisse 250ms pour que le paquet soit traité avant le suivant
+        await new Promise(r => setTimeout(r, 250));
     }
+
+    // PAUSE DE SÉCURITÉ FINALE : On attend que le dernier pack soit bien reçu 
+    // AVANT de lancer les messages du premier tour (nextTurn)
+    await new Promise(r => setTimeout(r, 800));
 
     updateTagsWithJobs();
     document.getElementById('setup-zone').style.display = 'none';
