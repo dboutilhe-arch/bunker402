@@ -91,33 +91,36 @@
             padding: 20px;
         }
         
-        #role-reveal-zone {
+        #role-reveal {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 15px;
             margin: 20px 0;
-            max-width: 900px;
-            z-index: 1001; /* S'assure d'être au-dessus du fond noir */
         }
         
         .reveal-card {
-            background: #1a1a1a;
+            background: #222;
             border: 1px solid #444;
-            padding: 15px;
-            border-radius: 8px;
-            min-width: 160px;
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 150px;
             text-align: left;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
         
-        .rev-S { border-left: 5px solid #3498db !important; }
-        .rev-I { border-left: 5px solid #e74c3c !important; }
-        .rev-A { border-left: 5px solid #9400d3 !important; }
+        /* Bordures de rôles */
+        .rev-S { border-left: 5px solid #3498db !important; } /* Bleu : Survivant */
+        .rev-I { border-left: 5px solid #e74c3c !important; } /* Rouge : Infecté */
+        .rev-A { border-left: 5px solid #9400d3 !important; } /* Violet : Alpha */
         
     </style>
 </head>
 <body>
+    <div id="end-screen">
+        <h1 id="victory-title" style="font-size: 4em; margin-bottom:10px;"></h1>
+        <h2 id="victory-reason" style="color: #f1c40f; margin-bottom:30px;"></h2>
+        <button onclick="location.reload()" style="padding: 20px; background: #2ecc71; border: none; cursor: pointer; font-weight: bold; border-radius:10px;">REINITIALISER LE BUNKER</button>
+    </div>
 
     <h1>BUNKER 402 - SYSTÈME CENTRAL</h1>
 
@@ -170,11 +173,11 @@
 
         <!-- Écran de fin global -->
         <div id="end-screen">
-            <h1 id="victory-title" style="font-size: 3.5em; margin-bottom:10px;"></h1>
+            <h1 id="victory-title" style="font-size: 3em; margin-bottom:10px;"></h1>
             <h2 id="victory-reason" style="color: #f1c40f; margin-bottom:20px; font-size: 1.2em;"></h2>
             
-            <!-- Zone de reveal avec ID unique et style forcé -->
-            <div id="role-reveal-zone"></div>
+            <!-- C'est ici que les cartes de rôles vont apparaître -->
+            <div id="role-reveal" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; max-width: 900px;"></div>
             
             <button onclick="location.reload()" style="padding: 15px 30px; background: #2ecc71; border: none; cursor: pointer; font-weight: bold; border-radius:10px; margin-top: 20px;">
                 REINITIALISER LE SYSTÈME
