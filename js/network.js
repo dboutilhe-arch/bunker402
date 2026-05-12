@@ -51,7 +51,7 @@ function setupConnection(conn) {
                     });
                     
                     syncTerminals();
-                    restorePlayerAction(p);
+                    setTimeout(() => restorePlayerAction(p), 100);
                 }
                 return; 
             }
