@@ -95,7 +95,7 @@ function triggerWin(team, reason) {
                     break;
                 case 'M':
                     roleLabel = "MYCOLOGUE";
-                    roleColor = "#9400d3"; // Vert foncé
+                    roleColor = "#1b4d3e"; // Vert foncé
                     break;
                 case 'IM':
                     roleLabel = "IMMUNISÉ";
