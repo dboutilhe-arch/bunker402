@@ -45,8 +45,8 @@ function render() {
 
 // Affichage du gouvernement proposé (Couleurs : Gardien Jaune, Sentinelle Bleu)
 function showGov(g, s) {
-    currentPhase = "VOTE"; // Mise à jour phase
-    currentProposedS = s;  // On retient qui est proposé
+    currentPhase = "VOTE"; 
+    currentProposedS = s;  
     const sTags = document.querySelectorAll(`[id="tag-${s.toLowerCase()}"]`);
     sTags.forEach(tag => { 
         tag.style.borderColor = "#3498db"; 
@@ -54,6 +54,7 @@ function showGov(g, s) {
     });
     
     document.getElementById('game-info-row').style.display = 'flex';
+    
     document.getElementById('g-name').innerText = g; 
     document.getElementById('g-name').style.color = "#f1c40f";
     document.getElementById('s-name').innerText = s; 
