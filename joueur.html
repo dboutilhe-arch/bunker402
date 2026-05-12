@@ -88,9 +88,9 @@
         const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
         let conn, myName, currentHand = [], allPlayers = [];
         const ROLES_DATA = {
-            'S': { label: "SURVIVANT", color: "#3498db", goal: "...", winCond: "..." },
-            'I': { label: "INFECTÉ", color: "#e74c3c", goal: "...", winCond: "..." },
-            'A': { label: "ALPHA", color: "#9400d3", goal: "...", winCond: "..." }
+            'S': { label: "SURVIVANT", color: "#3498db", goal: "🎯 OBJECTIF : Rétablir les protocoles de survie.", winCond: "Conditions : 5 décrets BLEUS ou éliminer l'Alpha." },
+            'I': { label: "INFECTÉ", color: "#e74c3c", goal: "🎯 OBJECTIF : Propager l'infection.", winCond: "Conditions : 6 décrets ROUGES ou élire l'Alpha comme Sentinelle (si 3 décrets rouges posés)." },
+            'A': { label: "ALPHA", color: "#9400d3", goal: "🎯 OBJECTIF : Propager l'infection.", winCond: "Conditions : 6 décrets ROUGES ou être élu Sentinelle (si 3 décrets rouges posés)." }
         };
 
         // FONCTION : Se connecter au PC
