@@ -8,7 +8,7 @@ function startServer() {
     peer.on('open', id => {
         document.getElementById('server-creation').style.display = 'none';
         document.getElementById('lobby-active').style.display = 'block';
-        document.getElementById('display-id').innerText = "CODE CONSOLE : " + id;
+        document.getElementById('display-id').innerText = id;
     });
     
     peer.on('error', err => {
