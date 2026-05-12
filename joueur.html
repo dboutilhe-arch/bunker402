@@ -136,47 +136,36 @@
                 document.getElementById('game').classList.remove('hidden');
             }
 
-            // Initialisation (Début de partie)
-            if (data.type === 'INIT') {
-                allPlayers = data.all;
-                const rDisplay = document.getElementById('role-display');
-                const memo = document.getElementById('memo-box');
-                const goal = document.getElementById('team-goal');
-                const win = document.getElementById('win-cond');
-                const alphaInfo = document.getElementById('alpha-info');
+        if (data.type === 'INIT') {
+            allPlayers = data.all;
+            const config = data.roleConfig; // On récupère l'objet envoyé par le PC
+        
+            const rDisplay = document.getElementById('role-display');
+            const memo = document.getElementById('memo-box');
+            const goal = document.getElementById('team-goal');
+            const win = document.getElementById('win-cond');
+            const alphaInfo = document.getElementById('alpha-info');
+        
+            // Affichage des textes et couleurs via la config
+            rDisplay.innerText = "RÔLE : " + config.label;
+            rDisplay.style.color = config.color;
+            goal.innerText = config.goal;
+            win.innerText = config.winCond;
             
-                memo.style.display = "block";
-
-                // Affichage entête en fonction du rôle
-                switch (data.role) {
-                        case 'S':
-                            rDisplay.innerText = "RÔLE : SURVIVANT";
-                            rDisplay.style.color = "#2ecc71"; // Vert standard
-                            goal.innerText = "🎯 OBJECTIF : Rétablir les protocoles de survie.";
-                            win.innerText = "Conditions : 5 décrets BLEUS ou éliminer l'Alpha.";
-                            break;
-                
-                        case 'I':
-                            rDisplay.innerText = "RÔLE : INFECTÉ";
-                            rDisplay.style.color = "#e74c3c"; // Rouge
-                            goal.innerText = "🎯 OBJECTIF : Propager l'infection.";
-                            win.innerText = "Conditions : 6 décrets ROUGES ou élire l'Alpha comme Sentinelle (si 3 décrets rouges posés).";
-                            if (data.alphaName) {
-                                alphaInfo.innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
-                            }
-                            break;
-                
-                        case 'A':
-                            rDisplay.innerText = "RÔLE : ALPHA";
-                            rDisplay.style.color = "#9400d3"; // Violet
-                            rDisplay.parentElement.style.borderColor = "#9400d3";
-                            goal.innerText = "🎯 OBJECTIF : Propager l'infection.";
-                            win.innerText = "Conditions : 6 décrets ROUGES ou être élu Sentinelle (si 3 décrets rouges posés).";
-                            break;
-                    }
-                
-                document.getElementById('metier-display').innerText = "MÉTIER : " + data.metier;
+            memo.style.display = "block";
+        
+            // Style spécial si c'est l'Alpha (bordure violette)
+            if (data.role === 'A') {
+                rDisplay.parentElement.style.borderColor = config.color;
             }
+        
+            // Info d'équipe pour les infectés
+            if (data.alphaName && (data.role === 'I' || data.role === 'A')) {
+                alphaInfo.innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
+            }
+        
+            document.getElementById('metier-display').innerText = "MÉTIER : " + data.metier;
+        }
 
             // Le nombre max de joueur est déjà atteint
             if (data.type === 'ERROR_BUNKER_FULL') {
