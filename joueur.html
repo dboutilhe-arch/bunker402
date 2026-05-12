@@ -10,7 +10,14 @@
         body { background: #000; color: #2ecc71; font-family: monospace; padding: 10px; text-align: center; margin: 0; overflow-x: hidden; }
         
         /* En-tête : affiche le nom du joueur et l'oxygène en haut de l'écran */
-        .header-ui { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 10px; font-size: 0.8em; }
+        .header-ui { 
+            display: flex; 
+            justify-content: space-between; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 5px; 
+            margin-bottom: 10px; 
+            font-size: 0.75em;
+        }
 
         /* Petit plateau de rappel : pour voir les scores sans regarder l'écran PC */
         .mini-board { display: flex; justify-content: space-around; background: #111; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 0.7em; }
@@ -64,7 +71,7 @@
     <div id="game" class="hidden">
         <div class="header-ui">
             <span id="display-name" style="color: #f1c40f; font-weight:bold;">NOM</span>
-            <span id="oxy-text-mini">OXY: 3/3</span>
+            <span id="oxy-text-mini">NIVEAU D'OXYGENE: 3/3</span>
         </div>
         <div id="oxy-mini"></div>
         <div class="mini-board">
@@ -240,7 +247,7 @@
                 // 2. La consigne de vote standard
                 ui.innerHTML += `
                     <div style="margin: 15px 0; padding: 10px; border: 1px dashed #555;">
-                        <p>Approuvez-vous ce gouvernement ?</p>
+                        <p>Approuvez-vous ce Conseil ?</p>
                         <p style="font-size: 1.1em;">
                             <span style="color:#f1c40f; font-weight:bold;">${data.g}</span> (Gardien) <br>
                             & <br>
@@ -317,7 +324,7 @@
         function updateMiniBoard(state) {
             document.getElementById('oxy-mini').style.width = (state.oxy / 3 * 100) + "%";
             document.getElementById('oxy-mini').style.background = state.oxy <= 1 ? "#e74c3c" : "#3498db";
-            document.getElementById('oxy-text-mini').innerText = `OXY: ${state.oxy}/3`;
+            document.getElementById('oxy-text-mini').innerText = `NIVEAU D'OXYGENE: ${state.oxy}/3`;
             // On boucle pour créer les carrés bleus
             let s = ""; for(let i=0; i<5; i++) s += `<div class="dot ${i < state.survie ? 'f-s' : ''}"></div>`;
             document.getElementById('m-s').innerHTML = s;
