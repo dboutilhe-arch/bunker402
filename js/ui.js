@@ -71,25 +71,43 @@ function showGov(g, s) {
 function triggerWin(team, reason) {
     state.gameOver = true;
     
-    // Reveal des rôles
     const revealZone = document.getElementById('role-reveal-zone');
     if (revealZone) {
         revealZone.innerHTML = ""; 
 
         players.forEach(p => {
-            const roleLabel = p.role === 'A' ? "ALPHA" : (p.role === 'I' ? "INFECTÉ" : "SURVIVANT");
+            // 1. Déterminer le label et la couleur selon le rôle
+            let roleLabel = "";
+            let roleColor = "";
+
+            switch (p.role) {
+                case 'A':
+                    roleLabel = "ALPHA";
+                    roleColor = "#9400d3"; // Violet
+                    break;
+                case 'I':
+                    roleLabel = "INFECTÉ";
+                    roleColor = "#e74c3c"; // Rouge
+                    break;
+                case 'S':
+                    roleLabel = "SURVIVANT";
+                    roleColor = "#3498db"; // Bleu
+                    break;
+            }
+
+            // 2. Créer la carte
             const card = document.createElement('div');
             card.className = `reveal-card rev-${p.role}`;
             card.innerHTML = `
                 <div style="font-weight:bold; color:#FFF; font-size:1.1em;">${p.name.toUpperCase()}</div>
                 <div style="font-size:0.8em; color:#888; margin-bottom:5px;">${p.metier}</div>
-                <div style="font-size:0.9em; color:${(p.role === 'S' ? '#3498db' : '#e74c3c')}; font-weight:bold;">${roleLabel}</div>
+                <div style="font-size:0.9em; color:${roleColor}; font-weight:bold;">${roleLabel}</div>
             `;
             revealZone.appendChild(card);
         });
     }
 
-    // Affichage de l'écran (qui est maintenant unique et global)
+    // Affichage de l'écran global
     document.getElementById('end-screen').style.display = "flex";
     document.getElementById('victory-title').innerText = "VICTOIRE : " + team;
     document.getElementById('victory-reason').innerText = reason;
@@ -99,6 +117,7 @@ function triggerWin(team, reason) {
     // Envoi aux joueurs
     players.forEach(p => {
         let hasWon = false;
+        // Correction de la logique de victoire pour inclure l'Alpha avec les Infectés
         if (team === "SURVIVANTS" && p.role === 'S') hasWon = true;
         if (team === "INFECTES" && (p.role === 'I' || p.role === 'A')) hasWon = true;
 
