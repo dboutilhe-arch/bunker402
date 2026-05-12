@@ -1,35 +1,36 @@
 async function initGame() {
-    // 1. Préparation des paquets et rôles
+    // 1. Préparation (inchangée)
     deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
     const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
     const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
     
     const alphaPlayer = players[roles.indexOf('A')];
 
-    // 2. Distribution personnalisée
+    // 2. Envoi avec délai renforcé
     for (let i = 0; i < players.length; i++) {
-            let p = players[i];
-            p.role = roles[i];
-            p.metier = metiers[i];
-    
-            let initPack = {
-                type: 'INIT',
-                role: p.role,
-                roleConfig: ROLES_CONFIG[p.role], // Source de vérité
-                metier: p.metier,
-                all: players.map(pl => pl.name),
-                alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
-            };
-    
-            // Vérification de l'état de la connexion avant l'envoi
-            if (p.conn && p.conn.open) {
-                p.conn.send(initPack);
-                console.log(`Données INIT envoyées à ${p.name}`); // Pour débug
-            } else {
-                console.error(`Impossible d'envoyer INIT à ${p.name} : connexion fermée`);
-            }
-            await new Promise(r => setTimeout(r, 100));
+        let p = players[i];
+        p.role = roles[i];
+        p.metier = metiers[i];
+
+        let initPack = {
+            type: 'INIT',
+            role: p.role,
+            roleConfig: ROLES_CONFIG[p.role],
+            metier: p.metier,
+            all: players.map(pl => pl.name),
+            alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
+        };
+
+        if (p.conn && p.conn.open) {
+            p.conn.send(initPack);
+            addLog(`Transmission des données : ${p.name}`); // Debug console PC
+        } else {
+            addLog(`ERREUR : Signal perdu avec ${p.name}`);
         }
+        
+        // On augmente à 150ms pour laisser le temps au réseau de traiter chaque paquet
+        await new Promise(r => setTimeout(r, 150));
+    }
 
     updateTagsWithJobs();
     document.getElementById('setup-zone').style.display = 'none';
