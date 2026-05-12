@@ -75,7 +75,7 @@ async function initGame() {
     displayComposition(roles); // Remplissage du bloc vert
     
     document.getElementById('setup-zone').style.display = 'none';
-    document.getElementById('game-info-row').style.display = 'flex'; // Affichage de la ligne d'infos (3 colonnes)
+    document.getElementById('game-info-row').style.display = 'flex';
     document.getElementById('game-zone').style.display = 'block';
     nextTurn();
 }
