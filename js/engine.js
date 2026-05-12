@@ -68,8 +68,8 @@ function nextTurn() {
 
     let eligiblePlayers = players.map(p => p.name).filter(name => {
         if (name === players[curG].name) return false;
-        if (name === lastSentinelle) return false;
-        if (players.length > 5 && name === lastGardien) return false;
+        if (name === state.lastSentinelle) return false;
+        if (players.length > 5 && name === state.lastGardien) return false;
         return true;
     });
     
@@ -133,8 +133,8 @@ function applyDecret(type) {
     else if(state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
     else {
         // Sauvegarde pour les restrictions du prochain tour
-        lastSentinelle = players[curSIdx].name;
-        lastGardien = players[curG].name;
+        state.lastSentinelle = players[curSIdx].name;
+        state.lastGardien = players[curG].name;
         curG = (curG + 1) % players.length;
         setTimeout(() => { isProcessingAction = false; nextTurn(); }, 1000);
     }
