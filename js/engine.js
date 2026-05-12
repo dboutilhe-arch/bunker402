@@ -119,7 +119,6 @@ function resolveVote() {
         clearGardienVisuals(); // On enlève l'étoile du gardien déchu
         state.oxy--;  // Diminution de l'oxygène
         if(state.oxy <= 0) {
-            addLog("⚠️ ALERTE : NIVEAU D'OXYGÈNE CRITIQUE (0/3)");
             addLog("PROTOCOLE DE SÉCURITÉ ACTIVÉ : Application immédiate du décret d'urgence.");
             const emergencyDecret = deck.shift(); // Pioche la première carte de la pile
             const typeLabel = emergencyDecret === 'S' ? "SURVIE" : (emergencyDecret === 'C' ? "CRISE" : "SUFFRAGE");
