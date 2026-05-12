@@ -52,7 +52,7 @@ function setupConnection(conn) {
                         
                         syncTerminals();
                         // On attend un peu pour que le terminal traite l'INIT avant de restaurer l'UI
-                        setTimeout(() => restorePlayerAction(p), 200);
+                        setTimeout(() => restorePlayerAction(p), 500);
                     }
                     return; 
                 }
