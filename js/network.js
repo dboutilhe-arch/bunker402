@@ -30,29 +30,28 @@ function setupConnection(conn) {
                 let p = players.find(pl => pl.name.toLowerCase() === data.name.toLowerCase());
             
                 if (p) {
+                    // CAS RECONNEXION : On ne touche pas au HTML (l'étiquette existe déjà)
                     p.conn = conn; 
                     p.conn.send({ type: 'CONNECTED' });
-                
+
+                    // --- RÉTABLISSEMENT VISUEL ---
+                    // On cherche toutes les étiquettes du joueur (Lobby + Jeu)
                     const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
-                    tags.forEach(tag => { tag.style.opacity = "1"; });
-                
-                    addLog(`RECONNEXION : ${p.name} est de retour.`);
+                    tags.forEach(tag => {
+                        tag.style.opacity = "1"; // On dégrise
+                        tag.style.filter = "none"; // Au cas où tu aurais mis un filtre noir et blanc
+                    });
+                    
+                    addLog(`RECONNEXION : Signal de ${p.name} rétabli.`);
                     
                     if (document.getElementById('game-zone').style.display === 'block') {
-                        const alpha = players.find(a => a.role === 'A');
-                        
                         p.conn.send({ 
-                            type: 'INIT', 
-                            role: p.role, 
-                            roleConfig: ROLES_CONFIG[p.role], // LIGNE CRUCIALE MANQUANTE
-                            metier: p.metier, 
+                            type: 'INIT', role: p.role, metier: p.metier, 
                             all: players.map(pl => pl.name),
-                            alphaName: (p.role === 'I' || p.role === 'A') ? (alpha ? alpha.name : null) : null
+                            alphaName: (p.role === 'I' || p.role === 'A') ? players.find(a => a.role === 'A').name : null
                         });
-                        
                         syncTerminals();
-                        // On attend un peu pour que le terminal traite l'INIT avant de restaurer l'UI
-                        setTimeout(() => restorePlayerAction(p), 500);
+                        restorePlayerAction(p);
                     }
                     return; 
                 }
