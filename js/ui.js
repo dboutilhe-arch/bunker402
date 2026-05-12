@@ -71,18 +71,31 @@ function showGov(g, s) {
 function triggerWin(team, reason) {
     state.gameOver = true;
     
-    // Affichage sur l'écran principal (PC)
+    const revealZone = document.getElementById('role-reveal');
+    revealZone.innerHTML = ""; // On vide au cas où
+
+    // Génération de la liste des rôles sur l'écran PC
+    players.forEach(p => {
+        const roleLabel = p.role === 'A' ? "ALPHA" : (p.role === 'I' ? "INFECTÉ" : "SURVIVANT");
+        const card = document.createElement('div');
+        card.className = `reveal-card rev-${p.role}`;
+        card.innerHTML = `
+            <div style="font-weight:bold; color:#FFF;">${p.name.toUpperCase()}</div>
+            <div style="font-size:0.8em; color:#888;">${p.metier}</div>
+            <div style="font-size:0.9em; color:${(p.role === 'S' ? '#3498db' : '#e74c3c')}">${roleLabel}</div>
+        `;
+        revealZone.appendChild(card);
+    });
+
+    // Affichage de l'écran de fin
     document.getElementById('end-screen').style.display = "flex";
     document.getElementById('victory-title').innerText = "VICTOIRE : " + team;
     document.getElementById('victory-reason').innerText = reason;
     
     addLog(`FIN DE PARTIE : Victoire des ${team}.`);
 
-    // Envoi personnalisé à chaque joueur
+    // Envoi aux joueurs
     players.forEach(p => {
-        // Logique de victoire :
-        // Si team est "SURVIVANTS", les 'S' gagnent.
-        // Si team est "INFECTES", les 'I' et 'A' gagnent.
         let hasWon = false;
         if (team === "SURVIVANTS" && p.role === 'S') hasWon = true;
         if (team === "INFECTES" && (p.role === 'I' || p.role === 'A')) hasWon = true;
@@ -91,7 +104,7 @@ function triggerWin(team, reason) {
             type: 'END_GAME', 
             team: team, 
             reason: reason,
-            personalResult: hasWon ? "VICTOIRE" : "DÉFAITE"
+            personalResult: hasWon ? "MISSION RÉUSSIE" : "MISSION ÉCHOUÉE"
         });
     });
 }
