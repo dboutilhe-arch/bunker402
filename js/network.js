@@ -29,32 +29,33 @@ function setupConnection(conn) {
             if (data.type === 'JOIN') {
                 let p = players.find(pl => pl.name.toLowerCase() === data.name.toLowerCase());
             
-            if (p) {
-                p.conn = conn; 
-                p.conn.send({ type: 'CONNECTED' });
-            
-                const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
-                tags.forEach(tag => { tag.style.opacity = "1"; });
-            
-                addLog(`RECONNEXION : Signal de ${p.name} rétabli.`);
+                if (p) {
+                    p.conn = conn; 
+                    p.conn.send({ type: 'CONNECTED' });
                 
-                if (document.getElementById('game-zone').style.display === 'block') {
-                    const alpha = players.find(a => a.role === 'A');
+                    const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+                    tags.forEach(tag => { tag.style.opacity = "1"; });
+                
+                    addLog(`RECONNEXION : ${p.name} est de retour.`);
                     
-                    p.conn.send({ 
-                        type: 'INIT', 
-                        role: p.role, 
-                        roleConfig: ROLES_CONFIG[p.role],
-                        metier: p.metier, 
-                        all: players.map(pl => pl.name),
-                        alphaName: (p.role === 'I' || p.role === 'A') ? (alpha ? alpha.name : null) : null
-                    });
-                    
-                    syncTerminals();
-                    setTimeout(() => restorePlayerAction(p), 100);
+                    if (document.getElementById('game-zone').style.display === 'block') {
+                        const alpha = players.find(a => a.role === 'A');
+                        
+                        p.conn.send({ 
+                            type: 'INIT', 
+                            role: p.role, 
+                            roleConfig: ROLES_CONFIG[p.role], // LIGNE CRUCIALE MANQUANTE
+                            metier: p.metier, 
+                            all: players.map(pl => pl.name),
+                            alphaName: (p.role === 'I' || p.role === 'A') ? (alpha ? alpha.name : null) : null
+                        });
+                        
+                        syncTerminals();
+                        // On attend un peu pour que le terminal traite l'INIT avant de restaurer l'UI
+                        setTimeout(() => restorePlayerAction(p), 200);
+                    }
+                    return; 
                 }
-                return; 
-            }
             
                 // CAS NOUVEAU JOUEUR
                 if (players.length >= 10) return conn.send({ type: 'ERROR_BUNKER_FULL' });
