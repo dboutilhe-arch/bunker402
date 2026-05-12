@@ -151,13 +151,18 @@ function restorePlayerAction(player) {
 
     switch(currentPhase) {
         case "VOTE":
-            // Si le joueur est déjà dans la liste des votants, on lui dit d'attendre
-            const aDejaVote = votes.list.some(v => v.name.toLowerCase() === p.name.toLowerCase());
+            // On vérifie si ce joueur précis a déjà voté
+            const aDejaVote = votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
             if (aDejaVote) {
-                return p.conn.send({ type: 'WAIT_VOTE' }); // Créer ce type ou envoyer un message d'attente
+                player.conn.send({ type: 'CLEAN_UI' }); // On lui affiche "En attente..."
+            } else {
+                // On renvoie l'écran de vote correct
+                player.conn.send({ 
+                    type: 'VOTE_START', 
+                    g: players[curG].name, 
+                    s: currentProposedS 
+                });
             }
-            // Sinon, on lui renvoie l'écran de vote
-            p.conn.send({ type: 'START_VOTE', gardien: players[curG].name, sentinelle: players[curSIdx].name });
             break;
         
         case "LÉGISLATION_G":
@@ -178,7 +183,6 @@ function restorePlayerAction(player) {
         
         default: // DÉSIGNATION
             if (isGardien) {
-                // On recalcule les éligibles pour lui renvoyer son menu
                 let eligible = players.map(p => p.name).filter(name => {
                     if (name === players[curG].name) return false;
                     if (name === lastSentinelle) return false;
