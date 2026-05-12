@@ -6,16 +6,28 @@ function displayComposition(roles) {
     }, {});
 
     const compDiv = document.getElementById('composition-display');
-    // Calcul des totaux par camp
-    const totalS = (counts['S'] || 0) + (counts['M'] || 0);
-    const totalI = (counts['I'] || 0) + (counts['IM'] || 0);
+    
+    // On ne compte que les rôles de base ici
+    const totalS = (counts['S'] || 0);
+    const totalI = (counts['I'] || 0);
 
-    compDiv.innerHTML = `
-        <div style="color: #FFF; font-weight: bold; margin-bottom: 5px;">${players.length} PERSONNELS :</div>
-        <div style="color: #3498db;">• ${totalS} SURVIVANTS ${counts['M'] ? '(dont 1 Mycologue)' : ''}</div>
-        <div style="color: #e74c3c;">• ${totalI} INFECTÉS ${counts['IM'] ? '(dont 1 Immunisé)' : ''}</div>
-        <div style="color: #9400d3;">• 1 ALPHA</div>
-    `;
+    let html = `<div style="color: #FFF; font-weight: bold; margin-bottom: 5px;">${players.length} PERSONNELS :</div>`;
+    // Affichage des Survivants standards
+    html += `<div style="color: #3498db;">• ${totalS} SURVIVANTS</div>`;
+    // Affichage des Infectés standards
+    html += `<div style="color: #e74c3c;">• ${totalI} INFECTÉS</div>`;
+    // Ligne Alpha (Toujours présent)
+    html += `<div style="color: #9400d3;">• 1 ALPHA</div>`;
+    // Affichage conditionnel du Mycologue (Infiltré)
+    if (counts['M']) {
+        html += `<div style="color: #1b4d3e;">• ${counts['M']} MYCOLOGUE</div>`;
+    }
+    // Affichage conditionnel de l'Immunisé (Résistant)
+    if (counts['IM']) {
+        html += `<div style="color: #d4af37;">• ${counts['IM']} IMMUNISÉ</div>`;
+    }
+
+    compDiv.innerHTML = html;
 }
 
 // Affichage dernier conseil
