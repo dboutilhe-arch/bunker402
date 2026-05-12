@@ -53,7 +53,9 @@
         }
         .win-condition { color: #888; font-style: italic; margin-top: 5px; }
 
-        .role-A { border: 2px solid #9400d3 !important; color: #9400d3 !important; } /* Coloration Alpha */
+        .role-A { border: 2px solid #9400d3 !important; color: #9400d3 !important; }  /* Alpha     => Violet     */
+        .role-M { border: 2px solid #1b4d3e !important; color: #1b4d3e !important; }  /* Mycologue => Vert foncé */
+        .role-IM { border: 2px solid #d4af37 !important; color: #d4af37 !important; } /* Immunisé  => Jaune doré */
         
         .hidden { display: none; } /* Pour cacher les écrans non utilisés */
         input { background: #111; color: #2ecc71; border: 1px solid #2ecc71; padding: 15px; width: 85%; text-align: center; margin-bottom: 10px; }
@@ -187,6 +189,25 @@
                         goal.innerText = "🎯 OBJECTIF : Propager l'infection.";
                         win.innerText = "Conditions : 6 décrets ROUGES ou être élu Sentinelle (si 3 décrets rouges posés).";
                         // On n'affiche rien dans alphaInfo pour l'Alpha lui-même
+                        alphaInfo.innerHTML = ""; 
+                        break;
+                    case 'M':
+                        rDisplay.innerText = "RÔLE : MYCOLOGUE";
+                        rDisplay.style.color = "#1b4d3e"; // Vert foncé
+                        rDisplay.parentElement.style.borderColor = "#1b4d3e";
+                        goal.innerText = "🎯 OBJECTIF : Propager l'infection (Infiltré).";
+                        win.innerText = "Conditions : 6 décrets ROUGES ou victoire de l'Alpha.";
+                        if (data.alphaName) {
+                            alphaInfo.innerHTML = `👑 ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
+                        }
+                        break;
+                    
+                    case 'IM':
+                        rDisplay.innerText = "RÔLE : IMMUNISÉ";
+                        rDisplay.style.color = "#d4af37"; // Jaune doré
+                        rDisplay.parentElement.style.borderColor = "#d4af37";
+                        goal.innerText = "🎯 OBJECTIF : Rétablir les protocoles (Résistant).";
+                        win.innerText = "Conditions : 5 décrets BLEUS ou éliminer l'Alpha.";
                         alphaInfo.innerHTML = ""; 
                         break;
                 }
