@@ -121,11 +121,9 @@ function resolveVote() {
         clearGardienVisuals(); // On enlève l'étoile du gardien déchu
 
         if(state.oxy <= 0) {
-            addLog("PROTOCOLE DE SÉCURITÉ ACTIVÉ : Application immédiate du décret d'urgence.");
-            const emergencyDecret = deck.shift(); // Pioche la première carte de la pile
-            const typeLabel = emergencyDecret === 'S' ? "SURVIE" : (emergencyDecret === 'C' ? "CRISE" : "SUFFRAGE");
-            addLog(`URGENCE : Le système d'urgence a déployé un décret de type ${typeLabel}.`);
-            
+            addLog("⚠️ ALERTE : RÉSERVES D'OXYGÈNE ÉPUISÉES !");
+            addLog("PROTOCOLE DE SÉCURITÉ : Application forcée d'un décret d'urgence.");
+            // On appelle applyForced qui va piocher ET logger le résultat
             applyForced();
         }
         else { 
@@ -156,10 +154,19 @@ function applyDecret(type) {
     }
 }
 
-// Loi forcée (Oxygène à 0)
+// Décret forcé (Oxygène à 0)
 function applyForced() {
-    let card = deck.pop(); while(card === 'F') card = deck.pop();
-    applyDecret(card); state.oxy = 3;
+    // On pioche la carte d'urgence
+    let card = deck.pop(); 
+    while(card === 'F') card = deck.pop(); 
+    
+    // On logue précisément ce qui a été déployé
+    const typeLabel = card === 'S' ? "SURVIE" : "CRISE";
+    addLog(`URGENCE : Le système a déployé un décret de type ${typeLabel}.`);
+    
+    // On applique et on reset l'oxygène
+    applyDecret(card); 
+    state.oxy = 3; 
 }
 
 // Restoration de l'écran du joueur en cas de reconnexion
