@@ -110,7 +110,7 @@
         }
         
         .rev-S { border-left: 5px solid #3498db; } /* Bleu pour Survivants */
-        .rev-I,{ border-left: 5px solid #e74c3c; } /* Rouge pour Infectés */
+        .rev-I { border-left: 5px solid #e74c3c; } /* Rouge pour Infectés */
         .rev-A { border-left: 5px solid #9400d3; } /* Violet pour l'Alpha */
         
     </style>
@@ -171,12 +171,17 @@
             </div>
         </div>
 
-        <!-- Ecran de fin -->
+        <!-- Écran de fin global -->
         <div id="end-screen">
             <h1 id="victory-title" style="font-size: 3em; margin-bottom:10px;"></h1>
             <h2 id="victory-reason" style="color: #f1c40f; margin-bottom:20px; font-size: 1.2em;"></h2>
+            
+            <!-- C'est ici que les cartes de rôles vont apparaître -->
             <div id="role-reveal"></div>
-            <button onclick="location.reload()" style="padding: 15px 30px; background: #2ecc71; border: none; cursor: pointer; font-weight: bold; border-radius:10px; margin-top: 20px;">REINITIALISER LE SYSTÈME</button>
+            
+            <button onclick="location.reload()" style="padding: 15px 30px; background: #2ecc71; border: none; cursor: pointer; font-weight: bold; border-radius:10px; margin-top: 20px;">
+                REINITIALISER LE SYSTÈME
+            </button>
         </div>
         
     </div>
