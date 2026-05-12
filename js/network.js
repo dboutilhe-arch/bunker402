@@ -94,7 +94,7 @@ function setupConnection(conn) {
             
                 // Mise à jour de l'interface console pour voir qui a voté
                 const summary = document.getElementById('vote-summary');
-                summary.innerText = `VOTES TRANSMIS : ${votes.total} / ${players.length}`;
+                summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${votes.total} / ${players.length}`;
                 summary.style.color = "#f1c40f"; // Couleur "Alerte" pendant le vote
 
                 // On ajoute une ligne dans le log
