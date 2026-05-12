@@ -1,37 +1,33 @@
-// Lancement de la partie
 async function initGame() {
-    // 1. Préparation des données
+    // 1. Préparation des paquets et rôles
     deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
     const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
     const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
-    const alphaPlayer = players[roles.indexOf('A')]; // On trouve l'Alpha via son index futur
+    
+    const alphaPlayer = players[roles.indexOf('A')];
 
-    // 2. Envoi progressif
+    // 2. Distribution personnalisée
     for (let i = 0; i < players.length; i++) {
         let p = players[i];
-        p.role = roles[i] || 'S';
+        p.role = roles[i];
         p.metier = metiers[i];
 
-        let teamInfo = {
+        // On prépare le pack de données avec la config du rôle extraite de ROLES_CONFIG
+        let initPack = {
             type: 'INIT',
             role: p.role,
+            roleConfig: ROLES_CONFIG[p.role], // Envoi de la config centralisée
             metier: p.metier,
             all: players.map(pl => pl.name),
             alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
         };
 
-        // On vérifie si la connexion est ouverte avant d'envoyer
         if (p.conn && p.conn.open) {
-            p.conn.send(teamInfo);
-        } else {
-            console.error(`Connexion perdue avec ${p.name}`);
+            p.conn.send(initPack);
         }
-
-        // On attend 50ms avant le prochain envoi pour laisser respirer le réseau
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(r => setTimeout(r, 50));
     }
 
-    // 3. Lancement visuel
     updateTagsWithJobs();
     document.getElementById('setup-zone').style.display = 'none';
     document.getElementById('game-zone').style.display = 'block';
