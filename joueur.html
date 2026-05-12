@@ -135,42 +135,36 @@
         function handleData(data) {
             const ui = document.getElementById('main-ui');
 
-            // --- SÉCURITÉ RECONNEXION ---
-            if (data.type === 'CONNECTED' || data.type === 'INIT') {
-                document.getElementById('setup').classList.add('hidden');
-                document.getElementById('game').classList.remove('hidden');
-            }
-
-        if (data.type === 'INIT') {
-            allPlayers = data.all;
-            const config = data.roleConfig; // On récupère l'objet envoyé par le PC
-        
-            const rDisplay = document.getElementById('role-display');
-            const memo = document.getElementById('memo-box');
-            const goal = document.getElementById('team-goal');
-            const win = document.getElementById('win-cond');
-            const alphaInfo = document.getElementById('alpha-info');
-        
-            // Affichage des textes et couleurs via la config
-            rDisplay.innerText = "RÔLE : " + config.label;
-            rDisplay.style.color = config.color;
-            goal.innerText = config.goal;
-            win.innerText = config.winCond;
+            if (data.type === 'INIT') {
+                allPlayers = data.all;
+                const config = ROLES_DATA[data.role];
             
-            memo.style.display = "block";
-        
-            // Style spécial si c'est l'Alpha (bordure violette)
-            if (data.role === 'A') {
-                rDisplay.parentElement.style.borderColor = config.color;
+                const rDisplay = document.getElementById('role-display');
+                const memo = document.getElementById('memo-box');
+                const goal = document.getElementById('team-goal');
+                const win = document.getElementById('win-cond');
+                const alphaInfo = document.getElementById('alpha-info');
+            
+                // Affichage des textes et couleurs via la config
+                rDisplay.innerText = "RÔLE : " + config.label;
+                rDisplay.style.color = config.color;
+                goal.innerText = config.goal;
+                win.innerText = config.winCond;
+                
+                memo.style.display = "block";
+            
+                // Style spécial si c'est l'Alpha (bordure violette)
+                if (data.role === 'A') {
+                    rDisplay.parentElement.style.borderColor = config.color;
+                }
+            
+                // Info d'équipe pour les infectés
+                if (data.alphaName && (data.role === 'I' || data.role === 'A')) {
+                    alphaInfo.innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
+                }
+            
+                document.getElementById('metier-display').innerText = "MÉTIER : " + data.metier;
             }
-        
-            // Info d'équipe pour les infectés
-            if (data.alphaName && (data.role === 'I' || data.role === 'A')) {
-                alphaInfo.innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
-            }
-        
-            document.getElementById('metier-display').innerText = "MÉTIER : " + data.metier;
-        }
 
             // Le nombre max de joueur est déjà atteint
             if (data.type === 'ERROR_BUNKER_FULL') {
