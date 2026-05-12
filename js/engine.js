@@ -151,7 +151,13 @@ function restorePlayerAction(player) {
 
     switch(currentPhase) {
         case "VOTE":
-            player.conn.send({ type: 'VOTE_START', g: players[curG].name, s: currentProposedS });
+            // Si le joueur est déjà dans la liste des votants, on lui dit d'attendre
+            const aDejaVote = votes.list.some(v => v.name.toLowerCase() === p.name.toLowerCase());
+            if (aDejaVote) {
+                return p.conn.send({ type: 'WAIT_VOTE' }); // Créer ce type ou envoyer un message d'attente
+            }
+            // Sinon, on lui renvoie l'écran de vote
+            p.conn.send({ type: 'START_VOTE', gardien: players[curG].name, sentinelle: players[curSIdx].name });
             break;
         
         case "LÉGISLATION_G":
