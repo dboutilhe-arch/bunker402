@@ -140,6 +140,7 @@
             if (data.type === 'INIT') {
                 allPlayers = data.all;
                 const rDisplay = document.getElementById('role-display');
+                const mDisplay = document.getElementById('metier-display');
                 const memo = document.getElementById('memo-box');
                 const goal = document.getElementById('team-goal');
                 const win = document.getElementById('win-cond');
@@ -147,33 +148,41 @@
             
                 memo.style.display = "block";
 
-                // Affichage entête en fonction du rôle
+                // Métier : Toujours en vert clair
+                mDisplay.style.color = "#2ecc71"; 
+                mDisplay.innerText = "MÉTIER : " + data.metier;
+
                 switch (data.role) {
-                        case 'S':
-                            rDisplay.innerText = "RÔLE : SURVIVANT";
-                            rDisplay.style.color = "#2ecc71"; // Vert standard
-                            goal.innerText = "🎯 OBJECTIF : Rétablir les protocoles de survie.";
-                            win.innerText = "Conditions : 5 décrets BLEUS ou éliminer l'Alpha.";
-                            break;
+                    case 'S':
+                        rDisplay.innerText = "RÔLE : SURVIVANT";
+                        rDisplay.style.color = "#3498db"; // Texte Bleu
+                        rDisplay.parentElement.style.borderColor = "#3498db"; // Cadre Bleu
+                        goal.innerText = "🎯 OBJECTIF : Rétablir les protocoles de survie.";
+                        win.innerText = "Conditions : 5 décrets BLEUS ou éliminer l'Alpha.";
+                        break;
                 
-                        case 'I':
-                            rDisplay.innerText = "RÔLE : INFECTÉ";
-                            rDisplay.style.color = "#e74c3c"; // Rouge
-                            goal.innerText = "🎯 OBJECTIF : Propager l'infection.";
-                            win.innerText = "Conditions : 6 décrets ROUGES ou élire l'Alpha comme Sentinelle (si 3 décrets rouges posés).";
-                            if (data.alphaName) {
-                                alphaInfo.innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
-                            }
-                            break;
+                    case 'I':
+                        rDisplay.innerText = "RÔLE : INFECTÉ";
+                        rDisplay.style.color = "#e74c3c"; // Texte Rouge
+                        rDisplay.parentElement.style.borderColor = "#e74c3c"; // Cadre Rouge
+                        goal.innerText = "🎯 OBJECTIF : Propager l'infection.";
+                        win.innerText = "Conditions : 6 décrets ROUGES ou élire l'Alpha comme Sentinelle (si 3 décrets rouges posés).";
+                        // Affiche l'Alpha uniquement pour les Infectés simples
+                        if (data.alphaName) {
+                            alphaInfo.innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
+                        }
+                        break;
                 
-                        case 'A':
-                            rDisplay.innerText = "RÔLE : ALPHA";
-                            rDisplay.style.color = "#9400d3"; // Violet
-                            rDisplay.parentElement.style.borderColor = "#9400d3";
-                            goal.innerText = "🎯 OBJECTIF : Propager l'infection.";
-                            win.innerText = "Conditions : 6 décrets ROUGES ou être élu Sentinelle (si 3 décrets rouges posés).";
-                            break;
-                    }
+                    case 'A':
+                        rDisplay.innerText = "RÔLE : ALPHA";
+                        rDisplay.style.color = "#9400d3"; // Texte Violet
+                        rDisplay.parentElement.style.borderColor = "#9400d3"; // Cadre Violet
+                        goal.innerText = "🎯 OBJECTIF : Propager l'infection.";
+                        win.innerText = "Conditions : 6 décrets ROUGES ou être élu Sentinelle (si 3 décrets rouges posés).";
+                        // On n'affiche rien dans alphaInfo pour l'Alpha lui-même
+                        alphaInfo.innerHTML = ""; 
+                        break;
+                }
                 
                 document.getElementById('metier-display').innerText = "MÉTIER : " + data.metier;
             }
