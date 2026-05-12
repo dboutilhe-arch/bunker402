@@ -87,6 +87,11 @@
         // Initialisation de la connexion Peer
         const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
         let conn, myName, currentHand = [], allPlayers = [];
+        const ROLES_DATA = {
+            'S': { label: "SURVIVANT", color: "#3498db", goal: "...", winCond: "..." },
+            'I': { label: "INFECTÉ", color: "#e74c3c", goal: "...", winCond: "..." },
+            'A': { label: "ALPHA", color: "#9400d3", goal: "...", winCond: "..." }
+        };
 
         // FONCTION : Se connecter au PC
         function connect(isReconnect = false) {
