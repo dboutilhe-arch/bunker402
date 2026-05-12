@@ -8,25 +8,28 @@ async function initGame() {
 
     // 2. Distribution personnalisée
     for (let i = 0; i < players.length; i++) {
-        let p = players[i];
-        p.role = roles[i];
-        p.metier = metiers[i];
-
-        // On prépare le pack de données avec la config du rôle extraite de ROLES_CONFIG
-        let initPack = {
-            type: 'INIT',
-            role: p.role,
-            roleConfig: ROLES_CONFIG[p.role], // Envoi de la config centralisée
-            metier: p.metier,
-            all: players.map(pl => pl.name),
-            alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
-        };
-
-        if (p.conn && p.conn.open) {
-            p.conn.send(initPack);
+            let p = players[i];
+            p.role = roles[i];
+            p.metier = metiers[i];
+    
+            let initPack = {
+                type: 'INIT',
+                role: p.role,
+                roleConfig: ROLES_CONFIG[p.role], // Source de vérité
+                metier: p.metier,
+                all: players.map(pl => pl.name),
+                alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
+            };
+    
+            // Vérification de l'état de la connexion avant l'envoi
+            if (p.conn && p.conn.open) {
+                p.conn.send(initPack);
+                console.log(`Données INIT envoyées à ${p.name}`); // Pour débug
+            } else {
+                console.error(`Impossible d'envoyer INIT à ${p.name} : connexion fermée`);
+            }
+            await new Promise(r => setTimeout(r, 100));
         }
-        await new Promise(r => setTimeout(r, 50));
-    }
 
     updateTagsWithJobs();
     document.getElementById('setup-zone').style.display = 'none';
