@@ -45,8 +45,6 @@
             display: none; /* Caché par défaut jusqu'à l'INIT */
         }
         .win-condition { color: #888; font-style: italic; margin-top: 5px; }
-
-        .role-A { border: 2px solid #9400d3 !important; color: #9400d3 !important; } /* Coloration Alpha */
         
         .hidden { display: none; } /* Pour cacher les écrans non utilisés */
         input { background: #111; color: #2ecc71; border: 1px solid #2ecc71; padding: 15px; width: 85%; text-align: center; margin-bottom: 10px; }
@@ -87,11 +85,6 @@
         // Initialisation de la connexion Peer
         const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
         let conn, myName, currentHand = [], allPlayers = [];
-        const ROLES_DATA = {
-            'S': { label: "SURVIVANT", color: "#3498db", goal: "🎯 OBJECTIF : Rétablir les protocoles de survie.", winCond: "Conditions : 5 décrets BLEUS ou éliminer l'Alpha." },
-            'I': { label: "INFECTÉ", color: "#e74c3c", goal: "🎯 OBJECTIF : Propager l'infection.", winCond: "Conditions : 6 décrets ROUGES ou élire l'Alpha comme Sentinelle (si 3 décrets rouges posés)." },
-            'A': { label: "ALPHA", color: "#9400d3", goal: "🎯 OBJECTIF : Propager l'infection.", winCond: "Conditions : 6 décrets ROUGES ou être élu Sentinelle (si 3 décrets rouges posés)." }
-        };
 
         // FONCTION : Se connecter au PC
         function connect(isReconnect = false) {
@@ -135,34 +128,41 @@
         function handleData(data) {
             const ui = document.getElementById('main-ui');
 
+            // --- SÉCURITÉ RECONNEXION ---
+            if (data.type === 'CONNECTED' || data.type === 'INIT') {
+                document.getElementById('setup').classList.add('hidden');
+                document.getElementById('game').classList.remove('hidden');
+            }
+
+            // Initialisation (Début de partie)
             if (data.type === 'INIT') {
                 allPlayers = data.all;
-                const config = ROLES_DATA[data.role];
-            
                 const rDisplay = document.getElementById('role-display');
                 const memo = document.getElementById('memo-box');
                 const goal = document.getElementById('team-goal');
                 const win = document.getElementById('win-cond');
                 const alphaInfo = document.getElementById('alpha-info');
             
-                // Affichage des textes et couleurs via la config
-                rDisplay.innerText = "RÔLE : " + config.label;
-                rDisplay.style.color = config.color;
-                goal.innerText = config.goal;
-                win.innerText = config.winCond;
-                
                 memo.style.display = "block";
             
-                // Style spécial si c'est l'Alpha (bordure violette)
-                if (data.role === 'A') {
-                    rDisplay.parentElement.style.borderColor = config.color;
+                if (data.role === 'S') {
+                    rDisplay.innerText = "RÔLE : SURVIVANT";
+                    goal.innerText = "🎯 OBJECTIF : Rétablir les protocoles de survie.";
+                    win.innerText = "Conditions : 5 décrets BLEUS ou éliminer l'Alpha.";
+                } else if (data.role === 'I' || data.role === 'A') {
+                    const isAlpha = data.role === 'A';
+                    rDisplay.innerText = isAlpha ? "RÔLE : ALPHA" : "RÔLE : INFECTÉ";
+                    rDisplay.style.color = "#e74c3c";
+                    
+                    goal.innerText = "🎯 OBJECTIF : Propager l'infection.";
+                    win.innerText = "Conditions : 6 décrets ROUGES ou élire l'Alpha comme Sentinelle (si 3 décrets rouges posés).";
+                    
+                    // Affichage de l'Alpha pour l'équipe
+                    if (data.alphaName) {
+                        alphaInfo.innerText = `☣️ ALPHA : ${data.alphaName.toUpperCase()}`;
+                    }
                 }
-            
-                // Info d'équipe pour les infectés
-                if (data.alphaName && (data.role === 'I' || data.role === 'A')) {
-                    alphaInfo.innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
-                }
-            
+                
                 document.getElementById('metier-display').innerText = "MÉTIER : " + data.metier;
             }
 
