@@ -22,9 +22,8 @@
         .filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; }
         .filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; }
 
-        /* Conseil et Fin de partie */
+        /* Conseil */
         .gov-box { background: #333; border: 2px solid #f1c40f; padding: 10px; margin-bottom: 10px; border-radius: 10px; display: none; }
-        #end-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
         #log { background: #000; color: #00ff00; padding: 10px; height: 80px; overflow-y: auto; width: 90%; margin: 10px auto; text-align: left; font-size: 0.8em; }
 
         /* Animations Lobby */
@@ -77,6 +76,43 @@
             line-height: 1.4;      /* Un peu d'air entre les deux lignes */
             margin-top: 10px;
         }
+
+        /* Ecran de Fin */
+        #end-screen { 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.98); /* Plus opaque pour le style */
+            display: none; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 1000; 
+            padding: 20px;
+        }
+        
+        #role-reveal {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            max-width: 900px;
+        }
+        
+        .reveal-card {
+            background: #222;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 150px;
+            text-align: left;
+        }
+        
+        .rev-S { border-left: 5px solid #3498db; } /* Bleu pour Survivants */
+        .rev-I,{ border-left: 5px solid #e74c3c; } /* Rouge pour Infectés */
+        .rev-A { border-left: 5px solid #9400d3; } /* Violet pour l'Alpha */
+        
     </style>
 </head>
 <body>
@@ -134,6 +170,15 @@
                 [INITIALISATION DU SYSTÈME RÉUSSIE]...
             </div>
         </div>
+
+        <!-- Ecran de fin -->
+        <div id="end-screen">
+            <h1 id="victory-title" style="font-size: 3em; margin-bottom:10px;"></h1>
+            <h2 id="victory-reason" style="color: #f1c40f; margin-bottom:20px; font-size: 1.2em;"></h2>
+            <div id="role-reveal"></div>
+            <button onclick="location.reload()" style="padding: 15px 30px; background: #2ecc71; border: none; cursor: pointer; font-weight: bold; border-radius:10px; margin-top: 20px;">REINITIALISER LE SYSTÈME</button>
+        </div>
+        
     </div>
 
     <script src="js/state.js"></script>
