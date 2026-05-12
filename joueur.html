@@ -275,10 +275,10 @@
             if (data.type === 'END_GAME') {
                 sessionStorage.clear();
                 
-                // Couleurs selon le résultat personnel
+                // On compare avec les bons termes envoyés par ui.js
+                const isWin = data.personalResult === "MISSION RÉUSSIE";
                 const winColor = "#2ecc71"; // Vert
                 const loseColor = "#e74c3c"; // Rouge
-                const isWin = data.personalResult === "VICTOIRE";
                 
                 ui.innerHTML = `
                     <div style="background:#111; padding:20px; border:2px solid ${isWin ? winColor : loseColor}; border-radius:10px; margin-top:10px;">
