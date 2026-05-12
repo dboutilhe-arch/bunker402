@@ -70,10 +70,30 @@ function showGov(g, s) {
 // Écran de victoire
 function triggerWin(team, reason) {
     state.gameOver = true;
+    
+    // Affichage sur l'écran principal (PC)
     document.getElementById('end-screen').style.display = "flex";
     document.getElementById('victory-title').innerText = "VICTOIRE : " + team;
     document.getElementById('victory-reason').innerText = reason;
-    players.forEach(p => p.conn.send({ type: 'END_GAME', team: team, reason: reason }));
+    
+    addLog(`FIN DE PARTIE : Victoire des ${team}.`);
+
+    // Envoi personnalisé à chaque joueur
+    players.forEach(p => {
+        // Logique de victoire :
+        // Si team est "SURVIVANTS", les 'S' gagnent.
+        // Si team est "INFECTES", les 'I' et 'A' gagnent.
+        let hasWon = false;
+        if (team === "SURVIVANTS" && p.role === 'S') hasWon = true;
+        if (team === "INFECTES" && (p.role === 'I' || p.role === 'A')) hasWon = true;
+
+        p.conn.send({ 
+            type: 'END_GAME', 
+            team: team, 
+            reason: reason,
+            personalResult: hasWon ? "VICTOIRE" : "DÉFAITE"
+        });
+    });
 }
 
 // Retire uniquement l'étoile et la bordure dorée du Gardien actuel
