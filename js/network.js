@@ -82,8 +82,23 @@ function setupConnection(conn) {
     
             // Réception d'un vote
             if (data.type === 'VOTE_DONE') {
-                votes[data.choice.toLowerCase()]++; votes.total++;
+                // 1. SÉCURITÉ : On vérifie si ce joueur a DÉJÀ voté dans ce tour
+                const dejaVote = votes.list.some(v => v.name.toLowerCase() === data.playerName.toLowerCase());
+                
+                if (dejaVote) {
+                    console.warn(`Tentative de double vote bloquée pour : ${data.playerName}`);
+                    return; // On ignore purement et simplement ce message
+                }
+            
+                // 2. Si c'est un nouveau vote, on l'enregistre normalement
+                votes[data.choice.toLowerCase()]++; 
+                votes.total++;
                 votes.list.push({ name: data.playerName, choice: data.choice });
+            
+                // Mise à jour de l'interface console pour voir qui a voté
+                console.log(`Vote reçu de ${data.playerName} (${votes.total}/${players.length})`);
+            
+                // 3. Si tout le monde a voté, on résout
                 if(votes.total === players.length) resolveVote();
             }
     
