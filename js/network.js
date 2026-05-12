@@ -57,7 +57,7 @@ function setupConnection(conn) {
                 }
             
                 // CAS NOUVEAU JOUEUR
-                if (players.length >= 10) return conn.send({ type: 'ERROR_BUNKER_FULL' });
+                if (players.length >= 100) return conn.send({ type: 'ERROR_BUNKER_FULL' });
             
                 players.push({ name: data.name, conn: conn });
                 
