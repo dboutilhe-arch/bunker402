@@ -92,3 +92,11 @@ function clearGardienVisuals() {
         });
     });
 }
+
+// Message Console de l'index
+function addLog(message) {
+    const log = document.getElementById('log');
+    const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    log.innerHTML += `<div>[${time}] > ${message}</div>`;
+    log.scrollTop = log.scrollHeight; // Scroll automatique vers le bas
+}
