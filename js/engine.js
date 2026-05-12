@@ -122,6 +122,7 @@ function resolveVote() {
 
 // Application d'un décret (Bleu, Rouge ou Gris)
 function applyDecret(type) {
+    clearGardienVisuals();
     if(type === 'S') state.survie++;
     else if(type === 'C') state.crise++;
     else if(type === 'F') state.suffrage = "Actif";
@@ -131,6 +132,7 @@ function applyDecret(type) {
     if(state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
     else if(state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
     else {
+        // Sauvegarde pour les restrictions du prochain tour
         lastSentinelle = players[curSIdx].name;
         lastGardien = players[curG].name;
         curG = (curG + 1) % players.length;
