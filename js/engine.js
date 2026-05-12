@@ -7,13 +7,13 @@ function displayComposition(roles) {
 
     const compDiv = document.getElementById('composition-display');
     // Calcul des totaux par camp
-    const totalS = (counts['S'] || 0) + (counts['IM'] || 0);
-    const totalI = (counts['I'] || 0) + (counts['M'] || 0);
+    const totalS = (counts['S'] || 0) + (counts['M'] || 0);
+    const totalI = (counts['I'] || 0) + (counts['IM'] || 0);
 
     compDiv.innerHTML = `
         <div style="color: #FFF; font-weight: bold; margin-bottom: 5px;">${players.length} PERSONNELS :</div>
-        <div style="color: #3498db;">• ${totalS} SURVIVANTS ${counts['IM'] ? '(dont 1 Immunisé)' : ''}</div>
-        <div style="color: #e74c3c;">• ${totalI} INFECTÉS ${counts['M'] ? '(dont 1 Mycologue)' : ''}</div>
+        <div style="color: #3498db;">• ${totalS} SURVIVANTS ${counts['M'] ? '(dont 1 Mycologue)' : ''}</div>
+        <div style="color: #e74c3c;">• ${totalI} INFECTÉS ${counts['IM'] ? '(dont 1 Immunisé)' : ''}</div>
         <div style="color: #9400d3;">• 1 ALPHA</div>
     `;
 }
