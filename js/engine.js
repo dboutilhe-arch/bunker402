@@ -1,42 +1,37 @@
+// Lancement de la partie
 async function initGame() {
-    // 1. Préparation (inchangée)
+    // 1. Préparation des données
     deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
     const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
     const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
-    
-    // Assigner les rôles à TOUT LE MONDE avant d'envoyer quoi que ce soit
-    players.forEach((p, i) => {
-        p.role = roles[i];
-        p.metier = metiers[i];
-    });
+    const alphaPlayer = players[roles.indexOf('A')]; // On trouve l'Alpha via son index futur
 
-    const alphaPlayer = players.find(p => p.role === 'A');
-
-    // 2. Envoi SÉQUENTIEL avec délai
+    // 2. Envoi progressif
     for (let i = 0; i < players.length; i++) {
         let p = players[i];
-        
-    let initPack = {
-        type: 'INIT',
-        role: p.role, // 'S', 'I' ou 'A'
-        metier: p.metier,
-        all: players.map(pl => pl.name),
-        alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
-    };
+        p.role = roles[i] || 'S';
+        p.metier = metiers[i];
 
+        let teamInfo = {
+            type: 'INIT',
+            role: p.role,
+            metier: p.metier,
+            all: players.map(pl => pl.name),
+            alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
+        };
+
+        // On vérifie si la connexion est ouverte avant d'envoyer
         if (p.conn && p.conn.open) {
-            p.conn.send(initPack);
-            addLog(`Transmission : ${p.name} (${i+1}/${players.length})`);
+            p.conn.send(teamInfo);
+        } else {
+            console.error(`Connexion perdue avec ${p.name}`);
         }
-        
-        // PAUSE : On laisse 250ms pour que le paquet soit traité avant le suivant
-        await new Promise(r => setTimeout(r, 250));
+
+        // On attend 50ms avant le prochain envoi pour laisser respirer le réseau
+        await new Promise(resolve => setTimeout(resolve, 50));
     }
 
-    // PAUSE DE SÉCURITÉ FINALE : On attend que le dernier pack soit bien reçu 
-    // AVANT de lancer les messages du premier tour (nextTurn)
-    await new Promise(r => setTimeout(r, 800));
-
+    // 3. Lancement visuel
     updateTagsWithJobs();
     document.getElementById('setup-zone').style.display = 'none';
     document.getElementById('game-zone').style.display = 'block';
@@ -211,12 +206,12 @@ function restorePlayerAction(player) {
             }
             break;
         
-default: // DÉSIGNATION
+        default: // DÉSIGNATION
             if (isGardien) {
                 let eligible = players.map(p => p.name).filter(name => {
                     if (name === players[curG].name) return false;
-                    if (name === state.lastSentinelle) return false;
-                    if (players.length > 5 && name === state.lastGardien) return false;
+                    if (name === lastSentinelle) return false;
+                    if (players.length > 5 && name === lastGardien) return false;
                     return true;
                 });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
