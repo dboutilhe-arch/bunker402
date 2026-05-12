@@ -33,6 +33,14 @@
         /* Zone de rôle : encadré jaune pour les infos secrètes */
         .role-ui { border: 2px solid yellow; color: yellow; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
 
+        /* Info Sang */
+        .blood-info { 
+            margin-top: 5px; 
+            font-weight: bold; 
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+
         /* Boutons standards (Lier, Voter, Choisir Joueur) */
         .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 15px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; }
 
@@ -86,6 +94,7 @@
         </div>
         <div id="memo-box" class="memo-box">
             <div id="team-goal"></div>
+            <div id="blood-status" class="blood-info"></div>
             <div id="alpha-info" style="color: #e74c3c; font-weight: bold; margin-top: 5px;"></div>
             <div class="win-condition" id="win-cond"></div>
         </div>
@@ -168,6 +177,7 @@
                         rDisplay.parentElement.style.borderColor = "#3498db"; // Cadre Bleu
                         goal.innerText = "🎯 OBJECTIF : Rétablir les protocoles de survie.";
                         win.innerText = "Conditions : 5 décrets BLEUS ou éliminer l'Alpha.";
+                        bloodDisplay.innerHTML = "🩸 SANG : <span style='color: #2ecc71;'>SAIN</span>";
                         break;
                 
                     case 'I':
@@ -180,6 +190,7 @@
                         if (data.alphaName) {
                             alphaInfo.innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
                         }
+                        bloodDisplay.innerHTML = "🩸 SANG : <span style='color: #e74c3c;'>INFECTÉ</span>";
                         break;
                 
                     case 'A':
@@ -190,6 +201,7 @@
                         win.innerText = "Conditions : 6 décrets ROUGES ou être élu Sentinelle (si 3 décrets rouges posés).";
                         // On n'affiche rien dans alphaInfo pour l'Alpha lui-même
                         alphaInfo.innerHTML = ""; 
+                        bloodDisplay.innerHTML = "🩸 SANG : <span style='color: #e74c3c;'>INFECTÉ</span>";
                         break;
                     case 'M':
                         rDisplay.innerText = "RÔLE : MYCOLOGUE";
@@ -200,6 +212,7 @@
                         if (data.alphaName) {
                             alphaInfo.innerHTML = `👑 ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
                         }
+                        bloodDisplay.innerHTML = "🩸 SANG : <span style='color: #2ecc71;'>SAIN</span>";
                         break;
                     
                     case 'IM':
@@ -209,6 +222,7 @@
                         goal.innerText = "🎯 OBJECTIF : Rétablir les protocoles (Résistant).";
                         win.innerText = "Conditions : 5 décrets BLEUS ou éliminer l'Alpha.";
                         alphaInfo.innerHTML = ""; 
+                        bloodDisplay.innerHTML = "🩸 SANG : <span style='color: #e74c3c;'>INFECTÉ</span>";
                         break;
                 }
                 
