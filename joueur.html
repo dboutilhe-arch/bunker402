@@ -240,6 +240,27 @@
                 return;
             }
 
+            if (data.type === 'RESET_TO_LOBBY') {
+                // On vide le stockage de session pour éviter les conflits de rôles d'une ancienne partie
+                // Mais on garde le nom et le code pour rester connecté
+                const savedName = sessionStorage.getItem('bunker_name');
+                const savedCode = sessionStorage.getItem('bunker_code');
+                
+                // On cache le jeu et on montre l'attente
+                document.getElementById('game').classList.remove('hidden');
+                document.getElementById('main-ui').innerHTML = "Le bunker a été réinitialisé par l'administrateur. En attente du lancement...";
+                
+                // On cache le memo-box
+                document.getElementById('memo-box').style.display = "none";
+                
+                // On reset l'affichage du rôle (visuel)
+                document.getElementById('role-display').innerText = "RÔLE : ???";
+                document.getElementById('role-display').style.color = "yellow";
+                document.getElementById('role-display').parentElement.style.borderColor = "yellow";
+                document.getElementById('metier-display').innerText = "MÉTIER : ???";
+                document.getElementById('metier-display').style.color = "#2ecc71";
+            }
+            
             // Le nom de joueur est déjà pris
             if (data.type === 'ERROR_NAME_TAKEN') {
                 alert("Ce nom est déjà utilisé dans le bunker. Choisis une autre identité !");
