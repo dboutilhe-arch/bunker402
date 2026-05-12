@@ -80,6 +80,7 @@ function setupConnection(conn) {
     
             // Gardien choisit sa Sentinelle
             if (data.type === 'SENTINELLE_CHOISIE') {
+                addLog(`CONSEIL : Le Gardien ${data.gardienName} a désigné ${data.sentinelleName} comme Sentinelle.`);
                 resetTagColors();
                 const gTags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
                 gTags.forEach(tag => {
@@ -123,6 +124,7 @@ function setupConnection(conn) {
                 currentLegislativeCards = data.remaining; // On stocke les 2 cartes restantes
                 
                 document.getElementById('vote-summary').innerText = "DÉCRET REÇU : La Sentinelle choisit le décret final";
+                addLog(`LÉGISLATION : Le Gardien a défaussé un décret et transmis les restants à la Sentinelle.`);
                 
                 // 1. On prévient tout le monde (y compris la sentinelle) de l'étape
                 players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
@@ -138,6 +140,9 @@ function setupConnection(conn) {
     
             // Choix final de la Sentinelle
             if (data.type === 'FINAL_CHOICE' && !isProcessingAction) {
+                const typeLabel = data.card === 'S' ? "SURVIE" : (data.card === 'C' ? "CRISE" : "SUFFRAGE");
+                addLog(`LÉGISLATION : La Sentinelle a promulgué le décret : ${typeLabel}`);
+                
                 isProcessingAction = true;
                 applyDecret(data.card);
             }
