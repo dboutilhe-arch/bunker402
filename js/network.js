@@ -39,13 +39,12 @@ function setupConnection(conn) {
                 addLog(`RECONNEXION : Signal de ${p.name} rétabli.`);
                 
                 if (document.getElementById('game-zone').style.display === 'block') {
-                    // CORRECTION ICI : On doit trouver l'Alpha pour renvoyer l'info
                     const alpha = players.find(a => a.role === 'A');
                     
                     p.conn.send({ 
                         type: 'INIT', 
                         role: p.role, 
-                        roleConfig: ROLES_CONFIG[p.role], // C'est cette ligne qui manque !
+                        roleConfig: ROLES_CONFIG[p.role],
                         metier: p.metier, 
                         all: players.map(pl => pl.name),
                         alphaName: (p.role === 'I' || p.role === 'A') ? (alpha ? alpha.name : null) : null
