@@ -97,7 +97,6 @@
             justify-content: center;
             gap: 15px;
             margin: 20px 0;
-            max-width: 900px;
         }
         
         .reveal-card {
@@ -109,9 +108,10 @@
             text-align: left;
         }
         
-        .rev-S { border-left: 5px solid #3498db; } /* Bleu pour Survivants */
-        .rev-I { border-left: 5px solid #e74c3c; } /* Rouge pour Infectés */
-        .rev-A { border-left: 5px solid #9400d3; } /* Violet pour l'Alpha */
+        /* Bordures de rôles */
+        .rev-S { border-left: 5px solid #3498db !important; } /* Bleu : Survivant */
+        .rev-I { border-left: 5px solid #e74c3c !important; } /* Rouge : Infecté */
+        .rev-A { border-left: 5px solid #9400d3 !important; } /* Violet : Alpha */
         
     </style>
 </head>
@@ -177,7 +177,7 @@
             <h2 id="victory-reason" style="color: #f1c40f; margin-bottom:20px; font-size: 1.2em;"></h2>
             
             <!-- C'est ici que les cartes de rôles vont apparaître -->
-            <div id="role-reveal"></div>
+            <div id="role-reveal" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; max-width: 900px;"></div>
             
             <button onclick="location.reload()" style="padding: 15px 30px; background: #2ecc71; border: none; cursor: pointer; font-weight: bold; border-radius:10px; margin-top: 20px;">
                 REINITIALISER LE SYSTÈME
