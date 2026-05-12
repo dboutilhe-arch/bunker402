@@ -93,6 +93,14 @@ function triggerWin(team, reason) {
                     roleLabel = "SURVIVANT";
                     roleColor = "#3498db"; // Bleu
                     break;
+                case 'M':
+                    roleLabel = "MYCOLOGUE";
+                    roleColor = "#9400d3"; // Vert foncé
+                    break;
+                case 'IM':
+                    roleLabel = "IMMUNISÉ";
+                    roleColor = "#d4af37"; // Jaune doré
+                    break;
             }
 
             // 2. Créer la carte
@@ -117,10 +125,9 @@ function triggerWin(team, reason) {
     // Envoi aux joueurs
     players.forEach(p => {
         let hasWon = false;
-        // Correction de la logique de victoire pour inclure l'Alpha avec les Infectés
-        if (team === "SURVIVANTS" && p.role === 'S') hasWon = true;
-        if (team === "INFECTES" && (p.role === 'I' || p.role === 'A')) hasWon = true;
-
+        if (team === "SURVIVANTS" && (p.role === 'S' || p.role === 'IM')) hasWon = true;
+        if (team === "INFECTES" && (p.role === 'I' || p.role === 'A' || p.role === 'M')) hasWon = true;
+    
         p.conn.send({ 
             type: 'END_GAME', 
             team: team, 
