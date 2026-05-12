@@ -29,36 +29,33 @@ function setupConnection(conn) {
             if (data.type === 'JOIN') {
                 let p = players.find(pl => pl.name.toLowerCase() === data.name.toLowerCase());
             
-                if (p) {
-                    // CAS RECONNEXION : On ne touche pas au HTML (l'étiquette existe déjà)
-                    p.conn = conn; 
-                    p.conn.send({ type: 'CONNECTED' });
-
-                    // --- RÉTABLISSEMENT VISUEL ---
-                    // On cherche toutes les étiquettes du joueur (Lobby + Jeu)
-                    const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
-                    tags.forEach(tag => {
-                        tag.style.opacity = "1"; // On dégrise
-                        tag.style.filter = "none"; // Au cas où tu aurais mis un filtre noir et blanc
+            if (p) {
+                p.conn = conn; 
+                p.conn.send({ type: 'CONNECTED' });
+            
+                const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+                tags.forEach(tag => { tag.style.opacity = "1"; });
+            
+                addLog(`RECONNEXION : Signal de ${p.name} rétabli.`);
+                
+                if (document.getElementById('game-zone').style.display === 'block') {
+                    // CORRECTION ICI : On doit trouver l'Alpha pour renvoyer l'info
+                    const alpha = players.find(a => a.role === 'A');
+                    
+                    p.conn.send({ 
+                        type: 'INIT', 
+                        role: p.role, 
+                        roleConfig: ROLES_CONFIG[p.role], // C'est cette ligne qui manque !
+                        metier: p.metier, 
+                        all: players.map(pl => pl.name),
+                        alphaName: (p.role === 'I' || p.role === 'A') ? (alpha ? alpha.name : null) : null
                     });
                     
-                    addLog(`RECONNEXION : Signal de ${p.name} rétabli.`);
-                    
-                    if (document.getElementById('game-zone').style.display === 'block') {
-                        const alpha = players.find(a => a.role === 'A');
-                        p.conn.send({ 
-                            type: 'INIT', 
-                            role: p.role, 
-                            roleConfig: ROLES_CONFIG[p.role], // AJOUT INDISPENSABLE
-                            metier: p.metier, 
-                            all: players.map(pl => pl.name),
-                            alphaName: (p.role === 'I' || p.role === 'A') ? (alpha ? alpha.name : null) : null
-                        });
-                        syncTerminals();
-                        restorePlayerAction(p);
-                    }
-                    return; 
+                    syncTerminals();
+                    restorePlayerAction(p);
                 }
+                return; 
+            }
             
                 // CAS NOUVEAU JOUEUR
                 if (players.length >= 10) return conn.send({ type: 'ERROR_BUNKER_FULL' });
