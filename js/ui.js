@@ -76,32 +76,13 @@ function triggerWin(team, reason) {
         revealZone.innerHTML = ""; 
 
         players.forEach(p => {
-            // 1. Déterminer le label et la couleur selon le rôle
-            let roleLabel = "";
-            let roleColor = "";
-
-            switch (p.role) {
-                case 'A':
-                    roleLabel = "ALPHA";
-                    roleColor = "#9400d3"; // Violet
-                    break;
-                case 'I':
-                    roleLabel = "INFECTÉ";
-                    roleColor = "#e74c3c"; // Rouge
-                    break;
-                case 'S':
-                    roleLabel = "SURVIVANT";
-                    roleColor = "#3498db"; // Bleu
-                    break;
-            }
-
-            // 2. Créer la carte
+            const config = ROLES_CONFIG[p.role]; // On récupère la config du rôle
             const card = document.createElement('div');
             card.className = `reveal-card rev-${p.role}`;
             card.innerHTML = `
                 <div style="font-weight:bold; color:#FFF; font-size:1.1em;">${p.name.toUpperCase()}</div>
                 <div style="font-size:0.8em; color:#888; margin-bottom:5px;">${p.metier}</div>
-                <div style="font-size:0.9em; color:${roleColor}; font-weight:bold;">${roleLabel}</div>
+                <div style="font-size:0.9em; color:${config.color}; font-weight:bold;">${config.label}</div>
             `;
             revealZone.appendChild(card);
         });
