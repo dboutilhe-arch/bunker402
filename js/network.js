@@ -124,7 +124,8 @@ function setupConnection(conn) {
                 currentLegislativeCards = data.remaining; // On stocke les 2 cartes restantes
                 
                 document.getElementById('vote-summary').innerText = "DÉCRET REÇU : La Sentinelle choisit le décret final";
-                addLog(`LÉGISLATION : Le Gardien a défaussé un décret et transmis les restants à la Sentinelle.`);
+                addLog(`LÉGISLATION : Le Gardien ${players[curG].name} a défaussé un décret secret.`);
+                addLog(`SYSTÈME : Transfert des décrets restants à la Sentinelle.`);
                 
                 // 1. On prévient tout le monde (y compris la sentinelle) de l'étape
                 players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
