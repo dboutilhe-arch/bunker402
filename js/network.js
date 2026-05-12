@@ -33,6 +33,16 @@ function setupConnection(conn) {
                     // CAS RECONNEXION : On ne touche pas au HTML (l'étiquette existe déjà)
                     p.conn = conn; 
                     p.conn.send({ type: 'CONNECTED' });
+
+                    // --- RÉTABLISSEMENT VISUEL ---
+                    // On cherche toutes les étiquettes du joueur (Lobby + Jeu)
+                    const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+                    tags.forEach(tag => {
+                        tag.style.opacity = "1"; // On dégrise
+                        tag.style.filter = "none"; // Au cas où tu aurais mis un filtre noir et blanc
+                    });
+                    
+                    addLog(`RECONNEXION : Signal de ${p.name} rétabli.`);
                     
                     if (document.getElementById('game-zone').style.display === 'block') {
                         p.conn.send({ 
