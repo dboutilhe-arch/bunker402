@@ -274,13 +274,22 @@
             // Écran de fin
             if (data.type === 'END_GAME') {
                 sessionStorage.clear();
-                ui.innerHTML = `<div style="background:#111; padding:20px; border-radius:10px; margin-top:10px;">
-                    <h1 style="color:#f1c40f; margin:0;">FIN DE PARTIE</h1>
-                    <h2 style="color:#2ecc71; margin:10px 0;">VICTOIRE : ${data.team}</h2>
-                    <p style="color:#888;">${data.reason}</p>
-                </div>`;
+                
+                // Couleurs selon le résultat personnel
+                const winColor = "#2ecc71"; // Vert
+                const loseColor = "#e74c3c"; // Rouge
+                const isWin = data.personalResult === "VICTOIRE";
+                
+                ui.innerHTML = `
+                    <div style="background:#111; padding:20px; border:2px solid ${isWin ? winColor : loseColor}; border-radius:10px; margin-top:10px;">
+                        <h1 style="color:${isWin ? winColor : loseColor}; margin:0;">${data.personalResult}</h1>
+                        <p style="color:#FFF; margin:10px 0; font-size:1.2em;">Les <b>${data.team}</b> ont pris le contrôle.</p>
+                        <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
+                        <p style="color:#888; font-style:italic;">"${data.reason}"</p>
+                    </div>
+                    <p style="margin-top:20px; font-size:0.8em; color:#555;">Connexion au bunker rompue.</p>
+                `;
             }
-        }
 
         // FONCTION : Dessiner les points bleus/rouges sur le téléphone
         function updateMiniBoard(state) {
