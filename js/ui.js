@@ -53,7 +53,7 @@ function showGov(g, s) {
         tag.style.borderWidth = "2px"; 
     });
     
-    document.getElementById('game-info-row').style.display = 'block';
+    document.getElementById('game-info-row').style.display = 'flex';
     document.getElementById('g-name').innerText = g; 
     document.getElementById('g-name').style.color = "#f1c40f";
     document.getElementById('s-name').innerText = s; 
