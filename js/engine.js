@@ -1,21 +1,28 @@
+// engine.js
 async function initGame() {
-    // 1. Préparation (inchangée)
+    // 1. Préparation des données
     deck = [...Array(10).fill('S'), ...Array(15).fill('C'), ...Array(4).fill('F')].sort(() => Math.random() - 0.5);
     const roles = (players.length >= 7 ? ['S','S','S','S','I','I','A'] : ['S','S','S','I','A']).sort(() => Math.random() - 0.5);
     const metiers = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile'].sort(() => Math.random() - 0.5);
     
-    const alphaPlayer = players[roles.indexOf('A')];
-
-    // 2. Envoi avec délai renforcé
-    for (let i = 0; i < players.length; i++) {
-        let p = players[i];
+    // ÉTAPE CRUCIALE : On assigne les rôles à TOUT LE MONDE d'abord
+    players.forEach((p, i) => {
         p.role = roles[i];
         p.metier = metiers[i];
+    });
 
+    // Maintenant l'Alpha est garanti d'exister pour tout le monde
+    const alphaPlayer = players.find(p => p.role === 'A');
+
+    // 2. Envoi avec un délai de sécurité au démarrage
+    // On attend 500ms pour laisser les connexions se stabiliser
+    await new Promise(r => setTimeout(r, 500));
+
+    for (let p of players) {
         let initPack = {
             type: 'INIT',
             role: p.role,
-            roleConfig: ROLES_CONFIG[p.role],
+            roleConfig: ROLES_CONFIG[p.role], // Utilise la config définie dans state.js
             metier: p.metier,
             all: players.map(pl => pl.name),
             alphaName: (p.role === 'I' || p.role === 'A') ? alphaPlayer.name : null 
@@ -23,13 +30,11 @@ async function initGame() {
 
         if (p.conn && p.conn.open) {
             p.conn.send(initPack);
-            addLog(`Transmission des données : ${p.name}`); // Debug console PC
-        } else {
-            addLog(`ERREUR : Signal perdu avec ${p.name}`);
+            addLog(`Transmission : ${p.name}`);
         }
         
-        // On augmente à 150ms pour laisser le temps au réseau de traiter chaque paquet
-        await new Promise(r => setTimeout(r, 150));
+        // On laisse 200ms entre chaque joueur pour ne pas saturer le canal PeerJS
+        await new Promise(r => setTimeout(r, 200));
     }
 
     updateTagsWithJobs();
