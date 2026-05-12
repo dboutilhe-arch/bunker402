@@ -71,23 +71,25 @@ function showGov(g, s) {
 function triggerWin(team, reason) {
     state.gameOver = true;
     
-    const revealZone = document.getElementById('role-reveal');
-    revealZone.innerHTML = ""; // On vide au cas où
+    // Reveal des rôles
+    const revealZone = document.getElementById('role-reveal-zone');
+    if (revealZone) {
+        revealZone.innerHTML = ""; 
 
-    // Génération de la liste des rôles sur l'écran PC
-    players.forEach(p => {
-        const roleLabel = p.role === 'A' ? "ALPHA" : (p.role === 'I' ? "INFECTÉ" : "SURVIVANT");
-        const card = document.createElement('div');
-        card.className = `reveal-card rev-${p.role}`;
-        card.innerHTML = `
-            <div style="font-weight:bold; color:#FFF;">${p.name.toUpperCase()}</div>
-            <div style="font-size:0.8em; color:#888;">${p.metier}</div>
-            <div style="font-size:0.9em; color:${(p.role === 'S' ? '#3498db' : '#e74c3c')}">${roleLabel}</div>
-        `;
-        revealZone.appendChild(card);
-    });
+        players.forEach(p => {
+            const roleLabel = p.role === 'A' ? "ALPHA" : (p.role === 'I' ? "INFECTÉ" : "SURVIVANT");
+            const card = document.createElement('div');
+            card.className = `reveal-card rev-${p.role}`;
+            card.innerHTML = `
+                <div style="font-weight:bold; color:#FFF; font-size:1.1em;">${p.name.toUpperCase()}</div>
+                <div style="font-size:0.8em; color:#888; margin-bottom:5px;">${p.metier}</div>
+                <div style="font-size:0.9em; color:${(p.role === 'S' ? '#3498db' : '#e74c3c')}; font-weight:bold;">${roleLabel}</div>
+            `;
+            revealZone.appendChild(card);
+        });
+    }
 
-    // Affichage de l'écran de fin
+    // Affichage de l'écran (qui est maintenant unique et global)
     document.getElementById('end-screen').style.display = "flex";
     document.getElementById('victory-title').innerText = "VICTOIRE : " + team;
     document.getElementById('victory-reason').innerText = reason;
