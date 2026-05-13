@@ -1,530 +1,221 @@
-<!DOCTYPE html>  
+<!-- joueur.html -->
+
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal Joueur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BUNKER 402 - Terminal</title>
+    <link rel="stylesheet" href="css/mobile.css">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <style>
-        /* Design global : look "ordinateur de bunker" (noir et vert) */
-        body { background: #000; color: #2ecc71; font-family: monospace; padding: 10px; text-align: center; margin: 0; overflow-x: hidden; }
-        
-        /* En-tête : affiche le nom du joueur et l'oxygène en haut de l'écran */
-        .header-ui { 
-            display: flex; 
-            justify-content: space-between; 
-            border-bottom: 1px solid #333; 
-            padding-bottom: 5px; 
-            margin-bottom: 10px; 
-            font-size: 0.75em;
-        }
-
-        /* Petit plateau de rappel : pour voir les scores sans regarder l'écran PC */
-        .mini-board { display: flex; justify-content: space-around; background: #111; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 0.7em; }
-
-        /* Les "dots" : petits carrés qui représentent les cartes posées (Bleu/Rouge) */
-        .dot { width: 10px; height: 15px; border: 1px solid #444; margin: 1px; display: inline-block; border-radius: 2px; }
-        .f-s { background: #3498db; border-color: #3498db; }
-        .f-c { background: #e74c3c; border-color: #e74c3c; }
-
-        /* Barre d'oxygène miniature sous le nom */
-        #oxy-mini { height: 5px; background: #3498db; width: 100%; transition: 0.5s; margin-top: 5px; }
-
-        /* Zone de rôle : encadré jaune pour les infos secrètes */
-        .role-ui { border: 2px solid yellow; color: yellow; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
-
-        /* Info Sang */
-        .blood-info { 
-            margin-top: 5px; 
-            font-weight: bold; 
-            text-transform: uppercase;
-            font-size: 0.9em;
-        }
-
-        /* Boutons standards (Lier, Voter, Choisir Joueur) */
-        .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 15px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; }
-
-        /* Boutons de cartes (Décrets) : plus larges et colorés selon le type */
-        .card { display: block; padding: 20px; margin: 10px auto; width: 90%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.1em; }
-        .S { background: #3498db; } /* Carte Bleue */
-        .C { background: #e74c3c; } /* Carte Rouge */
-        .F { background: #7f8c8d; } /* Carte Grise */
-
-        .memo-box {
-            background: #0a0a0a;
-            border-left: 3px solid #f1c40f;
-            padding: 10px;
-            margin: 10px 0;
-            text-align: left;
-            font-size: 0.85em;
-            display: none; /* Caché par défaut jusqu'à l'INIT */
-        }
-        .win-condition { color: #888; font-style: italic; margin-top: 5px; }
-
-        .role-A { border: 2px solid #9400d3 !important; color: #9400d3 !important; }  /* Alpha     => Violet     */
-        .role-M { border: 2px solid #1b4d3e !important; color: #1b4d3e !important; }  /* Mycologue => Vert foncé */
-        .role-IM { border: 2px solid #d4af37 !important; color: #d4af37 !important; } /* Immunisé  => Jaune doré */
-        
-        .hidden { display: none; } /* Pour cacher les écrans non utilisés */
-        input { background: #111; color: #2ecc71; border: 1px solid #2ecc71; padding: 15px; width: 85%; text-align: center; margin-bottom: 10px; }
-    </style>
 </head>
 <body>
-    <div id="setup">
-        <h2>TERMINAL BUNKER</h2>
-        <!-- Nom du joueur limité à 12 caractères maximum -->
-        <input type="text" id="p-name" placeholder="NOM (MAX 12)" maxlength="12">
-        <input type="text" id="r-code" placeholder="CODE CONSOLE">
-        <button class="btn" onclick="connect()" style="background:#2ecc71; color:#000;">LIER LE TERMINAL</button>
+    <div id="status-bar">CONNEXION EN COURS...</div>
+
+    <!-- ÉCRAN DE CONNEXION -->
+    <div id="login-screen" class="screen">
+        <h1 class="glitch">TERMINAL MOBILE</h1>
+        <input type="text" id="server-id" placeholder="CODE DU BUNKER">
+        <input type="text" id="player-name" placeholder="VOTRE NOM">
+        <button onclick="connectToServer()" id="join-btn">INTÉGRER LE BUNKER</button>
     </div>
 
-    <div id="game" class="hidden">
-        <div class="header-ui">
-            <span id="display-name" style="color: #f1c40f; font-weight:bold;">NOM</span>
-            <span id="oxy-text-mini">NIVEAU D'OXYGENE: 3/3</span>
-        </div>
-        <div id="oxy-mini"></div>
-        <div class="mini-board">
-            <div>SURVIE: <div id="m-s"></div></div>
-            <div>CRISE: <div id="m-c"></div></div>
-        </div>
-        <div class="role-ui">
-            <div id="role-display" style="font-size: 1.2em;">RÔLE : ???</div>
-            <div id="metier-display" style="color:#2ecc71; font-size:0.8em;">MÉTIER : ???</div>
-        </div>
-        <div id="memo-box" class="memo-box">
-            <div id="team-goal"></div>
-            <div id="blood-status" class="blood-info"></div>
-            <div id="alpha-info" style="color: #e74c3c; font-weight: bold; margin-top: 5px;"></div>
-            <div class="win-condition" id="win-cond"></div>
-        </div>
-        <div id="job-ui" style="margin-bottom: 10px;"></div>
-        <div id="main-ui">Synchronisation...</div>
+    <!-- LOBBY D'ATTENTE -->
+    <div id="lobby-screen" class="screen" style="display:none">
+        <p>IDENTITÉ EN COURS DE VÉRIFICATION...</p>
+        <div class="loader"></div>
+        <p id="waiting-msg">En attente du Superviseur...</p>
     </div>
 
-    <script>
-        // Initialisation de la connexion Peer
-        const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
-        let conn, myName, currentHand = [], allPlayers = [];
-        let hasUsedPower = false; // État du pouvoir pour la partie en cours
+    <!-- ZONE DE JEU PRINCIPALE -->
+    <div id="game-zone" class="screen" style="display:none">
+        <div id="role-card">
+            <div id="p-metier">Métier : ---</div>
+            <div id="p-role">Rôle : ---</div>
+        </div>
 
-        // FONCTION : Se connecter au PC
-        function connect(isReconnect = false) {
-            let nameInput = document.getElementById('p-name').value.trim();
-            let codeInput = document.getElementById('r-code').value.trim();
+        <div id="action-area">
+            <h2 id="phase-title">INITIALISATION...</h2>
+            <div id="controls"></div>
+        </div>
         
-            // Si c'est une reconnexion automatique
-            if (isReconnect) {
-                nameInput = sessionStorage.getItem('bunker_name');
-                codeInput = sessionStorage.getItem('bunker_code');
-                if (!nameInput || !codeInput) return;
-            }
-        
-            if(nameInput.length < 2 || !codeInput) return alert("Infos manquantes !");
-            
-            myName = nameInput;
-            conn = peer.connect(codeInput);
-        
-            conn.on('open', () => {
-                // On sauvegarde pour plus tard
-                sessionStorage.setItem('bunker_name', myName);
-                sessionStorage.setItem('bunker_code', codeInput);
-        
-                conn.send({ type: 'JOIN', name: myName, reconnect: isReconnect });
-                document.getElementById('setup').classList.add('hidden');
-                document.getElementById('game').classList.remove('hidden');
-                document.getElementById('display-name').innerText = myName.toUpperCase();
+        <!-- Zone spécifique pour les résultats de scan -->
+        <div id="feedback-area"></div>
+    </div>
+
+    <!-- ÉCRAN DE FIN -->
+    <div id="end-screen" class="screen" style="display:none">
+        <h1 id="end-result">---</h1>
+        <p id="end-reason"></p>
+        <button onclick="location.reload()">RETOUR LOBBY</button>
+    </div>
+
+    <script type="module">
+        let peer = null;
+        let conn = null;
+        let myName = "";
+        let myRole = "";
+        let myMetier = "";
+        let isPowerUsed = false;
+
+        window.connectToServer = () => {
+            const serverId = document.getElementById('server-id').value.trim();
+            myName = document.getElementById('player-name').value.trim();
+
+            if (!serverId || !myName) return alert("Infos manquantes !");
+
+            peer = new Peer();
+            peer.on('open', () => {
+                conn = peer.connect(serverId);
+                setupConnection();
             });
-        
-            conn.on('data', handleData);
-        }
-        
-        // Au chargement de la page, on vérifie si on peut se reconnecter
-        window.onload = () => {
-            if (sessionStorage.getItem('bunker_name')) {
-                connect(true);
-            }
         };
 
-        // FONCTION CRITIQUE : Gère tout ce que le PC ordonne au téléphone
-        function handleData(data) {
-            const ui = document.getElementById('main-ui');
+        function setupConnection() {
+            conn.on('open', () => {
+                conn.send({ type: 'JOIN', name: myName });
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('lobby-screen').style.display = 'block';
+                document.getElementById('status-bar').innerText = "VÉRIFIÉ : " + myName.toUpperCase();
+            });
 
-            // --- SÉCURITÉ RECONNEXION ---
-            if (data.type === 'CONNECTED' || data.type === 'INIT') {
-                document.getElementById('setup').classList.add('hidden');
-                document.getElementById('game').classList.remove('hidden');
-            }
-
-            // Initialisation (Début de partie)
-            if (data.type === 'INIT') {
-                allPlayers = data.all;
-                const rDisplay = document.getElementById('role-display');
-                const mDisplay = document.getElementById('metier-display');
-                const memo = document.getElementById('memo-box');
-                const goal = document.getElementById('team-goal');
-                const win = document.getElementById('win-cond');
-                const alphaInfo = document.getElementById('alpha-info');
-                const bloodDisplay = document.getElementById('blood-status');
-                const jobUi = document.getElementById('job-ui');
-
-                // Bouton du métier
-                // On synchronise la variable locale avec la mémoire du serveur
-                hasUsedPower = data.powerUsed || false;
-                // Si le serveur dit que c'est déjà utilisé, on grise l'interface
-                if (hasUsedPower && jobUi) {
-                    jobUi.style.opacity = "0.3";
-                }
-            
-                memo.style.display = "block";
-
-                // Métier : Toujours en vert clair
-                mDisplay.style.color = "#2ecc71"; 
-                mDisplay.innerText = "MÉTIER : " + data.metier;
-
-                // Affichage/Coloration des infos Objectifs/Alpha/Sang
-                switch (data.role) {
-                    case 'S':
-                        rDisplay.innerText = "RÔLE : SURVIVANT";
-                        rDisplay.style.color = "#3498db"; // Texte Bleu
-                        rDisplay.parentElement.style.borderColor = "#3498db"; // Cadre Bleu
-                        goal.innerText = "🎯 OBJECTIF : Rétablir les protocoles de survie.";
-                        win.innerText = "Conditions : 5 décrets BLEUS ou éliminer l'Alpha.";
-                        bloodDisplay.innerHTML = "🩸 SANG : <span style='color: #2ecc71;'>SAIN</span>";
-                        break;
-                
-                    case 'I':
-                        rDisplay.innerText = "RÔLE : INFECTÉ";
-                        rDisplay.style.color = "#e74c3c"; // Texte Rouge
-                        rDisplay.parentElement.style.borderColor = "#e74c3c"; // Cadre Rouge
-                        goal.innerText = "🎯 OBJECTIF : Propager l'infection.";
-                        win.innerText = "Conditions : 6 décrets ROUGES ou élire l'Alpha comme Sentinelle (si 3 décrets rouges posés).";
-                        // Affiche l'Alpha uniquement pour les Infectés simples
-                        if (data.alphaName) {
-                            alphaInfo.innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
-                        }
-                        bloodDisplay.innerHTML = "🩸 SANG : <span style='color: #e74c3c;'>INFECTÉ</span>";
-                        break;
-                
-                    case 'A':
-                        rDisplay.innerText = "RÔLE : ALPHA";
-                        rDisplay.style.color = "#9400d3"; // Texte Violet
-                        rDisplay.parentElement.style.borderColor = "#9400d3"; // Cadre Violet
-                        goal.innerText = "🎯 OBJECTIF : Propager l'infection.";
-                        win.innerText = "Conditions : 6 décrets ROUGES ou être élu Sentinelle (si 3 décrets rouges posés).";
-                        // On n'affiche rien dans alphaInfo pour l'Alpha lui-même
-                        alphaInfo.innerHTML = ""; 
-                        bloodDisplay.innerHTML = "🩸 SANG : <span style='color: #e74c3c;'>INFECTÉ</span>";
-                        break;
-                    case 'M':
-                        rDisplay.innerText = "RÔLE : MYCOLOGUE";
-                        rDisplay.style.color = "#1b4d3e"; // Vert foncé
-                        rDisplay.parentElement.style.borderColor = "#1b4d3e";
-                        goal.innerText = "🎯 OBJECTIF : Propager l'infection (Infiltré).";
-                        win.innerText = "Conditions : 6 décrets ROUGES ou victoire de l'Alpha.";
-                        if (data.alphaName) {
-                            alphaInfo.innerHTML = `👑 ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
-                        }
-                        bloodDisplay.innerHTML = "🩸 SANG : <span style='color: #2ecc71;'>SAIN</span>";
+            conn.on('data', (data) => {
+                switch(data.type) {
+                    case 'INIT':
+                        myRole = data.role;
+                        myMetier = data.metier;
+                        isPowerUsed = data.powerUsed || false;
+                        startUI(data);
                         break;
                     
-                    case 'IM':
-                        rDisplay.innerText = "RÔLE : IMMUNISÉ";
-                        rDisplay.style.color = "#d4af37"; // Jaune doré
-                        rDisplay.parentElement.style.borderColor = "#d4af37";
-                        goal.innerText = "🎯 OBJECTIF : Rétablir les protocoles (Résistant).";
-                        win.innerText = "Conditions : 5 décrets BLEUS ou éliminer l'Alpha.";
-                        alphaInfo.innerHTML = ""; 
-                        bloodDisplay.innerHTML = "🩸 SANG : <span style='color: #e74c3c;'>INFECTÉ</span>";
+                    case 'YOUR_TURN':
+                        showDesignation(data.eligible);
+                        break;
+
+                    case 'VOTE_START':
+                        showVote(data.g, data.s);
+                        break;
+
+                    case 'GARDIEN_PICK':
+                        showLegislative(data.cards, 3);
+                        break;
+
+                    case 'SENTINELLE_PICK':
+                        showLegislative(data.cards, 2);
+                        break;
+
+                    case 'BLOOD_TEST_RESULT':
+                        showScanResult(data.target, data.result);
+                        break;
+
+                    case 'CLEAN_UI':
+                        document.getElementById('controls').innerHTML = "";
+                        document.getElementById('feedback-area').innerHTML = "";
+                        break;
+
+                    case 'END_GAME':
+                        showEnd(data);
                         break;
                 }
-                
-                document.getElementById('metier-display').innerText = "MÉTIER : " + data.metier;
-
-                //Bouton Docteur
-                if (data.metier === 'Docteur') {
-                    document.getElementById('job-ui').innerHTML = `
-                        <button id="btn-power" class="btn" style="background:#2ecc71; color:black;" 
-                            onclick="openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE')">
-                            SCANNER UN PERSONNEL
-                        </button>
-                    `;
-                }
-            }
-
-            // Le nombre max de joueur est déjà atteint
-            if (data.type === 'ERROR_BUNKER_FULL') {
-                alert("Le bunker est complet ! Impossible de rejoindre cette session.");
-                // On ré-affiche le menu de connexion
-                document.getElementById('setup').classList.remove('hidden');
-                document.getElementById('game').classList.add('hidden');
-                if(conn) conn.close();
-                return;
-            }
-
-            if (data.type === 'RESET_TO_LOBBY') {
-
-                // Gestion Bouton de Métier
-                hasUsedPower = false; // Reset de l'utilisation du pouvoir
-                document.getElementById('job-ui').innerHTML = ""; // Nettoyage du bouton de métier
-                document.getElementById('job-ui').style.opacity = "1"; // Reset Opacité du bouton
-                
-                // On vide le stockage de session pour éviter les conflits de rôles d'une ancienne partie
-                // Mais on garde le nom et le code pour rester connecté
-                const savedName = sessionStorage.getItem('bunker_name');
-                const savedCode = sessionStorage.getItem('bunker_code');
-                
-                // On cache le jeu et on montre l'attente
-                document.getElementById('game').classList.remove('hidden');
-                document.getElementById('main-ui').innerHTML = "Le bunker a été réinitialisé par l'administrateur. En attente du lancement...";
-                
-                // On cache le memo-box
-                document.getElementById('memo-box').style.display = "none";
-                // On vide les infos de l'Alpha pour le reset
-                document.getElementById('alpha-info').innerHTML = "";
-                
-                // On reset l'affichage du rôle (visuel)
-                document.getElementById('role-display').innerText = "RÔLE : ???";
-                document.getElementById('role-display').style.color = "yellow";
-                document.getElementById('role-display').parentElement.style.borderColor = "yellow";
-                document.getElementById('metier-display').innerText = "MÉTIER : ???";
-                document.getElementById('metier-display').style.color = "#2ecc71";
-            }
-            
-            // Le nom de joueur est déjà pris
-            if (data.type === 'ERROR_NAME_TAKEN') {
-                alert("Ce nom est déjà utilisé dans le bunker. Choisis une autre identité !");
-                // On ré-affiche le menu de connexion pour qu'il puisse changer de nom
-                document.getElementById('setup').classList.remove('hidden');
-                document.getElementById('game').classList.add('hidden');
-                // On ferme la connexion actuelle pour repartir sur de bonnes bases
-                if(conn) conn.close(); 
-            }
-            
-            // Nettoyage (Entre les phases)
-            if (data.type === 'CLEAN_UI') { ui.innerHTML = "En attente..."; }
-
-            // Mise à jour des points (Synchronisation constante avec le PC)
-            if (data.type === 'SYNC_STATE') { updateMiniBoard(data.state); }
-
-            // Phase de sélection (Si on est le Gardien)
-            if (data.type === 'YOUR_TURN') {
-                ui.innerHTML = "<h3>TOUR DU GARDIEN</h3><p>Désignez votre Sentinelle :</p>";
-                
-                // On utilise data.eligible (la liste filtrée envoyée par le PC)
-                data.eligible.forEach(name => {
-                    ui.innerHTML += `<button class="btn" onclick="SentinelleChoisie('${name}')">${name}</button>`;
-                });
-            
-                // Optionnel : un petit message si la liste est vide (peu probable)
-                if(data.eligible.length === 0) ui.innerHTML += "<p>Erreur : Aucun joueur éligible.</p>";
-            }
-
-            // Phase de Vote (Pour tout le monde)
-            if (data.type === 'VOTE_START') {
-                ui.innerHTML = `<h3>VOTE CONSEIL</h3>`;
-            
-                // 1. Ajout d'un bandeau spécial si le joueur est concerné par le conseil
-                if (myName === data.g) {
-                    ui.innerHTML += `<p style="background: #f1c40f; color: black; padding: 5px;">⚠️ VOUS ÊTES LE GARDIEN PROPOSÉ</p>`;
-                } else if (myName === data.s) {
-                    ui.innerHTML += `<p style="background: #3498db; color: white; padding: 5px;">⚠️ VOUS ÊTES LA SENTINELLE PROPOSÉE</p>`;
-                }
-            
-                // 2. La consigne de vote standard
-                ui.innerHTML += `
-                    <div style="margin: 15px 0; padding: 10px; border: 1px dashed #555;">
-                        <p>Approuvez-vous ce Conseil ?</p>
-                        <p style="font-size: 1.1em;">
-                            <span style="color:#f1c40f; font-weight:bold;">${data.g}</span> (Gardien) <br>
-                            & <br>
-                            <span style="color:#3498db; font-weight:bold;">${data.s}</span> (Sentinelle)
-                        </p>
-                    </div>
-                `;
-                
-                // 3. Les boutons
-                ui.innerHTML += `<button class="btn" style="background:#2ecc71; color:black" onclick="EnvoiDuVote('OUI')">ACCEPTER</button>`;
-                ui.innerHTML += `<button class="btn" style="background:#e74c3c; color:black" onclick="EnvoiDuVote('NON')">REFUSER</button>`;
-            }
-
-            // Message d'information pour indiquer que le Gardien choisi sa Sentinelle
-            if (data.type === 'WAIT_SENTINELLE') {
-                ui.innerHTML = `<h3>FORMATION DU CONSEIL</h3><p>Le Gardien <b>${data.gardienName}</b> choisit sa Sentinelle...</p>`;
-            }
-
-            // Message d'information pour les joueurs de la phase de réflexion du Gardien et de la Sentinelle
-            if (data.type === 'WAIT_LEGISLATION') {
-                if (data.step === 'GARDIEN') {
-                    ui.innerHTML = "<h3>LÉGISLATION</h3><p>Le Gardien examine les décrets et en défausse un...</p>";
-                } else if (data.step === 'SENTINELLE') {
-                    ui.innerHTML = "<h3>LÉGISLATION</h3><p>Le Gardien a choisi. La Sentinelle décide du décret final...</p>";
-                }
-            }
-
-            // Choix du Gardien (3 cartes reçues, doit en jeter 1)
-            if (data.type === 'GARDIEN_PICK') {
-                currentHand = data.cards;
-                ui.innerHTML = "<h3>LÉGISLATION : GARDIEN</h3>";
-                ui.innerHTML +="<p style='color:#e74c3c; font-weight:bold;'>SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER (REJETER)</p>";
-                
-                currentHand.forEach((c, i) => {
-                    const label = c === 'S' ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
-                    ui.innerHTML += `<button class="card ${c}" onclick="gDiscard(${i})">${label}</button>`;
-                });
-            }
-
-            // Choix de la Sentinelle (2 cartes reçues, doit en jouer 1)
-            if (data.type === 'SENTINELLE_PICK') {
-                currentHand = data.cards;
-                ui.innerHTML = "<h3>LÉGISLATION : SENTINELLE</h3>";
-                ui.innerHTML += "<p style='color:#2ecc71; font-weight:bold;'>SÉLECTIONNEZ LE DÉCRET À APPLIQUER AU BUNKER</p>";
-                
-                currentHand.forEach((c, i) => {
-                    const label = c === 'S' ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
-                    ui.innerHTML += `<button class="card ${c}" onclick="sChoice(${i})">${label}</button>`;
-                });
-            }
-
-            // Test Sanguin
-            if (data.type === 'BLOOD_TEST_RESULT') {
-                const color = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
-            
-                ui.innerHTML = `
-                    <div style="border: 2px solid ${color}; padding: 15px; border-radius: 10px; background: #111;">
-                        <h3 style="color: ${color}">RÉSULTAT D'ANALYSE</h3>
-                        <p>Sujet : <b>${data.target}</b></p>
-                        <p>Statut : <span style="color: ${color}; font-weight: bold;">${data.result}</span></p>
-                        <button class="btn" onclick="closeUI()">OK</button>
-                    </div>
-                `;
-            }
-
-            if (data.type === 'FORCE_POWER_SELECT') {
-                // On ouvre le sélecteur automatiquement
-                openTargetSelector(data.action, data.title, true);
-                
-                // On peut même ajouter un petit son ou une alerte visuelle ici
-                document.body.style.backgroundColor = "#1a0000"; // Flash rouge pour l'alerte
-                setTimeout(() => { document.body.style.backgroundColor = "#000"; }, 500);
-            }
-            
-            // Écran de fin
-            if (data.type === 'END_GAME') {
-                sessionStorage.clear();
-                
-                // On compare avec les bons termes envoyés par ui.js
-                const isWin = data.personalResult === "MISSION RÉUSSIE";
-                const winColor = "#2ecc71"; // Vert
-                const loseColor = "#e74c3c"; // Rouge
-                
-                ui.innerHTML = `
-                    <div style="background:#111; padding:20px; border:2px solid ${isWin ? winColor : loseColor}; border-radius:10px; margin-top:10px;">
-                        <h1 style="color:${isWin ? winColor : loseColor}; margin:0;">${data.personalResult}</h1>
-                        <p style="color:#FFF; margin:10px 0; font-size:1.2em;">Les <b>${data.team}</b> ont pris le contrôle.</p>
-                        <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
-                        <p style="color:#888; font-style:italic;">"${data.reason}"</p>
-                    </div>
-                    <p style="margin-top:20px; font-size:0.8em; color:#555;">Connexion au bunker rompue.</p>
-                `;
-            }
-        }
-
-        // FONCTION : Dessiner les points bleus/rouges sur le téléphone
-        function updateMiniBoard(state) {
-            document.getElementById('oxy-mini').style.width = (state.oxy / 3 * 100) + "%";
-            document.getElementById('oxy-mini').style.background = state.oxy <= 1 ? "#e74c3c" : "#3498db";
-            document.getElementById('oxy-text-mini').innerText = `NIVEAU D'OXYGENE: ${state.oxy}/3`;
-            // On boucle pour créer les carrés bleus
-            let s = ""; for(let i=0; i<5; i++) s += `<div class="dot ${i < state.survie ? 'f-s' : ''}"></div>`;
-            document.getElementById('m-s').innerHTML = s;
-            // On boucle pour créer les carrés rouges (attention au nom 'crise' vs 'crisis')
-            let c = ""; for(let i=0; i<6; i++) c += `<div class="dot ${i < state.crise ? 'f-c' : ''}"></div>`;
-            document.getElementById('m-c').innerHTML = c;
-        }
-
-        // --- ACTIONS ENVOYÉES AU PC ---
-        function SentinelleChoisie(s) { conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: myName, sentinelleName: s }); }
-
-        // Envoi du vote
-        function EnvoiDuVote(v) { 
-            document.getElementById('main-ui').innerHTML = "Vote " + v + " transmis. En attente des autres joueurs..."; 
-            // On envoie le type, le choix ET le nom du joueur
-            conn.send({ type: 'VOTE_DONE', choice: v, playerName: myName }); 
-        }
-
-        function gDiscard(idx) { 
-            let cards = [...currentHand]; cards.splice(idx, 1);
-            // Splice retire la carte choisie du tableau. On envoie les 2 autres au PC.
-            document.getElementById('main-ui').innerHTML = "<h3 style='color:#3498db'>TRANSFÉRÉ</h3><p>La Sentinelle examine les décrets...</p>"; 
-            conn.send({ type: 'DISCARD_DONE', remaining: cards }); 
-        }
-        function sChoice(idx) { 
-            const card = currentHand[idx];
-            document.getElementById('main-ui').innerHTML = "<h3 style='color:#f1c40f'>PROMULGUÉ</h3><p>Mise à jour des systèmes du bunker...</p>";
-            conn.send({ type: 'FINAL_CHOICE', card: card }); 
-        }
-
-        // Ouvre une interface de sélection de joueur
-        function openTargetSelector(actionType, title, isForced = false) { // Ajout de isForced
-            // On ne bloque l'ouverture que si c'est le pouvoir de métier ET qu'il est déjà utilisé
-            if (!isForced && hasUsedPower) {
-                alert("PROTOCOLE : Capacité déjà utilisée.");
-                return;
-            }
-            
-            const ui = document.getElementById('main-ui');
-            let html = `<h3>${title}</h3>`;
-            html += `<p style="font-size:0.8em; color:#888; margin-bottom:10px;">Sélectionnez une cible :</p>`;
-            
-            allPlayers.forEach(name => {
-                if (name !== myName) {
-                    // On passe isForced à l'étape suivante
-                    html += `<button class="btn" onclick="executeTargetAction('${actionType}', '${name}', ${isForced})">${name.toUpperCase()}</button>`;
-                }
             });
-            
-            // Empêcher l'annulation si c'est un pouvoir de case (obligatoire)
-            if (!isForced) {
-                html += `<button class="btn" style="border-color:#e74c3c; color:#e74c3c; margin-top:15px;" onclick="closeUI()">ANNULER</button>`;
-            }
-            ui.innerHTML = html;
         }
-        
-        function executeTargetAction(actionType, targetName, isForced = false) {
-            if (!confirm(`Confirmer l'action sur ${targetName} ?`)) return;
-        
-            // On ne verrouille localement QUE si ce n'est pas forcé
-            if (!isForced) {
-                hasUsedPower = true; 
-                const jobUi = document.getElementById('job-ui');
-                if (jobUi) jobUi.style.opacity = "0.3";
+
+        function startUI(data) {
+            document.getElementById('lobby-screen').style.display = 'none';
+            document.getElementById('game-zone').style.display = 'block';
+            document.getElementById('p-metier').innerText = "POSTE : " + myMetier;
+            document.getElementById('p-role').innerText = "STATUS : " + myRole;
+            
+            // Si c'est le Docteur, on ajoute un bouton permanent pour son pouvoir
+            if (myMetier === 'Docteur') {
+                showDoctorPower(data.all);
             }
-        
-            conn.send({ 
-                type: actionType, 
-                targetName: targetName,
-                isForced: isForced // On transmet l'info au serveur
+        }
+
+        function showDesignation(eligible) {
+            const container = document.getElementById('controls');
+            container.innerHTML = "<h3>CHOISISSEZ UNE SENTINELLE :</h3>";
+            eligible.forEach(name => {
+                let btn = document.createElement('button');
+                btn.innerText = name;
+                btn.onclick = () => {
+                    conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: myName, sentinelleName: name });
+                    container.innerHTML = "<p>Désignation transmise...</p>";
+                };
+                container.appendChild(btn);
             });
-
-            // Ajouter un switch pour afficher le message correspondant à l'action
-            document.getElementById('main-ui').innerHTML = "<h3>TRAITEMENT...</h3><p>Accès aux données biologiques en cours...</p>";
-        }
-        
-        // Fonction pour fermer les fenêtres et revenir à l'état d'attente
-        function closeUI() {
-            // On demande au PC de nous renvoyer l'état actuel du jeu
-            // Cela déclenchera restorePlayerAction côté serveur
-            conn.send({ type: 'SYNC_REQUEST' });
-            
-            // Message temporaire le temps que le PC réponde
-            document.getElementById('main-ui').innerHTML = "Synchronisation avec le bunker...";
         }
 
-        // Si un joueur actualise sa page
-        window.onbeforeunload = function() {
-            return "Attention, quitter la page peut vous déconnecter du bunker !";
-        };
+        function showVote(g, s) {
+            const container = document.getElementById('controls');
+            container.innerHTML = `<h3>CONSEIL : ${g} & ${s}</h3>`;
+            ['OUI', 'NON'].forEach(choice => {
+                let btn = document.createElement('button');
+                btn.innerText = choice;
+                btn.className = choice === 'OUI' ? 'btn-oui' : 'btn-non';
+                btn.onclick = () => {
+                    conn.send({ type: 'VOTE_DONE', playerName: myName, choice: choice });
+                    container.innerHTML = "<p>Vote enregistré.</p>";
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function showLegislative(cards, count) {
+            const container = document.getElementById('controls');
+            container.innerHTML = `<h3>DÉFAUSSEZ 1 DÉCRET (${count === 3 ? 'GARDIEN' : 'SENTINELLE'})</h3>`;
+            cards.forEach((card, index) => {
+                let btn = document.createElement('button');
+                btn.innerText = card === 'S' ? 'SURVIE' : (card === 'C' ? 'CRISE' : 'SUFFRAGE');
+                btn.onclick = () => {
+                    let remaining = [...cards];
+                    remaining.splice(index, 1);
+                    if (count === 3) {
+                        conn.send({ type: 'DISCARD_DONE', remaining: remaining });
+                    } else {
+                        conn.send({ type: 'FINAL_CHOICE', card: remaining[0] });
+                    }
+                    container.innerHTML = "<p>Décision transmise...</p>";
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function showDoctorPower(allPlayers) {
+            const feedback = document.getElementById('feedback-area');
+            if (isPowerUsed) return;
+
+            const btn = document.createElement('button');
+            btn.id = "doc-btn";
+            btn.innerText = "💉 ANALYSE SANGUINE (1x)";
+            btn.onclick = () => {
+                feedback.innerHTML = "<h4>CIBLE DU SCAN :</h4>";
+                allPlayers.filter(n => n !== myName).forEach(target => {
+                    let pBtn = document.createElement('button');
+                    pBtn.innerText = target;
+                    pBtn.onclick = () => {
+                        conn.send({ type: 'REQUEST_BLOOD_TEST', targetName: target });
+                        isPowerUsed = true;
+                        btn.remove();
+                        feedback.innerHTML = "<p>Analyse en cours...</p>";
+                    };
+                    feedback.appendChild(pBtn);
+                });
+            };
+            document.getElementById('action-area').appendChild(btn);
+        }
+
+        function showScanResult(target, result) {
+            const feedback = document.getElementById('feedback-area');
+            feedback.innerHTML = `<div class="result-box ${result}">RÉSULTAT ${target} : ${result}</div>`;
+        }
+
+        function showEnd(data) {
+            document.getElementById('game-zone').style.display = 'none';
+            document.getElementById('end-screen').style.display = 'block';
+            document.getElementById('end-result').innerText = data.personalResult;
+            document.getElementById('end-reason').innerText = data.reason;
+        }
     </script>
 </body>
 </html>
