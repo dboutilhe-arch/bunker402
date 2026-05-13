@@ -1,7 +1,7 @@
 // Répartition des pouvoirs de case en fonction du nombre de joueur
 const POWER_MAP = {
     // 5 joueurs
-    5:  { 3: null, 4: 'TEST', 5: 'EXEC' },
+    5:  { 1: 'CENSURE', 3: null, 4: 'TEST', 5: 'EXEC' },
     // 6 à 7 joueurs
     6:  { 3: 'TEST', 4: 'TEST', 5: 'EXEC' },
     7:  { 3: 'TEST', 4: 'TEST', 5: 'EXEC' },
