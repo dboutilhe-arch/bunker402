@@ -1,6 +1,5 @@
 // Constants.js
-// Logique Pure et données
-// ôles, Config, PowerMap)
+// Ce fichier contient les données "statiques" qui ne changent pas pendant la partie. Cela permet d'équilibrer le jeu sans fouiller dans le code logique.
 
 export const DECK_COMPOSITION = {
     S: 40, // Survie
