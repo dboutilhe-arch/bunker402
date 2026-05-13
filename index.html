@@ -94,7 +94,12 @@
     </div>
     <script type="module">
         import { startServer } from './js/network/peer-manager.js';
-        window.startServer = startServer; // Pour le onclick du bouton
+        import { initGame } from './js/game/engine.js';
+        import { globalReset } from './js/ui/renderer.js';
+    
+        window.startServer = startServer;
+        window.initGame = initGame;
+        window.globalReset = globalReset;
     </script>
 </body>
 </html>
