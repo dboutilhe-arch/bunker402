@@ -380,11 +380,6 @@
             // Test Sanguin
             if (data.type === 'BLOOD_TEST_RESULT') {
                 const color = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
-                
-                // On marque le pouvoir comme utilisé ICI
-                hasUsedPower = true; 
-                // On peut aussi griser ou supprimer le bouton immédiatement
-                document.getElementById('job-ui').style.opacity = "0.3"; 
             
                 ui.innerHTML = `
                     <div style="border: 2px solid ${color}; padding: 15px; border-radius: 10px; background: #111;">
