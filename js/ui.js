@@ -42,6 +42,9 @@ function resetGameState() {
     
     // 3. On réactive le bouton start si on a assez de monde
     document.getElementById('start-btn').disabled = (players.length < 5);
+
+    // On remet le compteur de pouvoir à zéro pour tout le monde sur le serveur
+    players.forEach(p => p.powerUsed = false);
     
     // On remet les étiquettes en mode "Lobby" (sans métiers)
     resetLobbyVisuals();
