@@ -98,6 +98,7 @@
             <div id="alpha-info" style="color: #e74c3c; font-weight: bold; margin-top: 5px;"></div>
             <div class="win-condition" id="win-cond"></div>
         </div>
+        <div id="job-ui" style="margin-bottom: 10px;"></div>
         <div id="main-ui">Synchronisation...</div>
     </div>
 
@@ -232,14 +233,11 @@
 
                 //Bouton Docteur
                 if (data.metier === 'Docteur') {
-                    ui.innerHTML = `
-                        <div style="margin-top:20px; padding:10px; border:1px solid #2ecc71;">
-                            <p style="font-size:0.8em; margin-bottom:10px;">TEST SANGUIN</p>
-                            <button class="btn" style="background:#2ecc71; color:black;" 
-                                onclick="openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE')">
-                                SCANNER UN PERSONNEL
-                            </button>
-                        </div>
+                    document.getElementById('job-ui').innerHTML = `
+                        <button class="btn" style="background:#2ecc71; color:black;" 
+                            onclick="openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE')">
+                            SCANNER UN PERSONNEL
+                        </button>
                     `;
                 }
             }
