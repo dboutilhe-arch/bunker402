@@ -2,6 +2,8 @@
 // Dessin des plateaux & Mise à jour du DOM de la console centrale
 
 import { gameState, players, curG, curSIdx, votes } from '../core/state.js';
+import { gameState, players, resetState } from '../core/state.js';
+import { Logger } from './logger.js';
 
 export function render() {
     // Mise à jour de l'oxygène
@@ -84,4 +86,66 @@ export function updatePlayerTags() {
             }
         });
     });
+}
+
+/**
+ * Affiche l'écran de victoire final avec révélation des rôles
+ */
+export function showEndScreen(team, reason) {
+    const endScreen = document.getElementById('end-screen');
+    const revealZone = document.getElementById('role-reveal-zone');
+    
+    if (!endScreen || !revealZone) return;
+
+    document.getElementById('victory-title').innerText = "VICTOIRE : " + team;
+    document.getElementById('victory-reason').innerText = reason;
+    
+    revealZone.innerHTML = ""; 
+
+    players.forEach(p => {
+        let roleColor = p.role === 'S' ? '#3498db' : (p.role === 'I' || p.role === 'A' ? '#e74c3c' : '#d4af37');
+        const card = document.createElement('div');
+        card.className = `reveal-card rev-${p.role}`;
+        card.innerHTML = `
+            <div style="font-weight:bold; color:#FFF;">${p.name.toUpperCase()}</div>
+            <div style="font-size:0.7em; color:#888;">${p.metier}</div>
+            <div style="font-size:0.9em; color:${roleColor}; font-weight:bold;">${p.role}</div>
+        `;
+        revealZone.appendChild(card);
+    });
+
+    endScreen.style.display = "flex";
+    
+    // Notification aux terminaux mobiles
+    players.forEach(p => {
+        let hasWon = (team === "SURVIVANTS" && (p.role === 'S' || p.role === 'IM')) ||
+                     (team === "INFECTÉS" && (p.role === 'I' || p.role === 'A' || p.role === 'M'));
+        
+        p.conn.send({ 
+            type: 'END_GAME', 
+            team: team, 
+            reason: reason,
+            personalResult: hasWon ? "MISSION RÉUSSIE" : "MISSION ÉCHOUÉE"
+        });
+    });
+}
+
+/**
+ * Réinitialisation globale du serveur
+ */
+export function globalReset() {
+    if (!confirm("Réinitialiser la partie et renvoyer tout le monde au lobby ?")) return;
+    
+    players.forEach(p => p.conn.send({ type: 'RESET_TO_LOBBY' }));
+    
+    resetState();
+    Logger.clear();
+    
+    document.getElementById('end-screen').style.display = 'none';
+    document.getElementById('game-zone').style.display = 'none';
+    document.getElementById('setup-zone').style.display = 'block';
+    document.getElementById('lobby-active').style.display = 'block';
+    document.getElementById('count').innerText = "0";
+    document.getElementById('player-list').innerHTML = "";
+    document.getElementById('active-player-list').innerHTML = "";
 }
