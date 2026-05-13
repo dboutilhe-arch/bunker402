@@ -402,7 +402,7 @@
 
             if (data.type === 'FORCE_POWER_SELECT') {
                 // On ouvre le sélecteur automatiquement
-                openTargetSelector(data.action, data.title);
+                openTargetSelector(data.action, data.title, true);
                 
                 // On peut même ajouter un petit son ou une alerte visuelle ici
                 document.body.style.backgroundColor = "#1a0000"; // Flash rouge pour l'alerte
@@ -466,9 +466,10 @@
         }
 
         // Ouvre une interface de sélection de joueur
-        function openTargetSelector(actionType, title) {
-            if (hasUsedPower) {
-                alert("PROTOCOLE : Capacité déjà utilisée pour cette session.");
+        function openTargetSelector(actionType, title, isForced = false) { // Ajout de isForced
+            // On ne bloque l'ouverture que si c'est le pouvoir de métier ET qu'il est déjà utilisé
+            if (!isForced && hasUsedPower) {
+                alert("PROTOCOLE : Capacité déjà utilisée.");
                 return;
             }
             
@@ -478,29 +479,35 @@
             
             allPlayers.forEach(name => {
                 if (name !== myName) {
-                    html += `<button class="btn" onclick="executeTargetAction('${actionType}', '${name}')">${name.toUpperCase()}</button>`;
+                    // On passe isForced à l'étape suivante
+                    html += `<button class="btn" onclick="executeTargetAction('${actionType}', '${name}', ${isForced})">${name.toUpperCase()}</button>`;
                 }
             });
-        
-            html += `<button class="btn" style="border-color:#e74c3c; color:#e74c3c; margin-top:15px;" onclick="closeUI()">ANNULER</button>`;
+            
+            // Empêcher l'annulation si c'est un pouvoir de case (obligatoire)
+            if (!isForced) {
+                html += `<button class="btn" style="border-color:#e74c3c; color:#e74c3c; margin-top:15px;" onclick="closeUI()">ANNULER</button>`;
+            }
             ui.innerHTML = html;
         }
         
-        function executeTargetAction(actionType, targetName) {
+        function executeTargetAction(actionType, targetName, isForced = false) {
             if (!confirm(`Confirmer l'action sur ${targetName} ?`)) return;
         
-            // On considère le pouvoir consommé dès que la demande est partie
-            hasUsedPower = true; 
-            
-            // On grise l'interface métier tout de suite
-            const jobUi = document.getElementById('job-ui');
-            if (jobUi) jobUi.style.opacity = "0.3";
+            // On ne verrouille localement QUE si ce n'est pas forcé
+            if (!isForced) {
+                hasUsedPower = true; 
+                const jobUi = document.getElementById('job-ui');
+                if (jobUi) jobUi.style.opacity = "0.3";
+            }
         
             conn.send({ 
                 type: actionType, 
-                targetName: targetName 
+                targetName: targetName,
+                isForced: isForced // On transmet l'info au serveur
             });
-        
+
+            // Ajouter un switch pour afficher le message correspondant à l'action
             document.getElementById('main-ui').innerHTML = "<h3>TRAITEMENT...</h3><p>Accès aux données biologiques en cours...</p>";
         }
         
