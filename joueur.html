@@ -484,7 +484,12 @@
         
         // Fonction pour fermer les fenêtres et revenir à l'état d'attente
         function closeUI() {
-            document.getElementById('main-ui').innerHTML = "En attente d'instructions système...";
+            // On demande au PC de nous renvoyer l'état actuel du jeu
+            // Cela déclenchera restorePlayerAction côté serveur
+            conn.send({ type: 'SYNC_REQUEST' });
+            
+            // Message temporaire le temps que le PC réponde
+            document.getElementById('main-ui').innerHTML = "Synchronisation avec le bunker...";
         }
 
         // Si un joueur actualise sa page
