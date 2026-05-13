@@ -4,18 +4,16 @@ function testPlayerBlood(requester, targetName) {
 
     let bloodResult = "";
     
-    // Logique basée sur tes règles :
-    // Infecté : Alpha, Infectés, Immunisé
-    // Sain : Survivants, Mycologue
-    if (['A', 'I', 'IM'].includes(target.role)) {
-        bloodResult = "INFECTÉ";
-    } else {
-        bloodResult = "SAIN";
-    }
+    // Règles de Sang :
+    // INFECTÉ : Alpha (A), Infecté (I), Immunisé (IM)
+    // SAIN : Survivant (S), Mycologue (M)
+    const isInfected = ['A', 'I', 'IM'].includes(target.role);
+    bloodResult = isInfected ? "INFECTÉ" : "SAIN";
 
-    addLog(`POUVOIR : ${requester.name} a analysé le sang de ${targetName}.`);
+    // On logue l'action sur le PC (nourrit la paranoïa)
+    addLog(`POUVOIR : Le Docteur ${requester.name} a prélevé un échantillon de ${targetName}.`);
 
-    // Envoi du résultat UNIQUEMENT au demandeur
+    // On renvoie le résultat UNIQUEMENT au Docteur
     requester.conn.send({
         type: 'BLOOD_TEST_RESULT',
         target: targetName,
