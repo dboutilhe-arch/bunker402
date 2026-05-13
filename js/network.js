@@ -153,6 +153,13 @@ function setupConnection(conn) {
                 isProcessingAction = true;
                 applyDecret(data.card);
             }
+
+            // Test Sanguin
+            if (data.type === 'REQUEST_BLOOD_TEST') {
+                const requester = players.find(p => p.conn === conn);
+                testPlayerBlood(requester, data.targetName);
+            }
+            
         });
         // GESTION DE LA DÉCONNEXION
         conn.on('close', () => {
