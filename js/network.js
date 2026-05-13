@@ -49,9 +49,12 @@ function setupConnection(conn) {
                     
                     if (document.getElementById('game-zone').style.display === 'block') {
                         p.conn.send({ 
-                            type: 'INIT', role: p.role, metier: p.metier, 
+                            type: 'INIT', 
+                            role: p.role, 
+                            metier: p.metier, 
                             all: players.map(pl => pl.name),
-                            alphaName: (['I', 'A', 'M'].includes(p.role)) ? players.find(a => a.role === 'A').name : null
+                            alphaName: (['I', 'A', 'M'].includes(p.role)) ? players.find(a => a.role === 'A').name : null,
+                            powerUsed: p.powerUsed // On renvoie l'info stockée sur le serveur
                         });
                         syncTerminals();
                         restorePlayerAction(p);
@@ -62,7 +65,11 @@ function setupConnection(conn) {
                 // CAS NOUVEAU JOUEUR
                 if (players.length >= 100) return conn.send({ type: 'ERROR_BUNKER_FULL' });
             
-                players.push({ name: data.name, conn: conn });
+                players.push({ 
+                    name: data.name, 
+                    conn: conn, 
+                    powerUsed: false 
+                });
                 
                 // On crée l'étiquette
                 const nameTag = document.createElement('div');
@@ -157,8 +164,12 @@ function setupConnection(conn) {
             // Test Sanguin
             if (data.type === 'REQUEST_BLOOD_TEST') {
                 const requester = players.find(p => p.conn === conn);
-                // On appelle la fonction de powers.js
-                testPlayerBlood(requester, data.targetName); 
+                
+                // On vérifie si le serveur dit que c'est encore possible
+                if (requester && !requester.powerUsed) {
+                    requester.powerUsed = true; // On verrouille immédiatement sur le serveur
+                    testPlayerBlood(requester, data.targetName); 
+                }
             }
 
             // Synchronisation de l'écran joueur
