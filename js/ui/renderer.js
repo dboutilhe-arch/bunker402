@@ -1,4 +1,4 @@
-// renderer.js
+// renderer.js 
 // Dessin des plateaux & Mise à jour du DOM de la console centrale
 
 import { gameState, players, curG, curSIdx, votes } from '../core/state.js';
