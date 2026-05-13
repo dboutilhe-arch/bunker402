@@ -36,25 +36,15 @@ function testPlayerBlood(requester, targetName) {
 // Censure
 function applyCensure(requester, targetName) {
     state.censoredPlayer = targetName;
-    
-    addLog(`POLITIQUE : Le Gardien ${requester.name} a censuré ${targetName}.`);
-    
-    // On prévient la cible (Optionnel mais fun pour l'ambiance)
-    const target = players.find(p => p.name === targetName);
-    if (target) {
-        target.conn.send({ 
-            type: 'NOTIFY_CENSURE', 
-            message: "Le système vous a blacklisté pour le prochain conseil." 
-        });
-    }
+    addLog(`ALERTE : Droits de vote de ${targetName} révoqués par le Gardien.`);
 
-    // On libère le tour
     if (currentPowerActive) {
         currentPowerActive = false;
-        setTimeout(() => {
-            curG = (curG + 1) % players.length;
-            isProcessingAction = false;
-            nextTurn();
-        }, 1500);
+        // On ne passe PAS au tour suivant ici, car la censure s'applique 
+        // généralement avant ou pendant une phase législative/vote selon tes besoins.
+        // Si c'est une case de crise, on continue le flux normal :
+        curG = (curG + 1) % players.length;
+        isProcessingAction = false;
+        nextTurn();
     }
 }
