@@ -1,4 +1,4 @@
-// rules.js
+// rules.js 
 
 import { players, gameState } from '../core/state.js';
 
