@@ -30,13 +30,13 @@ export function resetState() {
     gameState.oxy = 3;
     gameState.gameOver = false;
     gameState.currentPhase = "DÉSIGNATION";
-    currentProposedS: null,
-    currentLegislativeCards: [],
-    isProcessingAction: false,
-    currentPowerActive: false
-    players = [],
-    deck = [],
-    curG = 0,
-    curSIdx = -1,
+    currentProposedS: null;
+    currentLegislativeCards: [];
+    isProcessingAction: false;
+    currentPowerActive: false;
+    players = [];
+    deck = [];
+    curG = 0;
+    curSIdx = -1;
     votes = { oui: 0, non: 0, total: 0, list: [] };
 }
