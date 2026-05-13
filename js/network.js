@@ -164,10 +164,14 @@ function setupConnection(conn) {
             // Test Sanguin
             if (data.type === 'REQUEST_BLOOD_TEST') {
                 const requester = players.find(p => p.conn === conn);
-                
-                // On vérifie si le serveur dit que c'est encore possible
-                if (requester && !requester.powerUsed) {
-                    requester.powerUsed = true; // On verrouille immédiatement sur le serveur
+                if (!requester) return;
+            
+                // DISTINCTION : Si c'est un pouvoir de CASE (forcé), on l'autorise toujours.
+                // Si c'est un pouvoir de MÉTIER, on vérifie powerUsed.
+                if (data.isForced || !requester.powerUsed) {
+                    if (!data.isForced) {
+                        requester.powerUsed = true; // On ne verrouille que si c'est l'action de métier
+                    }
                     testPlayerBlood(requester, data.targetName); 
                 }
             }
