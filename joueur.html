@@ -106,6 +106,7 @@
         // Initialisation de la connexion Peer
         const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
         let conn, myName, currentHand = [], allPlayers = [];
+        let hasUsedPower = false; // État du pouvoir pour la partie en cours
 
         // FONCTION : Se connecter au PC
         function connect(isReconnect = false) {
@@ -234,7 +235,7 @@
                 //Bouton Docteur
                 if (data.metier === 'Docteur') {
                     document.getElementById('job-ui').innerHTML = `
-                        <button class="btn" style="background:#2ecc71; color:black;" 
+                        <button id="btn-power" class="btn" style="background:#2ecc71; color:black;" 
                             onclick="openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE')">
                             SCANNER UN PERSONNEL
                         </button>
@@ -253,6 +254,10 @@
             }
 
             if (data.type === 'RESET_TO_LOBBY') {
+
+                hasUsedPower = false; // Reset de l'utilisation du pouvoir
+                document.getElementById('job-ui').innerHTML = ""; // Nettoyage du bouton de métier
+                
                 // On vide le stockage de session pour éviter les conflits de rôles d'une ancienne partie
                 // Mais on garde le nom et le code pour rester connecté
                 const savedName = sessionStorage.getItem('bunker_name');
@@ -373,12 +378,18 @@
             // Test Sanguin
             if (data.type === 'BLOOD_TEST_RESULT') {
                 const color = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
+                
+                // On marque le pouvoir comme utilisé ICI
+                hasUsedPower = true; 
+                // On peut aussi griser ou supprimer le bouton immédiatement
+                document.getElementById('job-ui').style.opacity = "0.3"; 
+            
                 ui.innerHTML = `
                     <div style="border: 2px solid ${color}; padding: 15px; border-radius: 10px; background: #111;">
                         <h3 style="color: ${color}">RÉSULTAT D'ANALYSE</h3>
                         <p>Sujet : <b>${data.target}</b></p>
                         <p>Statut : <span style="color: ${color}; font-weight: bold;">${data.result}</span></p>
-                        <button class="btn" onclick="conn.send({type: 'SYNC_REQUEST'})">OK</button>
+                        <button class="btn" onclick="closeUI()">OK</button>
                     </div>
                 `;
             }
@@ -441,31 +452,39 @@
 
         // Ouvre une interface de sélection de joueur
         function openTargetSelector(actionType, title) {
+            if (hasUsedPower) {
+                alert("PROTOCOLE : Capacité déjà utilisée pour cette session.");
+                return;
+            }
+            
             const ui = document.getElementById('main-ui');
             let html = `<h3>${title}</h3>`;
-            html += `<p style="font-size:0.8em; color:#888; margin-bottom:10px;">Sélectionnez un personnel du bunker :</p>`;
+            html += `<p style="font-size:0.8em; color:#888; margin-bottom:10px;">Sélectionnez une cible :</p>`;
             
-            // On boucle sur tous les joueurs (allPlayers) sauf soi-même
             allPlayers.forEach(name => {
                 if (name !== myName) {
                     html += `<button class="btn" onclick="executeTargetAction('${actionType}', '${name}')">${name.toUpperCase()}</button>`;
                 }
             });
         
-            html += `<button class="btn" style="border-color:#e74c3c; color:#e74c3c; margin-top:15px;" onclick="conn.send({type: 'SYNC_REQUEST'})">ANNULER</button>`;
+            html += `<button class="btn" style="border-color:#e74c3c; color:#e74c3c; margin-top:15px;" onclick="closeUI()">ANNULER</button>`;
             ui.innerHTML = html;
         }
         
-        // Envoie l'action choisie au PC
         function executeTargetAction(actionType, targetName) {
-            if (!confirm(`Confirmer l'action sur ${targetName} ?`)) return;
-            
+            if (!confirm(`Confirmer l'analyse sur ${targetName} ?`)) return;
+        
             conn.send({ 
                 type: actionType, 
                 targetName: targetName 
             });
         
-            document.getElementById('main-ui').innerHTML = "<h3>TRAITEMENT...</h3><p>Analyse biologique en cours...</p>";
+            document.getElementById('main-ui').innerHTML = "<h3>TRAITEMENT...</h3><p>Accès aux données biologiques en cours...</p>";
+        }
+        
+        // Fonction pour fermer les fenêtres et revenir à l'état d'attente
+        function closeUI() {
+            document.getElementById('main-ui').innerHTML = "En attente d'instructions système...";
         }
 
         // Si un joueur actualise sa page
