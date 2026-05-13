@@ -41,5 +41,47 @@ export function syncTerminals() {
 export function updatePlayerTags() {
     const list = document.getElementById('active-player-list');
     if (!list) return;
-    // ... logique de mise à jour des bordures (Jaune pour G, Bleu pour S)
+
+    players.forEach(p => {
+        // On récupère toutes les instances de l'étiquette (Lobby et Jeu)
+        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+        
+        tags.forEach(tag => {
+            const nameDiv = tag.querySelector('.p-name');
+            const jobDiv = tag.querySelector('.p-job');
+
+            // 1. Reset des styles par défaut
+            tag.className = 'player-tag'; 
+            tag.style.borderColor = "";
+            tag.style.borderWidth = "1px";
+            tag.style.opacity = "1";
+
+            // 2. Affichage du métier (si défini)
+            if (jobDiv && p.metier) {
+                jobDiv.innerText = p.metier;
+            }
+
+            // 3. Identification du Gardien (⭐ + Bordure Jaune)
+            if (players[curG] && p.name === players[curG].name) {
+                if (nameDiv) nameDiv.innerHTML = `⭐ ${p.name.toUpperCase()}`;
+                tag.style.borderColor = "#f1c40f"; // Jaune
+                tag.style.borderWidth = "2px";
+            } else {
+                if (nameDiv) nameDiv.innerText = p.name.toUpperCase();
+            }
+
+            // 4. Identification de la Sentinelle proposée (Bordure Bleue)
+            // On utilise gameState.currentProposedS défini dans le moteur
+            if (gameState.currentProposedS && p.name === gameState.currentProposedS) {
+                tag.style.borderColor = "#3498db"; // Bleu
+                tag.style.borderWidth = "2px";
+            }
+
+            // 5. Affichage visuel des votes (si on est en phase de vote)
+            const voteData = votes.list.find(v => v.name.toLowerCase() === p.name.toLowerCase());
+            if (voteData) {
+                tag.classList.add(voteData.choice === 'OUI' ? 'voted-oui' : 'voted-non');
+            }
+        });
+    });
 }
