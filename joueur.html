@@ -395,6 +395,15 @@
                     </div>
                 `;
             }
+
+            if (data.type === 'FORCE_POWER_SELECT') {
+                // On ouvre le sélecteur automatiquement
+                openTargetSelector(data.action, data.title);
+                
+                // On peut même ajouter un petit son ou une alerte visuelle ici
+                document.body.style.backgroundColor = "#1a0000"; // Flash rouge pour l'alerte
+                setTimeout(() => { document.body.style.backgroundColor = "#000"; }, 500);
+            }
             
             // Écran de fin
             if (data.type === 'END_GAME') {
