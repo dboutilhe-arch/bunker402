@@ -303,7 +303,10 @@
             }
             
             // Nettoyage (Entre les phases)
-            if (data.type === 'CLEAN_UI') { ui.innerHTML = "En attente..."; }
+            if (data.type === 'CLEAN_UI') { 
+                isPowerForced = false; // ON RÉINITIALISE LE VERROU ICI
+                ui.innerHTML = "En attente..."; 
+            }
 
             // Mise à jour des points (Synchronisation constante avec le PC)
             if (data.type === 'SYNC_STATE') { 
@@ -538,20 +541,13 @@
         
         // Fonction pour fermer les fenêtres et revenir à l'état d'attente
         function closeUI() {
-            isPowerForced = false; // <-- LIBÈRE LE VERROU
+            isPowerForced = false; // Libère le verrou
+            const jobUi = document.getElementById('job-ui');
+            if (jobUi) jobUi.style.display = "block"; // Réaffiche le bouton de métier si caché
             
-            // On demande au PC de nous renvoyer l'état actuel du jeu
-            // Cela déclenchera restorePlayerAction côté serveur
             conn.send({ type: 'SYNC_REQUEST' });
-            
-            // Message temporaire le temps que le PC réponde
             document.getElementById('main-ui').innerHTML = "Synchronisation avec le bunker...";
         }
-
-        // Si un joueur actualise sa page
-        window.onbeforeunload = function() {
-            return "Attention, quitter la page peut vous déconnecter du bunker !";
-        };
     </script>
 </body>
 </html>
