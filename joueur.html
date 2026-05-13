@@ -483,7 +483,14 @@
         }
         
         function executeTargetAction(actionType, targetName) {
-            if (!confirm(`Confirmer l'analyse sur ${targetName} ?`)) return;
+            if (!confirm(`Confirmer l'action sur ${targetName} ?`)) return;
+        
+            // On considère le pouvoir consommé dès que la demande est partie
+            hasUsedPower = true; 
+            
+            // On grise l'interface métier tout de suite
+            const jobUi = document.getElementById('job-ui');
+            if (jobUi) jobUi.style.opacity = "0.3";
         
             conn.send({ 
                 type: actionType, 
