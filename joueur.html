@@ -166,6 +166,15 @@
                 const win = document.getElementById('win-cond');
                 const alphaInfo = document.getElementById('alpha-info');
                 const bloodDisplay = document.getElementById('blood-status');
+                const jobUi = document.getElementById('job-ui');
+
+                // Bouton du métier
+                // On synchronise la variable locale avec la mémoire du serveur
+                hasUsedPower = data.powerUsed || false;
+                // Si le serveur dit que c'est déjà utilisé, on grise l'interface
+                if (hasUsedPower && jobUi) {
+                    jobUi.style.opacity = "0.3";
+                }
             
                 memo.style.display = "block";
 
