@@ -476,23 +476,31 @@
             html += `<button class="btn" style="border-color:#e74c3c; color:#e74c3c; margin-top:15px;" onclick="closeUI()">ANNULER</button>`;
             ui.innerHTML = html;
         }
-        
+
         function executeTargetAction(actionType, targetName) {
+            // 1. Demande de confirmation
             if (!confirm(`Confirmer l'action sur ${targetName} ?`)) return;
         
-            // On considère le pouvoir consommé dès que la demande est partie
+            // 2. VERROUILLAGE IMMÉDIAT (Anti-F5 / Anti-double clic)
+            // On considère le pouvoir consommé dès l'envoi de la requête
             hasUsedPower = true; 
             
-            // On grise l'interface métier tout de suite
+            // 3. RETOUR VISUEL IMMÉDIAT
             const jobUi = document.getElementById('job-ui');
-            if (jobUi) jobUi.style.opacity = "0.3";
+            if (jobUi) {
+                jobUi.style.opacity = "0.3";
+                // On peut aussi désactiver le bouton pour éviter les clics multiples
+                const btn = document.getElementById('btn-power');
+                if (btn) btn.disabled = true;
+            }
         
+            // 4. ENVOI AU SERVEUR
             conn.send({ 
                 type: actionType, 
                 targetName: targetName 
             });
         
-            document.getElementById('main-ui').innerHTML = "<h3>TRAITEMENT...</h3><p>Accès aux données biologiques en cours...</p>";
+            document.getElementById('main-ui').innerHTML = "<h3>TRAITEMENT...</h3><p>Accès aux données cryptées en cours...</p>";
         }
         
         // Fonction pour fermer les fenêtres et revenir à l'état d'attente
