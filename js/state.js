@@ -11,7 +11,8 @@ let state = {  survie: 0,
                gameOver: false, 
                suffrage: "Aucun",
                lastSentinelle: null,
-               lastGardien: null};
+               lastGardien: null,
+               censoredPlayer: null};
 let isProcessingAction = false;
 let currentPhase = "DÉSIGNATION"; // "DÉSIGNATION", "VOTE", "LÉGISLATION_G", "LÉGISLATION_S"
 let currentProposedS = null;      // Nom de la sentinelle proposée
