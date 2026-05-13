@@ -357,6 +357,19 @@
                     ui.innerHTML += `<button class="card ${c}" onclick="sChoice(${i})">${label}</button>`;
                 });
             }
+
+            // Test Sanguin
+            if (data.type === 'BLOOD_TEST_RESULT') {
+                const color = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
+                ui.innerHTML = `
+                    <div style="border: 2px solid ${color}; padding: 15px; border-radius: 10px; background: #111;">
+                        <h3 style="color: ${color}">RÉSULTAT D'ANALYSE</h3>
+                        <p>Sujet : <b>${data.target}</b></p>
+                        <p>Statut : <span style="color: ${color}; font-weight: bold;">${data.result}</span></p>
+                        <button class="btn" onclick="conn.send({type: 'SYNC_REQUEST'})">OK</button>
+                    </div>
+                `;
+            }
             
             // Écran de fin
             if (data.type === 'END_GAME') {
