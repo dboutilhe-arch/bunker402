@@ -14,7 +14,7 @@
 │   ├── game/         (Mécaniques de jeu)
 │   │   ├── engine.js     (Cycles de tours, votes)
 │   │   └── rules.js      (Calcul des victoires, répartition rôles)
-│   │   └── powers.js     <-- AJOUT : Actions spécifiques (Docteur, Cases)
+│   │   └── powers.js     (Actions spécifiques (Docteur, Cases))
 │   └── ui/           (Affichage et DOM)
 │       ├── renderer.js   (Dessin des plateaux)
 │       └── logger.js     (Gestion du log console)
