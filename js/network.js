@@ -180,10 +180,8 @@ function setupConnection(conn) {
             if (data.type === 'SYNC_REQUEST') {
                 const p = players.find(pl => pl.conn === conn);
                 if (p) {
-                    // On renvoie l'état des plateaux (Oxygène, Décrets)
                     p.conn.send({ type: 'SYNC_STATE', state: state });
-                    
-                    // On restaure l'action en cours (Vote, Gardien_Pick, etc.)
+                    p.conn.send({ type: 'UNLOCK_JOB_UI' });
                     restorePlayerAction(p);
                 }
             }
