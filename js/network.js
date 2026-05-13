@@ -157,7 +157,8 @@ function setupConnection(conn) {
             // Test Sanguin
             if (data.type === 'REQUEST_BLOOD_TEST') {
                 const requester = players.find(p => p.conn === conn);
-                testPlayerBlood(requester, data.targetName);
+                // On appelle la fonction de powers.js
+                testPlayerBlood(requester, data.targetName); 
             }
             
         });
