@@ -164,14 +164,10 @@ function setupConnection(conn) {
             // Test Sanguin
             if (data.type === 'REQUEST_BLOOD_TEST') {
                 const requester = players.find(p => p.conn === conn);
-                if (!requester) return;
-            
-                // DISTINCTION : Si c'est un pouvoir de CASE (forcé), on l'autorise toujours.
-                // Si c'est un pouvoir de MÉTIER, on vérifie powerUsed.
-                if (data.isForced || !requester.powerUsed) {
-                    if (!data.isForced) {
-                        requester.powerUsed = true; // On ne verrouille que si c'est l'action de métier
-                    }
+                
+                // On vérifie si le serveur dit que c'est encore possible
+                if (requester && !requester.powerUsed) {
+                    requester.powerUsed = true; // On verrouille immédiatement sur le serveur
                     testPlayerBlood(requester, data.targetName); 
                 }
             }
@@ -180,8 +176,10 @@ function setupConnection(conn) {
             if (data.type === 'SYNC_REQUEST') {
                 const p = players.find(pl => pl.conn === conn);
                 if (p) {
+                    // On renvoie l'état des plateaux (Oxygène, Décrets)
                     p.conn.send({ type: 'SYNC_STATE', state: state });
-                    p.conn.send({ type: 'UNLOCK_JOB_UI' });
+                    
+                    // On restaure l'action en cours (Vote, Gardien_Pick, etc.)
                     restorePlayerAction(p);
                 }
             }
