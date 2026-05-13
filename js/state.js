@@ -1,19 +1,33 @@
-// Variables Globales de l'état du bunker
-let peer = null; 
-let players = []; 
-let deck = []; 
-let curG = 0; 
-let curSIdx = -1;
-let votes = { oui: 0, non: 0, total: 0, list: [] };
-let state = {  survie: 0, 
-               crise: 0, 
-               oxy: 3,  
-               gameOver: false, 
-               suffrage: "Aucun",
-               lastSentinelle: null,
-               lastGardien: null,
-               censoredPlayer: null};
-let isProcessingAction = false;
-let currentPhase = "DÉSIGNATION"; // "DÉSIGNATION", "VOTE", "LÉGISLATION_G", "LÉGISLATION_S"
-let currentProposedS = null;      // Nom de la sentinelle proposée
-let currentLegislativeCards = []; // Cartes envoyées au Gardien ou à la Sentinelle
+function testPlayerBlood(requester, targetName) {
+    const target = players.find(p => p.name === targetName);
+    if (!target) return;
+
+    let bloodResult = "";
+    
+    // Règles de Sang :
+    // INFECTÉ : Alpha (A), Infecté (I), Immunisé (IM)
+    // SAIN : Survivant (S), Mycologue (M)
+    const isInfected = ['A', 'I', 'IM'].includes(target.role);
+    bloodResult = isInfected ? "INFECTÉ" : "SAIN";
+
+    // On logue l'action sur le PC (nourrit la paranoïa)
+    addLog(`POUVOIR : Le Docteur ${requester.name} a prélevé un échantillon de ${targetName}.`);
+
+    // On renvoie le résultat UNIQUEMENT au Docteur
+    requester.conn.send({
+        type: 'BLOOD_TEST_RESULT',
+        target: targetName,
+        result: bloodResult
+    });
+
+    if (currentPowerActive) {
+        currentPowerActive = false;
+        // On attend que le joueur ait cliqué sur OK pour passer au tour suivant
+        // Ou on le fait automatiquement ici après un délai :
+        setTimeout(() => {
+            curG = (curG + 1) % players.length;
+            isProcessingAction = false;
+            nextTurn();
+        }, 2000); 
+    }
+}
