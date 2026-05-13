@@ -254,7 +254,12 @@ function checkCasePower(caseNumber) {
             // À implémenter : openTargetSelector('REQUEST_EXECUTION', 'PROTOCOLE D\'ÉLIMINATION')
             break;
         case 'CENSURE':
-            // À implémenter
+            // On force l'ouverture du sélecteur chez le Gardien
+            gardien.conn.send({ 
+                    type: 'FORCE_POWER_SELECT', 
+                    action: 'REQUEST_CENSURE', 
+                    title: 'PROTOCOLE DE CENSURE' 
+                });
             break;
     }
 }
