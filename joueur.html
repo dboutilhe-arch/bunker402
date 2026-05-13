@@ -255,8 +255,10 @@
 
             if (data.type === 'RESET_TO_LOBBY') {
 
+                // Gestion Bouton de Métier
                 hasUsedPower = false; // Reset de l'utilisation du pouvoir
                 document.getElementById('job-ui').innerHTML = ""; // Nettoyage du bouton de métier
+                document.getElementById('job-ui').style.opacity = "1"; // Reset Opacité du bouton
                 
                 // On vide le stockage de session pour éviter les conflits de rôles d'une ancienne partie
                 // Mais on garde le nom et le code pour rester connecté
