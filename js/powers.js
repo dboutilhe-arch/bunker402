@@ -1,3 +1,4 @@
+// Test Sanguin
 function testPlayerBlood(requester, targetName) {
     const target = players.find(p => p.name === targetName);
     if (!target) return;
@@ -29,5 +30,31 @@ function testPlayerBlood(requester, targetName) {
             isProcessingAction = false;
             nextTurn();
         }, 2000); 
+    }
+}
+
+// Censure
+function applyCensure(requester, targetName) {
+    state.censoredPlayer = targetName;
+    
+    addLog(`POLITIQUE : Le Gardien ${requester.name} a censuré ${targetName}.`);
+    
+    // On prévient la cible (Optionnel mais fun pour l'ambiance)
+    const target = players.find(p => p.name === targetName);
+    if (target) {
+        target.conn.send({ 
+            type: 'NOTIFY_CENSURE', 
+            message: "Le système vous a blacklisté pour le prochain conseil." 
+        });
+    }
+
+    // On libère le tour
+    if (currentPowerActive) {
+        currentPowerActive = false;
+        setTimeout(() => {
+            curG = (curG + 1) % players.length;
+            isProcessingAction = false;
+            nextTurn();
+        }, 1500);
     }
 }
