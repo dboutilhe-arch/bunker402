@@ -19,4 +19,15 @@ function testPlayerBlood(requester, targetName) {
         target: targetName,
         result: bloodResult
     });
+
+    if (currentPowerActive) {
+        currentPowerActive = false;
+        // On attend que le joueur ait cliqué sur OK pour passer au tour suivant
+        // Ou on le fait automatiquement ici après un délai :
+        setTimeout(() => {
+            curG = (curG + 1) % players.length;
+            isProcessingAction = false;
+            nextTurn();
+        }, 2000); 
+    }
 }
