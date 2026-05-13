@@ -1,4 +1,3 @@
-// Test Sanguin
 function testPlayerBlood(requester, targetName) {
     const target = players.find(p => p.name === targetName);
     if (!target) return;
@@ -30,21 +29,5 @@ function testPlayerBlood(requester, targetName) {
             isProcessingAction = false;
             nextTurn();
         }, 2000); 
-    }
-}
-
-// Censure
-function applyCensure(requester, targetName) {
-    state.censoredPlayer = targetName;
-    addLog(`ALERTE : Droits de vote de ${targetName} révoqués par le Gardien.`);
-
-    if (currentPowerActive) {
-        currentPowerActive = false;
-        // On ne passe PAS au tour suivant ici, car la censure s'applique 
-        // généralement avant ou pendant une phase législative/vote selon tes besoins.
-        // Si c'est une case de crise, on continue le flux normal :
-        curG = (curG + 1) % players.length;
-        isProcessingAction = false;
-        nextTurn();
     }
 }
