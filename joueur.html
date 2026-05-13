@@ -107,6 +107,7 @@
         const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
         let conn, myName, currentHand = [], allPlayers = [];
         let hasUsedPower = false; // État du pouvoir pour la partie en cours
+        let isPowerForced = false; // Verrou
 
         // FONCTION : Se connecter au PC
         function connect(isReconnect = false) {
@@ -305,7 +306,13 @@
             if (data.type === 'CLEAN_UI') { ui.innerHTML = "En attente..."; }
 
             // Mise à jour des points (Synchronisation constante avec le PC)
-            if (data.type === 'SYNC_STATE') { updateMiniBoard(data.state); }
+            if (data.type === 'SYNC_STATE') { 
+                updateMiniBoard(data.state); 
+                
+                // Le serveur renvoie un SYNC après l'action, on en profite pour réafficher le bouton métier
+                const jobUi = document.getElementById('job-ui');
+                if (jobUi) jobUi.style.display = "block"; 
+            }
 
             // Phase de sélection (Si on est le Gardien)
             if (data.type === 'YOUR_TURN') {
@@ -401,6 +408,10 @@
             }
 
             if (data.type === 'FORCE_POWER_SELECT') {
+                // On cache ou on grise le bouton de métier pour éviter la confusion
+                const jobUi = document.getElementById('job-ui');
+                if (jobUi) jobUi.style.display = "none"; // On le cache carrément
+                
                 // On ouvre le sélecteur automatiquement
                 openTargetSelector(data.action, data.title, true);
                 
@@ -492,6 +503,20 @@
         }
         
         function executeTargetAction(actionType, targetName, isForced = false) {
+            // SÉCURITÉ : Si une action forcée est déjà en cours et qu'on essaie de cliquer sur le métier
+            if (!isForced && isPowerForced) {
+                alert("PROTOCOLE : Système occupé par une directive prioritaire.");
+                return;
+            }
+        
+            if (!isForced && hasUsedPower) {
+                alert("PROTOCOLE : Capacité déjà utilisée.");
+                return;
+            }
+            
+            // Si c'est une action de case, on active le verrou
+            if (isForced) isPowerForced = true;
+            
             if (!confirm(`Confirmer l'action sur ${targetName} ?`)) return;
         
             // On ne verrouille localement QUE si ce n'est pas forcé
@@ -513,6 +538,8 @@
         
         // Fonction pour fermer les fenêtres et revenir à l'état d'attente
         function closeUI() {
+            isPowerForced = false; // <-- LIBÈRE LE VERROU
+            
             // On demande au PC de nous renvoyer l'état actuel du jeu
             // Cela déclenchera restorePlayerAction côté serveur
             conn.send({ type: 'SYNC_REQUEST' });
