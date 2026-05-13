@@ -399,6 +399,16 @@
                 document.body.style.backgroundColor = "#1a0000"; // Flash rouge pour l'alerte
                 setTimeout(() => { document.body.style.backgroundColor = "#000"; }, 500);
             }
+
+            // Affichage pour le joueur censuré
+            if (data.type === 'CENSURE_ACTIVE') {
+                ui.innerHTML = `
+                    <div style="border: 1px solid #e74c3c; padding: 15px; color: #e74c3c;">
+                        <h3>VOTE BLOQUÉ</h3>
+                        <p>Le système a suspendu vos droits de vote pour ce conseil.</p>
+                    </div>
+                `;
+            }
             
             // Écran de fin
             if (data.type === 'END_GAME') {
