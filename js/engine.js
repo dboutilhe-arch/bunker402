@@ -1,3 +1,18 @@
+// Répartition des pouvoirs de case en fonction du nombre de joueur
+const POWER_MAP = {
+    // 5 joueurs
+    5:  { 3: null, 4: 'TEST', 5: 'EXEC' },
+    // 6 à 7 joueurs
+    6:  { 3: 'TEST', 4: 'TEST', 5: 'EXEC' },
+    7:  { 3: 'TEST', 4: 'TEST', 5: 'EXEC' },
+    // 8 à 10 joueurs
+    8:  { 3: 'TEST', 4: 'EXEC', 5: 'EXEC' },
+    9:  { 3: 'TEST', 4: 'EXEC', 5: 'EXEC' },
+    10: { 3: 'TEST', 4: 'EXEC', 5: 'EXEC' },
+    // 11 joueurs et plus
+    default: { 2: 'CENSURE', 3: 'TEST', 4: 'EXEC', 5: 'EXEC' }
+};
+
 // Affichage Composition Partie
 function displayComposition(roles) {
     const counts = roles.reduce((acc, r) => {
@@ -184,24 +199,63 @@ function resolveVote() {
 
 function applyDecret(type) {
     clearGardienVisuals();
-    
-    // On enregistre l'historique avant de passer au tour suivant
     state.lastSentinelle = players[curSIdx].name;
     state.lastGardien = players[curG].name;
-    updateLastCouncil(); // Mise à jour du bloc rouge
+    updateLastCouncil();
 
-    if(type === 'S') state.survie++;
-    else if(type === 'C') state.crise++;
-    else if(type === 'F') state.suffrage = "Actif";
+    if (type === 'S') {
+        state.survie++;
+    } else if (type === 'C') {
+        state.crise++;
+        // --- DÉCLENCHEMENT DES POUVOIRS DE CASE ---
+        checkCasePower(state.crise);
+    } else if (type === 'F') {
+        state.suffrage = "Actif";
+    }
 
-    render(); 
+    render();
     syncTerminals();
 
-    if(state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
-    else if(state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
+    if (state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
+    else if (state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
     else {
-        curG = (curG + 1) % players.length;
-        setTimeout(() => { isProcessingAction = false; nextTurn(); }, 1000);
+        // On ne passe au tour suivant que si aucun pouvoir n'est en cours 
+        // ou après un petit délai si c'est un décret normal
+        if (!currentPowerActive) {
+            curG = (curG + 1) % players.length;
+            setTimeout(() => { isProcessingAction = false; nextTurn(); }, 1000);
+        }
+    }
+}
+
+let currentPowerActive = false; // Verrou pour empêcher le tour de passer pendant un pouvoir
+
+function checkCasePower(caseNumber) {
+    const n = players.length;
+    const config = POWER_MAP[n] || POWER_MAP['default'];
+    const power = config[caseNumber];
+
+    if (!power) return;
+
+    currentPowerActive = true;
+    const gardien = players.find(p => p.name === state.lastGardien);
+    addLog(`SYSTÈME : Case de Crise ${caseNumber} atteinte. Activation du protocole : ${power}.`);
+
+    switch (power) {
+        case 'TEST':
+            // On force l'ouverture du sélecteur chez le Gardien
+            gardien.conn.send({ 
+                type: 'FORCE_POWER_SELECT', 
+                action: 'REQUEST_BLOOD_TEST', 
+                title: 'ANALYSE BIOLOGIQUE (DÉCRET)' 
+            });
+            break;
+        case 'EXEC':
+            // À implémenter : openTargetSelector('REQUEST_EXECUTION', 'PROTOCOLE D\'ÉLIMINATION')
+            break;
+        case 'CENSURE':
+            // À implémenter
+            break;
     }
 }
 
