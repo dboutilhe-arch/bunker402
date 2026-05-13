@@ -1,8 +1,7 @@
 // renderer.js 
 // Dessin des plateaux & Mise à jour du DOM de la console centrale
 
-import { gameState, players, curG, curSIdx, votes } from '../core/state.js';
-import { gameState, players, resetState } from '../core/state.js';
+import { gameState, players, curG, curSIdx, votes, resetState } from '../core/state.js';
 import { Logger } from './logger.js';
 
 export function render() {
