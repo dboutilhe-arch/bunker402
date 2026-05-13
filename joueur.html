@@ -253,6 +253,12 @@
                 }
             }
 
+            if (data.type === 'UNLOCK_JOB_UI') {
+                isPowerForced = false;
+                const jobUi = document.getElementById('job-ui');
+                if (jobUi) jobUi.style.display = "block";
+            }
+
             // Le nombre max de joueur est déjà atteint
             if (data.type === 'ERROR_BUNKER_FULL') {
                 alert("Le bunker est complet ! Impossible de rejoindre cette session.");
