@@ -134,17 +134,9 @@ function showGov(g, s) {
     document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : 0 / ${players.length}`;
     document.getElementById('vote-summary').style.color = "#f1c40f";
     
-    addLog(`Ouverture du scrutin. Note : ${state.censoredPlayer || 'Aucun'} est privé de vote.`);
+    addLog(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
     
-    players.forEach(p => {
-            if (p.name === state.censoredPlayer) {
-                // On informe le joueur qu'il est spectateur
-                p.conn.send({ type: 'CENSURE_ACTIVE' });
-            } else {
-                p.conn.send({ type: 'VOTE_START', g: g, s: s });
-            }
-        });
-    }
+    players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
 }
 
 // Écran de victoire
