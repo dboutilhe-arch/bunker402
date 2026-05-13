@@ -10,6 +10,9 @@ function startServer() {
         document.getElementById('lobby-active').style.display = 'block';
         document.getElementById('display-id').innerText = id;
     });
+
+    // Affichage Bouton Reset
+    document.getElementById('admin-reset').style.display = 'block';
     
     peer.on('error', err => {
         if (err.type === 'unavailable-id') alert("Ce code est déjà utilisé.");
