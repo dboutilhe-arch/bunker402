@@ -1,5 +1,3 @@
-// ui.js
-
 function globalReset() {
     if (!confirm("Réinitialiser la partie et renvoyer tout le monde au lobby ?")) return;
     
@@ -53,8 +51,16 @@ function resetLobbyVisuals() {
     players.forEach(p => {
         const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
         tags.forEach(tag => {
+            // 1. On remet la classe de base
             tag.className = 'player-tag';
+            
+            // 2. On retire les styles "inline" appliqués par le JS (bordures et épaisseur)
+            tag.style.borderColor = ""; 
+            tag.style.borderWidth = "1px";
             tag.style.opacity = "1";
+            tag.style.filter = "none";
+            
+            // 3. On reconstruit le contenu pour virer l'étoile du Gardien et remettre le métier vide (vert)
             tag.innerHTML = `
                 <div class="p-name">${p.name.toUpperCase()}</div>
                 <div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal; color: #2ecc71;"></div>
