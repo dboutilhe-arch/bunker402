@@ -140,9 +140,12 @@ function nextTurn() {
         if (name === players[curG].name) return false;
         if (name === state.lastSentinelle) return false;
         if (players.length > 5 && name === state.lastGardien) return false;
+        if (name === state.censoredPlayer) return false;
         return true;
     });
-    
+
+    // Une fois le tour lancé, on reset la censure pour le tour d'après
+    state.censoredPlayer = null;
     players[curG].conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
     syncTerminals(); 
     render();
