@@ -107,7 +107,6 @@
         const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
         let conn, myName, currentHand = [], allPlayers = [];
         let hasUsedPower = false; // État du pouvoir pour la partie en cours
-        let isPowerForced = false; // Verrou
 
         // FONCTION : Se connecter au PC
         function connect(isReconnect = false) {
@@ -253,12 +252,6 @@
                 }
             }
 
-            if (data.type === 'UNLOCK_JOB_UI') {
-                isPowerForced = false;
-                const jobUi = document.getElementById('job-ui');
-                if (jobUi) jobUi.style.display = "block";
-            }
-
             // Le nombre max de joueur est déjà atteint
             if (data.type === 'ERROR_BUNKER_FULL') {
                 alert("Le bunker est complet ! Impossible de rejoindre cette session.");
@@ -309,19 +302,10 @@
             }
             
             // Nettoyage (Entre les phases)
-            if (data.type === 'CLEAN_UI') { 
-                isPowerForced = false; // ON RÉINITIALISE LE VERROU ICI
-                ui.innerHTML = "En attente..."; 
-            }
+            if (data.type === 'CLEAN_UI') { ui.innerHTML = "En attente..."; }
 
             // Mise à jour des points (Synchronisation constante avec le PC)
-            if (data.type === 'SYNC_STATE') { 
-                updateMiniBoard(data.state); 
-                
-                // Le serveur renvoie un SYNC après l'action, on en profite pour réafficher le bouton métier
-                const jobUi = document.getElementById('job-ui');
-                if (jobUi) jobUi.style.display = "block"; 
-            }
+            if (data.type === 'SYNC_STATE') { updateMiniBoard(data.state); }
 
             // Phase de sélection (Si on est le Gardien)
             if (data.type === 'YOUR_TURN') {
@@ -417,12 +401,8 @@
             }
 
             if (data.type === 'FORCE_POWER_SELECT') {
-                // On cache ou on grise le bouton de métier pour éviter la confusion
-                const jobUi = document.getElementById('job-ui');
-                if (jobUi) jobUi.style.display = "none"; // On le cache carrément
-                
                 // On ouvre le sélecteur automatiquement
-                openTargetSelector(data.action, data.title, true);
+                openTargetSelector(data.action, data.title);
                 
                 // On peut même ajouter un petit son ou une alerte visuelle ici
                 document.body.style.backgroundColor = "#1a0000"; // Flash rouge pour l'alerte
@@ -486,10 +466,9 @@
         }
 
         // Ouvre une interface de sélection de joueur
-        function openTargetSelector(actionType, title, isForced = false) { // Ajout de isForced
-            // On ne bloque l'ouverture que si c'est le pouvoir de métier ET qu'il est déjà utilisé
-            if (!isForced && hasUsedPower) {
-                alert("PROTOCOLE : Capacité déjà utilisée.");
+        function openTargetSelector(actionType, title) {
+            if (hasUsedPower) {
+                alert("PROTOCOLE : Capacité déjà utilisée pour cette session.");
                 return;
             }
             
@@ -499,61 +478,46 @@
             
             allPlayers.forEach(name => {
                 if (name !== myName) {
-                    // On passe isForced à l'étape suivante
-                    html += `<button class="btn" onclick="executeTargetAction('${actionType}', '${name}', ${isForced})">${name.toUpperCase()}</button>`;
+                    html += `<button class="btn" onclick="executeTargetAction('${actionType}', '${name}')">${name.toUpperCase()}</button>`;
                 }
             });
-            
-            // Empêcher l'annulation si c'est un pouvoir de case (obligatoire)
-            if (!isForced) {
-                html += `<button class="btn" style="border-color:#e74c3c; color:#e74c3c; margin-top:15px;" onclick="closeUI()">ANNULER</button>`;
-            }
+        
+            html += `<button class="btn" style="border-color:#e74c3c; color:#e74c3c; margin-top:15px;" onclick="closeUI()">ANNULER</button>`;
             ui.innerHTML = html;
         }
         
-        function executeTargetAction(actionType, targetName, isForced = false) {
-            // SÉCURITÉ : Si une action forcée est déjà en cours et qu'on essaie de cliquer sur le métier
-            if (!isForced && isPowerForced) {
-                alert("PROTOCOLE : Système occupé par une directive prioritaire.");
-                return;
-            }
-        
-            if (!isForced && hasUsedPower) {
-                alert("PROTOCOLE : Capacité déjà utilisée.");
-                return;
-            }
-            
-            // Si c'est une action de case, on active le verrou
-            if (isForced) isPowerForced = true;
-            
+        function executeTargetAction(actionType, targetName) {
             if (!confirm(`Confirmer l'action sur ${targetName} ?`)) return;
         
-            // On ne verrouille localement QUE si ce n'est pas forcé
-            if (!isForced) {
-                hasUsedPower = true; 
-                const jobUi = document.getElementById('job-ui');
-                if (jobUi) jobUi.style.opacity = "0.3";
-            }
+            // On considère le pouvoir consommé dès que la demande est partie
+            hasUsedPower = true; 
+            
+            // On grise l'interface métier tout de suite
+            const jobUi = document.getElementById('job-ui');
+            if (jobUi) jobUi.style.opacity = "0.3";
         
             conn.send({ 
                 type: actionType, 
-                targetName: targetName,
-                isForced: isForced // On transmet l'info au serveur
+                targetName: targetName 
             });
-
-            // Ajouter un switch pour afficher le message correspondant à l'action
+        
             document.getElementById('main-ui').innerHTML = "<h3>TRAITEMENT...</h3><p>Accès aux données biologiques en cours...</p>";
         }
         
         // Fonction pour fermer les fenêtres et revenir à l'état d'attente
         function closeUI() {
-            isPowerForced = false; // Libère le verrou
-            const jobUi = document.getElementById('job-ui');
-            if (jobUi) jobUi.style.display = "block"; // Réaffiche le bouton de métier si caché
-            
+            // On demande au PC de nous renvoyer l'état actuel du jeu
+            // Cela déclenchera restorePlayerAction côté serveur
             conn.send({ type: 'SYNC_REQUEST' });
+            
+            // Message temporaire le temps que le PC réponde
             document.getElementById('main-ui').innerHTML = "Synchronisation avec le bunker...";
         }
+
+        // Si un joueur actualise sa page
+        window.onbeforeunload = function() {
+            return "Attention, quitter la page peut vous déconnecter du bunker !";
+        };
     </script>
 </body>
 </html>
