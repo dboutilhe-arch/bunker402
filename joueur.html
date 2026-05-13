@@ -171,6 +171,7 @@
                 mDisplay.style.color = "#2ecc71"; 
                 mDisplay.innerText = "MÉTIER : " + data.metier;
 
+                // Affichage/Coloration des infos Objectifs/Alpha/Sang
                 switch (data.role) {
                     case 'S':
                         rDisplay.innerText = "RÔLE : SURVIVANT";
@@ -228,6 +229,19 @@
                 }
                 
                 document.getElementById('metier-display').innerText = "MÉTIER : " + data.metier;
+
+                //Bouton Docteur
+                if (data.metier === 'Docteur') {
+                    ui.innerHTML = `
+                        <div style="margin-top:20px; padding:10px; border:1px solid #2ecc71;">
+                            <p style="font-size:0.8em; margin-bottom:10px;">TEST SANGUIN</p>
+                            <button class="btn" style="background:#2ecc71; color:black;" 
+                                onclick="openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE')">
+                                SCANNER UN PERSONNEL
+                            </button>
+                        </div>
+                    `;
+                }
             }
 
             // Le nombre max de joueur est déjà atteint
@@ -425,6 +439,35 @@
             const card = currentHand[idx];
             document.getElementById('main-ui').innerHTML = "<h3 style='color:#f1c40f'>PROMULGUÉ</h3><p>Mise à jour des systèmes du bunker...</p>";
             conn.send({ type: 'FINAL_CHOICE', card: card }); 
+        }
+
+        // Ouvre une interface de sélection de joueur
+        function openTargetSelector(actionType, title) {
+            const ui = document.getElementById('main-ui');
+            let html = `<h3>${title}</h3>`;
+            html += `<p style="font-size:0.8em; color:#888; margin-bottom:10px;">Sélectionnez un personnel du bunker :</p>`;
+            
+            // On boucle sur tous les joueurs (allPlayers) sauf soi-même
+            allPlayers.forEach(name => {
+                if (name !== myName) {
+                    html += `<button class="btn" onclick="executeTargetAction('${actionType}', '${name}')">${name.toUpperCase()}</button>`;
+                }
+            });
+        
+            html += `<button class="btn" style="border-color:#e74c3c; color:#e74c3c; margin-top:15px;" onclick="conn.send({type: 'SYNC_REQUEST'})">ANNULER</button>`;
+            ui.innerHTML = html;
+        }
+        
+        // Envoie l'action choisie au PC
+        function executeTargetAction(actionType, targetName) {
+            if (!confirm(`Confirmer l'action sur ${targetName} ?`)) return;
+            
+            conn.send({ 
+                type: actionType, 
+                targetName: targetName 
+            });
+        
+            document.getElementById('main-ui').innerHTML = "<h3>TRAITEMENT...</h3><p>Analyse biologique en cours...</p>";
         }
 
         // Si un joueur actualise sa page
