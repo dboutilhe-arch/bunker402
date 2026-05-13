@@ -152,6 +152,9 @@ function nextTurn() {
 }
 
 function resolveVote() {
+    // On enlève les censurés du total de votants requis
+    const totalVotantsAttendus = players.length - (state.censoredPlayer ? 1 : 0);
+    
     votes.list.forEach(v => {
         const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
         tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
@@ -196,6 +199,7 @@ function resolveVote() {
             setTimeout(nextTurn, 1500); 
         }
     }
+    state.censoredPlayer = null;
     syncTerminals(); 
     render();
 }
