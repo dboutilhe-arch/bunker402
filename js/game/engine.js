@@ -70,7 +70,6 @@ export async function initGame() {
  * Début d'un nouveau tour (Désignation du conseil)
  */
 export function nextTurn() {
-    resetVoteColors(); // On efface les couleurs du vote précédent ICI
     state.currentPhase = "DÉSIGNATION";
     
     const activeG = players[state.curG];
