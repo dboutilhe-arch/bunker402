@@ -12,7 +12,7 @@
 │   ├── network/      (Communication PeerJS)
 │   │   ├── peer-manager.js
 │   │   └── handlers.js   (Gestion des messages data.type)
-│   │   └── mobile-handlers.js
+│   │   └── mobile-handler.js
 │   ├── game/         (Mécaniques de jeu)
 │   │   ├── engine.js     (Cycles de tours, votes)
 │   │   └── rules.js      (Calcul des victoires, répartition rôles)
