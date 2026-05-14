@@ -38,3 +38,23 @@ export function updateLastCouncil() {
         `;
     }
 }
+
+// Création étiquette
+export function createPlayerTag(name) {
+    const nameTag = document.createElement('div');
+    nameTag.className = 'player-tag'; 
+    nameTag.id = `tag-${name.toLowerCase()}`;
+    nameTag.innerHTML = `
+        <div class="p-name">${name.toUpperCase()}</div>
+        <div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal; color: #2ecc71;"></div>
+    `;
+    
+    const nameTagClone = nameTag.cloneNode(true);
+    document.getElementById('player-list').appendChild(nameTag);
+    document.getElementById('active-player-list').appendChild(nameTagClone);
+}
+
+// Synchronisation
+export function syncTerminals() {
+    players.forEach(p => p.conn.send({ type: 'SYNC_STATE', state: state }));
+}
