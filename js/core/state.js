@@ -34,7 +34,7 @@ export let state = {
     currentPhase: "DÉSIGNATION", 
     currentProposedS: null,      
     currentLegislativeCards: [], 
-    currentPowerActive: false
+    currentPowerActive: false,
 };
 
 /**
@@ -61,7 +61,12 @@ export function resetGameState() {
     state.currentProposedS = null;
     state.currentLegislativeCards = [];
     state.currentPowerActive = false;
+    state.jobPowerUsed: false;
+    state.casePowerUsed: false;
     
     // Reset des pouvoirs joueurs sans vider la liste
-    players.forEach(p => p.powerUsed = false);
+    players.forEach(p => {
+        p.jobPowerUsed = false;  // Métier
+        p.casePowerUsed = false; // Case
+    });
 }
