@@ -2,6 +2,7 @@ import { state, players } from '../core/state.js';
 import { nextTurn } from './engine.js';
 import { Logger } from '../ui/logger.js';
 import { POWER_MAP } from '../core/constants.js';
+import { syncTerminals } from '../ui/renderer.js';
 
 /**
  * Analyse biologique d'un joueur (Pouvoir du Docteur ou Case de Crise)
@@ -24,6 +25,7 @@ export function testPlayerBlood(requester, targetName) {
     // Gestion de la fin de l'action de case
     if (state.currentPowerActive) {
         state.currentPowerActive = false;
+        syncTerminals();
         setTimeout(() => {
             state.curG = (state.curG + 1) % players.length;
             state.isProcessingAction = false;
