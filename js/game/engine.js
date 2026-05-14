@@ -109,8 +109,8 @@ export function resolveVote() {
         document.getElementById('vote-summary').style.color = "#2ecc71";
         Logger.add("VOTE ACCEPTÉ : Le conseil entre en session législative.");
         
-        currentPhase = "LÉGISLATION_G";
-        currentLegislativeCards = [deck.pop(), deck.pop(), deck.pop()];
+        state.currentPhase = "LÉGISLATION_G";
+        state.currentLegislativeCards = [deck.pop(), deck.pop(), deck.pop()];
         state.oxy = 3;
 
         players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
@@ -120,7 +120,7 @@ export function resolveVote() {
         }
 
         setTimeout(() => {
-            players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards });
+            players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
         }, 100);
     } else {
         state.oxy--;
@@ -169,9 +169,9 @@ export function applyDecret(type) {
     else {
         // On ne passe au tour suivant que si aucun pouvoir n'est en cours 
         // ou après un petit délai si c'est un décret normal
-        if (!currentPowerActive) {
+        if (!state.currentPowerActive) {
             state.curG = (state.curG + 1) % players.length;
-            setTimeout(() => { isProcessingAction = false; nextTurn(); }, 1000);
+            setTimeout(() => { state.isProcessingAction = false; nextTurn(); }, 1000);
         }
     }
 }
@@ -191,7 +191,7 @@ export function restorePlayerAction(player) {
     const isGardien = (players[state.curG] === player);
     const isSentinelle = (state.curSIdx !== -1 && players[state.curSIdx] === player);
 
-    switch(currentPhase) {
+    switch(state.currentPhase) {
         case "VOTE":
             const aDejaVote = votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
             if (aDejaVote) {
@@ -200,18 +200,18 @@ export function restorePlayerAction(player) {
                 player.conn.send({ 
                     type: 'VOTE_START', 
                     g: players[state.curG].name, 
-                    s: currentProposedS 
+                    s: state.currentProposedS 
                 });
             }
             break;
         
         case "LÉGISLATION_G":
-            if (isGardien)    player.conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards });
+            if (isGardien)    player.conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
                 else          player.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
             break;
 
         case "LÉGISLATION_S":
-            if (isSentinelle) player.conn.send({ type: 'SENTINELLE_PICK', cards: currentLegislativeCards });
+            if (isSentinelle) player.conn.send({ type: 'SENTINELLE_PICK', cards: state.currentLegislativeCards });
             else              player.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' });
             break;
         
