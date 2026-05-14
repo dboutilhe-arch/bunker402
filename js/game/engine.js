@@ -143,7 +143,6 @@ export function resolveVote() {
         setTimeout(() => {
             players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
         }, 100);
-        clearCouncilVisuals(); // On enlève les cadres ⭐ immédiatement
     } else {
         state.oxy--;
         document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
