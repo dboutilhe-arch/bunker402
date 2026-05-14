@@ -1,4 +1,4 @@
-import { state, players } from '../core/state.js';
+import { state, players, resetGameState } from '../core/state.js';
 import { JOBS_LIST } from '../core/constants.js';
 import { 
     render, 
@@ -7,7 +7,8 @@ import {
     displayComposition, 
     updateLastCouncil, 
     syncTerminals, 
-    triggerWin 
+    triggerWin,
+    resetLobbyVisuals
 } from '../ui/renderer.js';
 import { Logger } from '../ui/logger.js';
 import { checkCasePower } from './powers.js';
@@ -243,4 +244,45 @@ export function restorePlayerAction(player) {
             }
             else player.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[state.curG].name });
     }
+}
+
+export function globalReset() {
+    if (!confirm("Réinitialiser la partie et renvoyer tout le monde au lobby ?")) return;
+    
+    players.forEach(p => p.conn.send({ type: 'RESET_TO_LOBBY' }));
+
+    resetGameState(); // Reset des données (state.js)
+
+    // Reset de l'interface PC
+    document.getElementById('end-screen').style.display = 'none';
+    document.getElementById('game-zone').style.display = 'none';
+    document.getElementById('game-info-row').style.display = 'none';
+    document.getElementById('setup-zone').style.display = 'block';
+    
+    Logger.clear();
+    document.getElementById('last-council-display').innerText = "Aucun";
+    document.getElementById('start-btn').disabled = (players.length < 5);
+
+    resetLobbyVisuals();
+}
+
+export function showGov(g, s) {
+    state.currentPhase = "VOTE"; 
+    state.currentProposedS = s;  
+    const sTags = document.querySelectorAll(`[id="tag-${s.toLowerCase()}"]`);
+    sTags.forEach(tag => { 
+        tag.style.borderColor = "#3498db"; 
+        tag.style.borderWidth = "2px"; 
+    });
+    
+    document.getElementById('game-info-row').style.display = 'flex';
+    document.getElementById('g-name').innerText = g; 
+    document.getElementById('g-name').style.color = "#f1c40f";
+    document.getElementById('s-name').innerText = s; 
+    document.getElementById('s-name').style.color = "#3498db";
+    
+    document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS...\nVOTES TRANSMIS : 0 / ${players.length}`;
+    
+    Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
+    players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
 }
