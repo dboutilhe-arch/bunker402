@@ -8,7 +8,9 @@ import {
     updateLastCouncil, 
     syncTerminals, 
     triggerWin,
-    resetLobbyVisuals
+    resetLobbyVisuals,
+    clearCouncilVisuals,
+    resetVoteColors
 } from '../ui/renderer.js';
 import { Logger } from '../ui/logger.js';
 import { checkCasePower } from './powers.js';
@@ -69,6 +71,7 @@ export async function initGame() {
  * Début d'un nouveau tour (Désignation du conseil)
  */
 export function nextTurn() {
+    resetVoteColors(); // On efface les couleurs du vote précédent ICI
     state.currentPhase = "DÉSIGNATION";
     
     const activeG = players[state.curG];
@@ -142,6 +145,7 @@ export function resolveVote() {
         setTimeout(() => {
             players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
         }, 100);
+        clearCouncilVisuals(); // On enlève les cadres ⭐ immédiatement
     } else {
         state.oxy--;
         document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
@@ -158,6 +162,7 @@ export function resolveVote() {
             state.curG = (state.curG + 1) % players.length; 
             setTimeout(nextTurn, 1500); 
         }
+        clearCouncilVisuals(); // On enlève les cadres ⭐ immédiatement
     }
     syncTerminals(); 
     render();
@@ -167,7 +172,7 @@ export function resolveVote() {
  * Application d'un décret (Survie, Crise ou Suffrage)
  */
 export function applyDecret(type) {
-    clearGardienVisuals();
+    clearCouncilVisuals(); // Sécurité pour enlever les cadres
     state.lastSentinelle = players[state.curSIdx].name;
     state.lastGardien = players[state.curG].name;
     updateLastCouncil();
