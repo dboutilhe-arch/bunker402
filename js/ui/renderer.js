@@ -99,26 +99,6 @@ export function updateTagsWithJobs() {
 }
 
 /**
- * Nettoie les visuels (bordures, étoiles) sans toucher aux métiers
- */
-export function clearGardienVisuals() {
-    players.forEach(p => {
-        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
-        tags.forEach(tag => {
-            if (tag.style.borderColor === "rgb(241, 196, 15)") {
-                tag.style.borderColor = "";
-                tag.style.borderWidth = "1px";
-            }
-            const nameDiv = tag.querySelector('.p-name');
-            if (nameDiv && nameDiv.innerText.includes("⭐")) {
-                nameDiv.innerText = p.name.toUpperCase();
-            }
-            tag.classList.remove('voted-oui', 'voted-non');
-        });
-    });
-}
-
-/**
  * Reset complet des étiquettes pour le Lobby
  */
 export function resetLobbyVisuals() {
@@ -131,21 +111,6 @@ export function resetLobbyVisuals() {
                 <div class="p-name">${p.name.toUpperCase()}</div>
                 <div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal; color: #2ecc71;"></div>
             `;
-        });
-    });
-}
-
-/**
- * Réinitialise les bordures de vote uniquement
- */
-export function resetTagColors() {
-    players.forEach(p => {
-        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
-        tags.forEach(tag => {
-            tag.style.borderColor = "";   
-            tag.style.borderWidth = "1px";
-            const nameDiv = tag.querySelector('.p-name');
-            if (nameDiv) nameDiv.innerText = p.name.toUpperCase();
         });
     });
 }
