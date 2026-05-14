@@ -248,22 +248,27 @@ export function restorePlayerAction(player) {
 
 export function globalReset() {
     if (!confirm("Réinitialiser la partie et renvoyer tout le monde au lobby ?")) return;
-    
-    players.forEach(p => p.conn.send({ type: 'RESET_TO_LOBBY' }));
-
-    resetGameState(); // Reset des données (state.js)
-
-    // Reset de l'interface PC
+    // 1. On prévient les téléphones de changer d'écran SANS couper la connexion
+    players.forEach(p => {
+        if (p.conn && p.conn.open) {
+            p.conn.send({ type: 'RESET_TO_LOBBY' });
+        }
+    });
+    // 2. On remet les variables de jeu à zéro (via state.js)
+    resetGameState(); 
+    // 3. Mise à jour de l'interface PC (On repasse en mode Lobby)
     document.getElementById('end-screen').style.display = 'none';
     document.getElementById('game-zone').style.display = 'none';
     document.getElementById('game-info-row').style.display = 'none';
     document.getElementById('setup-zone').style.display = 'block';
-    
-    Logger.clear();
-    document.getElementById('last-council-display').innerText = "Aucun";
+    document.getElementById('lobby-active').style.display = 'block';
+    // On réactive le bouton start si on a assez de monde
     document.getElementById('start-btn').disabled = (players.length < 5);
-
+    document.getElementById('count').innerText = players.length;
+    // 4. On nettoie les visuels (on enlève les métiers et étoiles)
     resetLobbyVisuals();
+    Logger.clear();
+    Logger.add("Réinitialisation réussie. Les joueurs sont toujours connectés.");
 }
 
 export function showGov(g, s) {
