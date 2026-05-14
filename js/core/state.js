@@ -1,39 +1,41 @@
-
 // state.js
 // Ce fichier centralise toutes les variables qui évoluent pendant la partie.
 
-// L'objet principal de l'état du bunker
+export let players = []; // On garde players à part car c'est un tableau de référence
+
 export let state = {  
+    // Statistiques du bunker
     survie: 0, 
     crise: 0, 
     oxy: 3,  
     gameOver: false, 
     suffrage: "Aucun",
+    
+    // Historique et censure
     lastSentinelle: null,
     lastGardien: null,
-    censoredPlayer: null
+    censoredPlayer: null,
+
+    // Deck et Index
+    deck: [], 
+    curG: 0, 
+    curSIdx: -1,
+
+    // Gestion des votes
+    votes: { 
+        oui: 0, 
+        non: 0, 
+        total: 0, 
+        list: [] 
+    },
+
+    // Variables de phase et contrôle
+    isProcessingAction: false,
+    currentPhase: "DÉSIGNATION", 
+    currentProposedS: null,      
+    currentLegislativeCards: [], 
+    currentPowerActive: false
 };
-
-// Variables de gestion des joueurs et du deck
-export let players = []; 
-export let deck = []; 
-export let curG = 0; 
-export let curSIdx = -1;
-
-// Gestion des votes
-export let votes = { 
-    oui: 0, 
-    non: 0, 
-    total: 0, 
-    list: [] 
-};
-
-// Variables de phase et contrôle
-export let isProcessingAction = false;
-export let currentPhase = "DÉSIGNATION"; // "DÉSIGNATION", "VOTE", "LÉGISLATION_G", "LÉGISLATION_S"
-export let currentProposedS = null;      
-export let currentLegislativeCards = []; 
-export let currentPowerActive = false;
 
 /**
  * Fonction pour remettre l'état à zéro (utile pour le globalReset)
@@ -46,17 +48,20 @@ export function resetGameState() {
     state.suffrage = "Aucun";
     state.lastSentinelle = null;
     state.lastGardien = null;
+    state.censoredPlayer = null;
     
-    curG = 0;
-    curSIdx = -1;
-    votes = { oui: 0, non: 0, total: 0, list: [] };
+    state.deck = [];
+    state.curG = 0;
+    state.curSIdx = -1;
     
-    isProcessingAction = false;
-    currentPhase = "DÉSIGNATION";
-    currentProposedS = null;
-    currentLegislativeCards = [];
-    currentPowerActive = false;
+    state.votes = { oui: 0, non: 0, total: 0, list: [] };
     
-    // Note : On ne vide pas players ici car ils restent dans le lobby
+    state.isProcessingAction = false;
+    state.currentPhase = "DÉSIGNATION";
+    state.currentProposedS = null;
+    state.currentLegislativeCards = [];
+    state.currentPowerActive = false;
+    
+    // Reset des pouvoirs joueurs sans vider la liste
     players.forEach(p => p.powerUsed = false);
 }
