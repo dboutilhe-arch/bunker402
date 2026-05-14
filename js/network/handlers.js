@@ -1,4 +1,3 @@
-
 // js/network/handlers.js
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
