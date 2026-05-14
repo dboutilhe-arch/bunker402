@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <title>BUNKER 402 - Console Centrale</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <style>
-
-    </style>
+    <link rel="stylesheet" href="css/central.css">
 </head>
 <body>
 
-    <button onclick="globalReset()" id="admin-reset" style="position: fixed; top: 10px; right: 10px; padding: 10px; background: #c0392b; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: monospace; z-index: 2000; font-size: 0.8em; display: none;">
+    <button id="admin-reset" style="position: fixed; top: 10px; right: 10px; padding: 10px; background: #c0392b; color: white; border: none; border-radius: 5px; cursor: pointer; font-family: monospace; z-index: 2000; font-size: 0.8em; display: none;">
         FORCE RESET
     </button>
 
@@ -20,7 +18,7 @@
         <div id="server-creation" style="margin: 20px 0;">
             <input type="text" id="custom-id" placeholder="NOM DE LA PARTIE (ex: BUNKER-402)" 
                    style="padding: 15px; width: 300px; background: #000; color: #f1c40f; border: 2px solid #444; font-family: 'Courier New';">
-            <button onclick="startServer()" style="padding: 15px 25px; background: #444; color: white; cursor: pointer; border: none; font-weight: bold;">CRÉER LE SERVEUR</button>
+            <button id="start-server-btn" style="padding: 15px 25px; background: #444; color: white; cursor: pointer; border: none; font-weight: bold;">CRÉER LE SERVEUR</button>
         </div>
     
         <div id="lobby-active" style="display: none;">
@@ -28,45 +26,35 @@
             <div class="lobby-code" id="display-id" style="margin-top: 0;"></div>
             <p>Joueurs connectés : <span id="count">0</span> / 100</p>
             <div id="player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px auto; max-width: 95%;"></div>
-            <button onclick="initGame()" id="start-btn" disabled style="padding:15px 30px; background:#2ecc71; cursor:pointer; font-weight:bold; border-radius:10px; border:none;">INITIALISER LA PARTIE</button>
+            <button id="start-btn" disabled style="padding:15px 30px; background:#2ecc71; cursor:pointer; font-weight:bold; border-radius:10px; border:none;">INITIALISER LA PARTIE</button>
         </div>
     </div>
 
     <div id="game-zone" style="display:none">
-        <!-- Barre d'Oxygène -->
         <div id="oxy-bar"><div id="oxy-level"></div></div>
     
-    <div id="game-info-row" style="display: none; justify-content: space-around; gap: 10px; margin-bottom: 20px;">
-        
-        <!-- BLOC ROUGE : DERNIER CONSEIL -->
-        <div class="info-box" style="border-color: #e74c3c; width: 25%;">
-            <h4 style="color: #e74c3c; margin: 5px 0;">DERNIER CONSEIL</h4>
-            <div id="last-council-display" style="font-size: 0.9em; color: #888;">Aucun</div>
+        <div id="game-info-row" style="display: none; justify-content: space-around; gap: 10px; margin-bottom: 20px;">
+            <div class="info-box" style="border-color: #e74c3c; width: 25%;">
+                <h4 style="color: #e74c3c; margin: 5px 0;">DERNIER CONSEIL</h4>
+                <div id="last-council-display" style="font-size: 0.9em; color: #888;">Aucun</div>
+            </div>
+            <div class="info-box" style="border-color: #f1c40f; width: 45%;">
+                <h4 style="color: #f1c40f; margin: 5px 0;">CONSEIL ACTUEL</h4>
+                <p style="font-size:1.5em; margin:5px;"><span id="g-name" style="color:#f1c40f">?</span> & <span id="s-name" style="color:#3498db">?</span></p>
+                <div id="vote-summary" style="font-size: 0.8em; color: #f1c40f;">DÉSIGNATION DU CONSEIL...</div>
+            </div>
+            <div class="info-box" style="border-color: #2ecc71; width: 25%;">
+                <h4 style="color: #2ecc71; margin: 5px 0;">COMPOSITION</h4>
+                <div id="composition-display" style="text-align: left; font-size: 0.85em; padding-left: 15px;"></div>
+            </div>
         </div>
     
-        <!-- BLOC JAUNE : CONSEIL ACTUEL -->
-        <div class="info-box" style="border-color: #f1c40f; width: 45%;">
-            <h4 style="color: #f1c40f; margin: 5px 0;">CONSEIL ACTUEL</h4>
-            <p style="font-size:1.5em; margin:5px;"><span id="g-name" style="color:#f1c40f">?</span> & <span id="s-name" style="color:#3498db">?</span></p>
-            <div id="vote-summary" style="font-size: 0.8em; color: #f1c40f;">DÉSIGNATION DU CONSEIL...</div>
-        </div>
-    
-        <!-- BLOC VERT : COMPOSITION DU BUNKER -->
-        <div class="info-box" style="border-color: #2ecc71; width: 25%;">
-            <h4 style="color: #2ecc71; margin: 5px 0;">COMPOSITION</h4>
-            <div id="composition-display" style="text-align: left; font-size: 0.85em; padding-left: 15px;"></div>
-        </div>
-    
-    </div>
-    
-        <!-- Plateaux de décrets (Largeur complète) -->
         <div class="main-layout" style="margin-bottom: 30px;">
             <div class="board"><h4>PROTOCOLES DE SURVIE</h4><div id="slots-s"></div></div>
             <div class="board"><h4>ORDRE DU JOUR</h4><div id="slots-f"></div></div>
             <div class="board"><h4>DIRECTIVES DE CRISE</h4><div id="slots-c"></div></div>
         </div>
     
-        <!-- LISTE DES JOUEURS (Sous les plateaux) -->
         <div style="border-top: 1px solid #444; padding-top: 20px;">
             <h4 style="color: #7f8c8d; margin-bottom: 15px; letter-spacing: 2px;">PERSONNEL DU BUNKER</h4>
             <div id="active-player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 95%; margin: 0 auto;"></div>
@@ -79,26 +67,16 @@
             </div>
         </div>
 
-        <!-- Écran de fin global -->
         <div id="end-screen">
             <h1 id="victory-title" style="font-size: 3.5em; margin-bottom:10px;"></h1>
             <h2 id="victory-reason" style="color: #f1c40f; margin-bottom:20px; font-size: 1.2em;"></h2>
-            
-            <!-- Zone de reveal avec ID unique et style forcé -->
             <div id="role-reveal-zone"></div>
-            
-            <button onclick="globalReset()" style="padding: 15px 30px; background: #2ecc71; border: none; cursor: pointer; font-weight: bold; border-radius:10px; margin-top: 20px;">
+            <button id="end-reset-btn" style="padding: 15px 30px; background: #2ecc71; border: none; cursor: pointer; font-weight: bold; border-radius:10px; margin-top: 20px;">
                 REINITIALISER LE SYSTÈME
             </button>
         </div>
-        
     </div>
 
-    <script src="js/state.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/engine.js"></script>
-    <script src="js/network.js"></script>
-    <script src="js/powers.js"></script>
-    
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
