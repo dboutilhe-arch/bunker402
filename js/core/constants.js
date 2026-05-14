@@ -1,16 +1,7 @@
-// Constants.js
-// Ce fichier contient les données "statiques" qui ne changent pas pendant la partie. Cela permet d'équilibrer le jeu sans fouiller dans le code logique.
-
-export const DECK_COMPOSITION = {
-    S: 40, // Survie
-    C: 60, // Crise
-    F: 10  // Suffrage
-};
-
-export const ROLES_CONFIG = {
-    SMALL: { min: 5, max: 6, roles: ['S', 'S', 'S', 'S', 'I', 'A'] },
-    MEDIUM: { min: 7, max: 10, roles: ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'S'] },
-    LARGE: { min: 11, max: 100, roles: ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'M', 'IM'] }
+export const ROLES_CONFIG = (n) => {
+    if (n <= 6) return ['S', 'S', 'S', 'S', 'I', 'A'];
+    if (n <= 10) return ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'S'];
+    return ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'M', 'IM'];
 };
 
 export const JOBS_LIST = [
