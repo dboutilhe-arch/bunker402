@@ -34,7 +34,7 @@ export let state = {
     currentPhase: "DÉSIGNATION", 
     currentProposedS: null,      
     currentLegislativeCards: [], 
-    currentPowerActive: false,
+    currentPowerActive: false
 };
 
 /**
