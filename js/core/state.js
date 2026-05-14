@@ -1,7 +1,9 @@
-// state.js
-// Variables qui vivent le temps d'une session
-
-export let gameState = {
+export let players = [];
+export let deck = [];
+export let curG = 0;
+export let curSIdx = -1;
+export let votes = { oui: 0, non: 0, total: 0, list: [] };
+export let state = {
     survie: 0,
     crise: 0,
     oxy: 3,
@@ -9,34 +11,10 @@ export let gameState = {
     suffrage: "Aucun",
     lastSentinelle: null,
     lastGardien: null,
-    censoredPlayer: null,
-    currentPhase: "DÉSIGNATION",
-    currentProposedS: null,
-    currentLegislativeCards: [],
-    isProcessingAction: false,
-    currentPowerActive: false
+    censoredPlayer: null
 };
-
-export let players = []; // Liste des objets joueurs {name, conn, role, metier, powerUsed}
-export let deck = [];
-export let curG = 0; // Index du Gardien actuel
-export let curSIdx = -1; // Index de la Sentinelle actuelle
-export let votes = { oui: 0, non: 0, total: 0, list: [] };
-
-// Fonction Reset des variables
-export function resetState() {
-    gameState.survie = 0;
-    gameState.crise = 0;
-    gameState.oxy = 3;
-    gameState.gameOver = false;
-    gameState.currentPhase = "DÉSIGNATION";
-    currentProposedS = null;
-    currentLegislativeCards = [];
-    isProcessingAction = false;
-    currentPowerActive = false;
-    players = [];
-    deck = [];
-    curG = 0;
-    curSIdx = -1;
-    votes = { oui: 0, non: 0, total: 0, list: [] };
-}
+export let isProcessingAction = false;
+export let currentPhase = "DÉSIGNATION";
+export let currentProposedS = null;
+export let currentLegislativeCards = [];
+export let currentPowerActive = false;
