@@ -156,8 +156,6 @@ export function triggerWin(team, reason) {
     });
 }
 
-// js/ui/renderer.js
-
 /**
  * Retire UNIQUEMENT les cadres (jaune/bleu) et l'étoile.
  * Appelée dès que le vote est fini.
