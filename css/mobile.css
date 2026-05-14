@@ -60,3 +60,8 @@
         
         .hidden { display: none; } /* Pour cacher les écrans non utilisés */
         input { background: #111; color: #2ecc71; border: 1px solid #2ecc71; padding: 15px; width: 85%; text-align: center; margin-bottom: 10px; }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
