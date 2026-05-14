@@ -83,6 +83,7 @@ function handleSentinelle(data) {
         tag.querySelector('.p-name').innerHTML = `⭐ ${players[state.curG].name.toUpperCase()}`;
         tag.style.borderColor = "#f1c40f"; tag.style.borderWidth = "2px";
     });
+    state.currentProposedS = data.sentinelleName;
     state.curSIdx = players.findIndex(p => p.name === data.sentinelleName);
     showGov(data.gardienName, data.sentinelleName);
 }
