@@ -6,7 +6,7 @@ import { checkCasePower } from './powers.js';
 
 // --- LOGIQUE DE JEU ---
 
-async function initGame() {
+export async function initGame() {
     // 1. Préparation du deck
     deck = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
 
@@ -54,7 +54,7 @@ async function initGame() {
     nextTurn();
 }
 
-function nextTurn() {
+export function nextTurn() {
     currentPhase = "DÉSIGNATION";
     
     const tags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
@@ -65,7 +65,7 @@ function nextTurn() {
         tag.style.borderWidth = "2px";
     });
 
-    addLog(`SYSTÈME : Désignation du nouveau Gardien : ${players[curG].name.toUpperCase()}`);
+    Logger.add(`SYSTÈME : Désignation du nouveau Gardien : ${players[curG].name.toUpperCase()}`);
     
     votes = { oui: 0, non: 0, total: 0, list: [] };
     
@@ -95,13 +95,13 @@ function nextTurn() {
     render();
 }
 
-function resolveVote() {
+export function resolveVote() {
     votes.list.forEach(v => {
         const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
         tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
     });
 
-    addLog(`RÉSULTAT DU SCRUTIN : ${votes.oui} OUI vs ${votes.non} NON`);
+    Logger.add(`RÉSULTAT DU SCRUTIN : ${votes.oui} OUI vs ${votes.non} NON`);
     
     if(votes.oui > votes.non) {
         document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ";
@@ -131,8 +131,8 @@ function resolveVote() {
         clearGardienVisuals();
 
         if(state.oxy <= 0) {
-            addLog("⚠️ ALERTE : RÉSERVES D'OXYGÈNE ÉPUISÉES !");
-            addLog("PROTOCOLE DE SÉCURITÉ : Application forcée d'un décret d'urgence.");
+            Logger.add("⚠️ ALERTE : RÉSERVES D'OXYGÈNE ÉPUISÉES !");
+            Logger.add("PROTOCOLE DE SÉCURITÉ : Application forcée d'un décret d'urgence.");
             applyForced();
         }
         else { 
@@ -144,7 +144,7 @@ function resolveVote() {
     render();
 }
 
-function applyDecret(type) {
+export function applyDecret(type) {
     clearGardienVisuals();
     state.lastSentinelle = players[curSIdx].name;
     state.lastGardien = players[curG].name;
@@ -175,20 +175,18 @@ function applyDecret(type) {
     }
 }
 
-let currentPowerActive = false; // Verrou pour empêcher le tour de passer pendant un pouvoir
-
-function applyForced() {
+export function applyForced() {
     let card = deck.pop(); 
     while(card === 'F') card = deck.pop(); 
     
     const typeLabel = card === 'S' ? "SURVIE" : "CRISE";
-    addLog(`URGENCE : Le système a déployé un décret de type ${typeLabel}.`);
+    Logger.add(`URGENCE : Le système a déployé un décret de type ${typeLabel}.`);
     
     applyDecret(card); 
     state.oxy = 3; 
 }
 
-function restorePlayerAction(player) {
+export function restorePlayerAction(player) {
     const isGardien = (players[curG] === player);
     const isSentinelle = (curSIdx !== -1 && players[curSIdx] === player);
 
@@ -207,19 +205,13 @@ function restorePlayerAction(player) {
             break;
         
         case "LÉGISLATION_G":
-            if (isGardien) {
-                player.conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards });
-            } else {
-                player.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
-            }
+            if (isGardien)    player.conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards });
+                else          player.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
             break;
 
         case "LÉGISLATION_S":
-            if (isSentinelle) {
-                player.conn.send({ type: 'SENTINELLE_PICK', cards: currentLegislativeCards });
-            } else {
-                player.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' });
-            }
+            if (isSentinelle) player.conn.send({ type: 'SENTINELLE_PICK', cards: currentLegislativeCards });
+            else              player.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' });
             break;
         
         default:
