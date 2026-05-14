@@ -101,6 +101,7 @@ export function nextTurn() {
     players.forEach((p, index) => {
         if(index !== state.curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: activeG.name });
     });
+    players.forEach(p => p.casePowerUsed = false);
 
     let eligiblePlayers = players.map(p => p.name).filter(name => {
         if (name === activeG.name) return false;
