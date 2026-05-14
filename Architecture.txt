@@ -5,6 +5,7 @@
 │   ├── central.css   (Extraire le <style> de index.html)
 │   └── mobile.css    (Extraire le <style> de joueur.html)
 ├── js/
+|   ├── main.js
 │   ├── core/         (Logique pure et données)
 │   │   ├── state.js      (Variables globales)
 │   │   ├── constants.js  (Rôles, Config, PowerMap)
