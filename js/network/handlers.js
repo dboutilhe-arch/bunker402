@@ -114,11 +114,11 @@ function handleVote(data) {
 }
 
 function handleDiscard(data) {
-    currentPhase = "LÉGISLATION_S"; // On change la phase
-    currentLegislativeCards = data.remaining; // On stocke les 2 cartes restantes
+    state.currentPhase = "LÉGISLATION_S"; // On change la phase
+    state.currentLegislativeCards = data.remaining; // On stocke les 2 cartes restantes
     
     document.getElementById('vote-summary').innerText = "DÉCRET REÇU : La Sentinelle choisit le décret final";
-    Logger.add(`LÉGISLATION : Le Gardien ${players[curG].name} a défaussé un décret secret.`);
+    Logger.add(`LÉGISLATION : Le Gardien ${players[state.curG].name} a défaussé un décret secret.`);
     Logger.add(`SYSTÈME : Transfert des décrets restants à la Sentinelle.`);
     
     // 1. On prévient tout le monde (y compris la sentinelle) de l'étape
@@ -127,8 +127,8 @@ function handleDiscard(data) {
     // 2. On envoie les cartes à la Sentinelle après un micro-délai (100ms)
     // Cela laisse le temps au téléphone de traiter le message précédent
     setTimeout(() => {
-        if (players[curSIdx] && players[curSIdx].conn.open) {
-            players[curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: currentLegislativeCards });
+        if (players[state.curSIdx] && players[state.curSIdx].conn.open) {
+            players[state.curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: state.currentLegislativeCards });
         }
     }, 100);
 }
@@ -137,7 +137,7 @@ function handleFinalChoice(data) {
     const typeLabel = data.card === 'S' ? "SURVIE" : (data.card === 'C' ? "CRISE" : "SUFFRAGE");
     Logger.add(`LÉGISLATION : La Sentinelle a promulgué le décret : ${typeLabel}`);
     
-    isProcessingAction = true;
+    state.isProcessingAction = true;
     applyDecret(data.card);
 }
 
