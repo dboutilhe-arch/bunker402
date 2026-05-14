@@ -56,17 +56,17 @@ export async function initGame() {
 }
 
 export function nextTurn() {
-    currentPhase = "DÉSIGNATION";
+    state.currentPhase = "DÉSIGNATION";
     
-    const tags = document.querySelectorAll(`[id="tag-${players[curG].name.toLowerCase()}"]`);
+    const tags = document.querySelectorAll(`[id="tag-${players[state.curG].name.toLowerCase()}"]`);
     tags.forEach(tag => {
         const nameDiv = tag.querySelector('.p-name');
-        if (nameDiv) nameDiv.innerHTML = `⭐ ${players[curG].name.toUpperCase()}`;
+        if (nameDiv) nameDiv.innerHTML = `⭐ ${players[state.curG].name.toUpperCase()}`;
         tag.style.borderColor = "#f1c40f"; 
         tag.style.borderWidth = "2px";
     });
 
-    Logger.add(`SYSTÈME : Désignation du nouveau Gardien : ${players[curG].name.toUpperCase()}`);
+    Logger.add(`SYSTÈME : Désignation du nouveau Gardien : ${players[state.curG].name.toUpperCase()}`);
     
     votes = { oui: 0, non: 0, total: 0, list: [] };
     
@@ -74,24 +74,24 @@ export function nextTurn() {
     document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...";
     document.getElementById('vote-summary').style.color = "#3498db";
     
-    document.getElementById('g-name').innerText = players[curG].name;
+    document.getElementById('g-name').innerText = players[state.curG].name;
     document.getElementById('g-name').style.color = "#f1c40f"; 
     document.getElementById('s-name').innerText = "?";
     document.getElementById('s-name').style.color = "#e0e0e0";
 
     players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
     players.forEach((p, index) => {
-        if(index !== curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[curG].name });
+        if(index !== state.curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[state.curG].name });
     });
 
     let eligiblePlayers = players.map(p => p.name).filter(name => {
-        if (name === players[curG].name) return false;
+        if (name === players[state.curG].name) return false;
         if (name === state.lastSentinelle) return false;
         if (players.length > 5 && name === state.lastGardien) return false;
         return true;
     });
     
-    players[curG].conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
+    players[state.curG].conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
     syncTerminals(); 
     render();
 }
@@ -115,12 +115,12 @@ export function resolveVote() {
 
         players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
 
-        if(state.crise >= 3 && players[curSIdx].role === 'A') {
+        if(state.crise >= 3 && players[state.curSIdx].role === 'A') {
             return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
         }
 
         setTimeout(() => {
-            players[curG].conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards });
+            players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: currentLegislativeCards });
         }, 100);
     } else {
         state.oxy--;
@@ -137,7 +137,7 @@ export function resolveVote() {
             applyForced();
         }
         else { 
-            curG = (curG + 1) % players.length; 
+            state.curG = (state.curG + 1) % players.length; 
             setTimeout(nextTurn, 1500); 
         }
     }
@@ -147,8 +147,8 @@ export function resolveVote() {
 
 export function applyDecret(type) {
     clearGardienVisuals();
-    state.lastSentinelle = players[curSIdx].name;
-    state.lastGardien = players[curG].name;
+    state.lastSentinelle = players[state.curSIdx].name;
+    state.lastGardien = players[state.curG].name;
     updateLastCouncil();
 
     if (type === 'S') {
@@ -170,7 +170,7 @@ export function applyDecret(type) {
         // On ne passe au tour suivant que si aucun pouvoir n'est en cours 
         // ou après un petit délai si c'est un décret normal
         if (!currentPowerActive) {
-            curG = (curG + 1) % players.length;
+            state.curG = (state.curG + 1) % players.length;
             setTimeout(() => { isProcessingAction = false; nextTurn(); }, 1000);
         }
     }
@@ -188,8 +188,8 @@ export function applyForced() {
 }
 
 export function restorePlayerAction(player) {
-    const isGardien = (players[curG] === player);
-    const isSentinelle = (curSIdx !== -1 && players[curSIdx] === player);
+    const isGardien = (players[state.curG] === player);
+    const isSentinelle = (state.curSIdx !== -1 && players[state.curSIdx] === player);
 
     switch(currentPhase) {
         case "VOTE":
@@ -199,7 +199,7 @@ export function restorePlayerAction(player) {
             } else {
                 player.conn.send({ 
                     type: 'VOTE_START', 
-                    g: players[curG].name, 
+                    g: players[state.curG].name, 
                     s: currentProposedS 
                 });
             }
@@ -218,14 +218,14 @@ export function restorePlayerAction(player) {
         default:
             if (isGardien) {
                 let eligible = players.map(p => p.name).filter(name => {
-                    if (name === players[curG].name) return false;
+                    if (name === players[state.curG].name) return false;
                     if (name === state.lastSentinelle) return false;
                     if (players.length > 5 && name === state.lastGardien) return false;
                     return true;
                 });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
             } else {
-                player.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[curG].name });
+                player.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[state.curG].name });
             }
     }
 }
