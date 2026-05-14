@@ -10,27 +10,20 @@ export function testPlayerBlood(requester, targetName) {
     const target = players.find(p => p.name === targetName);
     if (!target) return;
 
-    // Règles de Sang :
-    // INFECTÉ : Alpha (A), Infecté (I), Immunisé (IM)
-    // SAIN : Survivant (S), Mycologue (M)
     const isInfected = ['A', 'I', 'IM'].includes(target.role);
     const bloodResult = isInfected ? "INFECTÉ" : "SAIN";
 
-    // On logue l'action sur le PC
-    Logger.add(`POUVOIR : Le Docteur ${requester.name} a prélevé un échantillon de ${targetName}.`);
+    Logger.add(`POUVOIR : ${requester.name} a analysé ${targetName}.`);
 
-    // On renvoie le résultat UNIQUEMENT au Docteur (Terminal mobile)
     requester.conn.send({
         type: 'BLOOD_TEST_RESULT',
         target: targetName,
         result: bloodResult
     });
 
-    // Si le pouvoir a été déclenché par une case du plateau (Urgence)
+    // Gestion de la fin de l'action de case
     if (state.currentPowerActive) {
         state.currentPowerActive = false;
-        
-        // On attend 2 secondes pour laisser le temps au joueur de lire son résultat
         setTimeout(() => {
             state.curG = (state.curG + 1) % players.length;
             state.isProcessingAction = false;
