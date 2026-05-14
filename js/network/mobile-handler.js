@@ -63,6 +63,19 @@ function handleData(data) {
 
         case 'SYNC_STATE':
             updateMiniBoard(data.state);
+            // Si on reçoit une synchro et qu'on n'est pas en train de choisir un pouvoir forcé
+            // on redonne l'état normal au bouton de métier
+            const btn = document.getElementById('btn-power');
+            if (btn) {
+                // Le bouton n'est utilisable que si :
+                // 1. Le joueur ne l'a pas déjà utilisé (hasUsedPower)
+                // 2. Le serveur ne dit pas qu'un pouvoir de case est actif (currentPowerActive)
+                if (!hasUsedPower && !data.state.currentPowerActive) {
+                    btn.disabled = false;
+                    btn.style.opacity = "1";
+                    btn.style.pointerEvents = "auto";
+                }
+            }
             break;
 
         case 'YOUR_TURN':
@@ -94,7 +107,18 @@ function handleData(data) {
             break;
 
         case 'FORCE_POWER_SELECT':
+            // 1. On grise le bouton de métier pour éviter le conflit
+            const jobBtn = document.getElementById('btn-power');
+            if (jobBtn) {
+                jobBtn.disabled = true;
+                jobBtn.style.opacity = "0.3";
+                jobBtn.style.pointerEvents = "none";
+            }
+            // 2. On ouvre le sélecteur forcé
             openTargetSelector(data.action, data.title, true);
+            // 3. Petit effet visuel d'alerte
+            document.body.style.backgroundColor = "#1a0000";
+            setTimeout(() => { document.body.style.backgroundColor = "#000"; }, 500);
             break;
 
         case 'CLEAN_UI':
@@ -147,10 +171,11 @@ function setupIdentity(data) {
     jobUi.innerHTML = "";
     if (data.metier === 'Docteur') {
         const btn = document.createElement('button');
+        btn.id = "btn-power";
         btn.className = "btn";
         btn.style.background = "#2ecc71";
         btn.style.color = "black";
-        btn.innerText = "SCANNER UN PERSONNEL";
+        btn.innerText = "TEST SANGUIN";
         if (hasUsedPower) jobUi.style.opacity = "0.3";
         btn.onclick = () => openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE');
         jobUi.appendChild(btn);
