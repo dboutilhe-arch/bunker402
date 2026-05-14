@@ -76,7 +76,7 @@ function handleJoin(conn, data) {
 }
 
 function handleSentinelle(data) {
-    resetVoteColors()
+    resetVoteColors();
     Logger.add(`CONSEIL : Le Gardien ${data.gardienName} a désigné ${data.sentinelleName}.`);
     const gTags = document.querySelectorAll(`[id="tag-${players[state.curG].name.toLowerCase()}"]`);
     gTags.forEach(tag => {
