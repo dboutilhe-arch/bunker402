@@ -26,13 +26,14 @@ export async function initGame() {
     }
     roles.sort(() => Math.random() - 0.5);
 
-   const alphaPlayer = players[roles.indexOf('A')];
+    const shuffledJobs = [...JOBS_LIST].sort(() => Math.random() - 0.5);
+    const alphaPlayer = players[roles.indexOf('A')];
 
     // 3. Envoi progressif
     for (let i = 0; i < n; i++) {
         let p = players[i];
         p.role = roles[i];
-        p.metier = metiers[i % metiers.length];
+        p.metier = shuffledJobs[i % shuffledJobs.length];
 
         p.conn.send({
             type: 'INIT',
