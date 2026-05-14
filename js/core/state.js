@@ -61,8 +61,8 @@ export function resetGameState() {
     state.currentProposedS = null;
     state.currentLegislativeCards = [];
     state.currentPowerActive = false;
-    state.jobPowerUsed: false;
-    state.casePowerUsed: false;
+    state.jobPowerUsed = false;
+    state.casePowerUsed = false;
     
     // Reset des pouvoirs joueurs sans vider la liste
     players.forEach(p => {
