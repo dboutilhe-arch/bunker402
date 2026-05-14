@@ -8,7 +8,7 @@ import { checkCasePower } from './powers.js';
 
 export async function initGame() {
     // 1. Préparation du deck
-    deck = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
+    state.deck = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
 
     // 2. Logique de répartition des rôles
     let roles = [];
@@ -68,7 +68,7 @@ export function nextTurn() {
 
     Logger.add(`SYSTÈME : Désignation du nouveau Gardien : ${players[state.curG].name.toUpperCase()}`);
     
-    votes = { oui: 0, non: 0, total: 0, list: [] };
+    state.votes = { oui: 0, non: 0, total: 0, list: [] };
     
     // Reset de l'affichage du conseil actuel dans le bloc jaune
     document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...";
@@ -97,20 +97,20 @@ export function nextTurn() {
 }
 
 export function resolveVote() {
-    votes.list.forEach(v => {
+    state.votes.list.forEach(v => {
         const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
         tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
     });
 
-    Logger.add(`RÉSULTAT DU SCRUTIN : ${votes.oui} OUI vs ${votes.non} NON`);
+    Logger.add(`RÉSULTAT DU SCRUTIN : ${state.votes.oui} OUI vs ${state.votes.non} NON`);
     
-    if(votes.oui > votes.non) {
+    if(state.votes.oui > state.votes.non) {
         document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ";
         document.getElementById('vote-summary').style.color = "#2ecc71";
         Logger.add("VOTE ACCEPTÉ : Le conseil entre en session législative.");
         
         state.currentPhase = "LÉGISLATION_G";
-        state.currentLegislativeCards = [deck.pop(), deck.pop(), deck.pop()];
+        state.currentLegislativeCards = [state.deck.pop(), state.deck.pop(), state.deck.pop()];
         state.oxy = 3;
 
         players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
@@ -177,8 +177,8 @@ export function applyDecret(type) {
 }
 
 export function applyForced() {
-    let card = deck.pop(); 
-    while(card === 'F') card = deck.pop(); 
+    let card = state.deck.pop(); 
+    while(card === 'F') card = state.deck.pop(); 
     
     const typeLabel = card === 'S' ? "SURVIE" : "CRISE";
     Logger.add(`URGENCE : Le système a déployé un décret de type ${typeLabel}.`);
@@ -193,7 +193,7 @@ export function restorePlayerAction(player) {
 
     switch(state.currentPhase) {
         case "VOTE":
-            const aDejaVote = votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
+            const aDejaVote = state.votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
             if (aDejaVote) {
                 player.conn.send({ type: 'CLEAN_UI' });
             } else {
