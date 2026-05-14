@@ -1,73 +1,61 @@
-/* mobile.css */ 
+        /* Design global : look "ordinateur de bunker" (noir et vert) */
+        body { background: #000; color: #2ecc71; font-family: monospace; padding: 10px; text-align: center; margin: 0; overflow-x: hidden; }
+        
+        /* En-tête : affiche le nom du joueur et l'oxygène en haut de l'écran */
+        .header-ui { 
+            display: flex; 
+            justify-content: space-between; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 5px; 
+            margin-bottom: 10px; 
+            font-size: 0.75em;
+        }
 
-body {
-    background: #0d0d0d;
-    color: #00ff41;
-    font-family: 'Courier New', Courier, monospace;
-    margin: 0;
-    padding: 20px;
-    overflow-x: hidden;
-}
+        /* Petit plateau de rappel : pour voir les scores sans regarder l'écran PC */
+        .mini-board { display: flex; justify-content: space-around; background: #111; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 0.7em; }
 
-#status-bar {
-    font-size: 0.7em;
-    border-bottom: 1px solid #00ff41;
-    margin-bottom: 20px;
-    padding-bottom: 5px;
-}
+        /* Les "dots" : petits carrés qui représentent les cartes posées (Bleu/Rouge) */
+        .dot { width: 10px; height: 15px; border: 1px solid #444; margin: 1px; display: inline-block; border-radius: 2px; }
+        .f-s { background: #3498db; border-color: #3498db; }
+        .f-c { background: #e74c3c; border-color: #e74c3c; }
 
-.screen { text-align: center; }
+        /* Barre d'oxygène miniature sous le nom */
+        #oxy-mini { height: 5px; background: #3498db; width: 100%; transition: 0.5s; margin-top: 5px; }
 
-input {
-    width: 90%;
-    padding: 15px;
-    background: #000;
-    border: 1px solid #00ff41;
-    color: #00ff41;
-    margin-bottom: 15px;
-}
+        /* Zone de rôle : encadré jaune pour les infos secrètes */
+        .role-ui { border: 2px solid yellow; color: yellow; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
 
-button {
-    width: 100%;
-    padding: 15px;
-    background: #00ff41;
-    color: #000;
-    border: none;
-    font-weight: bold;
-    margin: 10px 0;
-    text-transform: uppercase;
-}
+        /* Info Sang */
+        .blood-info { 
+            margin-top: 5px; 
+            font-weight: bold; 
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
 
-#role-card {
-    border: 2px solid #00ff41;
-    padding: 15px;
-    margin-bottom: 25px;
-    background: rgba(0, 255, 65, 0.1);
-}
+        /* Boutons standards (Lier, Voter, Choisir Joueur) */
+        .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 15px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; }
 
-.btn-oui { background: #2ecc71; color: white; }
-.btn-non { background: #e74c3c; color: white; }
+        /* Boutons de cartes (Décrets) : plus larges et colorés selon le type */
+        .card { display: block; padding: 20px; margin: 10px auto; width: 90%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.1em; }
+        .S { background: #3498db; } /* Carte Bleue */
+        .C { background: #e74c3c; } /* Carte Rouge */
+        .F { background: #7f8c8d; } /* Carte Grise */
 
-#doc-btn {
-    background: #f1c40f;
-    margin-top: 30px;
-}
+        .memo-box {
+            background: #0a0a0a;
+            border-left: 3px solid #f1c40f;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: left;
+            font-size: 0.85em;
+            display: none; /* Caché par défaut jusqu'à l'INIT */
+        }
+        .win-condition { color: #888; font-style: italic; margin-top: 5px; }
 
-.result-box {
-    margin-top: 20px;
-    padding: 15px;
-    border: 1px solid white;
-}
-.INFECTÉ { background: #e74c3c; color: white; }
-.SAIN { background: #2ecc71; color: white; }
-
-.loader {
-    border: 3px solid #111;
-    border-top: 3px solid #00ff41;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    animation: spin 1s linear infinite;
-    margin: 20px auto;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .role-A { border: 2px solid #9400d3 !important; color: #9400d3 !important; }  /* Alpha     => Violet     */
+        .role-M { border: 2px solid #1b4d3e !important; color: #1b4d3e !important; }  /* Mycologue => Vert foncé */
+        .role-IM { border: 2px solid #d4af37 !important; color: #d4af37 !important; } /* Immunisé  => Jaune doré */
+        
+        .hidden { display: none; } /* Pour cacher les écrans non utilisés */
+        input { background: #111; color: #2ecc71; border: 1px solid #2ecc71; padding: 15px; width: 85%; text-align: center; margin-bottom: 10px; }
