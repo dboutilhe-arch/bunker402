@@ -1,4 +1,5 @@
 import { state, players } from '../core/state.js';
+import { Logger } from './logger.js';
 
 // Affichage Composition Partie
 export function displayComposition(roles) {
@@ -57,4 +58,135 @@ export function createPlayerTag(name) {
 // Synchronisation
 export function syncTerminals() {
     players.forEach(p => p.conn.send({ type: 'SYNC_STATE', state: state }));
+}
+
+/**
+ * Mise à jour des plateaux (Oxygène, Survie, Crise, Suffrage)
+ */
+export function render() {
+    const oxyBar = document.getElementById('oxy-level');
+    if (oxyBar) {
+        oxyBar.style.width = (state.oxy / 3 * 100) + "%";
+        oxyBar.className = (state.oxy <= 1) ? "critical" : "";
+    }
+    
+    // Slots Décrets
+    document.getElementById('slots-s').innerHTML = Array(5).fill(0)
+        .map((_, i) => `<div class="slot ${i < state.survie ? 'filled-s' : ''}"></div>`).join('');
+    
+    document.getElementById('slots-c').innerHTML = Array(6).fill(0)
+        .map((_, i) => `<div class="slot ${i < state.crise ? 'filled-c' : ''}"></div>`).join('');
+    
+    document.getElementById('slots-f').innerHTML = 
+        `<div class="slot ${state.suffrage !== "Aucun" ? 'filled-f' : ''}"></div>`;
+}
+
+/**
+ * Affiche les métiers sur les étiquettes
+ */
+export function updateTagsWithJobs() {
+    players.forEach(p => {
+        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+        tags.forEach(tag => {
+            tag.innerHTML = `
+                <div class="p-name">${p.name.toUpperCase()}</div>
+                <div class="p-job" style="font-size: 0.65em; opacity: 0.8; font-weight: normal; margin-top: 2px;">
+                    ${p.metier}
+                </div>
+            `;
+        });
+    });
+}
+
+/**
+ * Nettoie les visuels (bordures, étoiles) sans toucher aux métiers
+ */
+export function clearGardienVisuals() {
+    players.forEach(p => {
+        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+        tags.forEach(tag => {
+            if (tag.style.borderColor === "rgb(241, 196, 15)") {
+                tag.style.borderColor = "";
+                tag.style.borderWidth = "1px";
+            }
+            const nameDiv = tag.querySelector('.p-name');
+            if (nameDiv && nameDiv.innerText.includes("⭐")) {
+                nameDiv.innerText = p.name.toUpperCase();
+            }
+            tag.classList.remove('voted-oui', 'voted-non');
+        });
+    });
+}
+
+/**
+ * Reset complet des étiquettes pour le Lobby
+ */
+export function resetLobbyVisuals() {
+    players.forEach(p => {
+        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+        tags.forEach(tag => {
+            tag.className = 'player-tag';
+            tag.style = ""; // Reset de tous les styles inline
+            tag.innerHTML = `
+                <div class="p-name">${p.name.toUpperCase()}</div>
+                <div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal; color: #2ecc71;"></div>
+            `;
+        });
+    });
+}
+
+/**
+ * Réinitialise les bordures de vote uniquement
+ */
+export function resetTagColors() {
+    players.forEach(p => {
+        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+        tags.forEach(tag => {
+            tag.style.borderColor = "";   
+            tag.style.borderWidth = "1px";
+            const nameDiv = tag.querySelector('.p-name');
+            if (nameDiv) nameDiv.innerText = p.name.toUpperCase();
+        });
+    });
+}
+
+/**
+ * Gère l'affichage des résultats finaux
+ */
+export function triggerWin(team, reason) {
+    state.gameOver = true;
+    const revealZone = document.getElementById('role-reveal-zone');
+    if (revealZone) {
+        revealZone.innerHTML = ""; 
+        players.forEach(p => {
+            const config = {
+                'A':  { label: "ALPHA", color: "#9400d3" },
+                'I':  { label: "INFECTÉ", color: "#e74c3c" },
+                'S':  { label: "SURVIVANT", color: "#3498db" },
+                'M':  { label: "MYCOLOGUE", color: "#1b4d3e" },
+                'IM': { label: "IMMUNISÉ", color: "#d4af37" }
+            };
+            const { label, color } = config[p.role];
+            const card = document.createElement('div');
+            card.className = `reveal-card rev-${p.role}`;
+            card.innerHTML = `
+                <div style="font-weight:bold; color:#FFF; font-size:1.1em;">${p.name.toUpperCase()}</div>
+                <div style="font-size:0.8em; color:#888; margin-bottom:5px;">${p.metier}</div>
+                <div style="font-size:0.9em; color:${color}; font-weight:bold;">${label}</div>
+            `;
+            revealZone.appendChild(card);
+        });
+    }
+
+    document.getElementById('end-screen').style.display = "flex";
+    document.getElementById('victory-title').innerText = "VICTOIRE : " + team;
+    document.getElementById('victory-reason').innerText = reason;
+    Logger.add(`FIN DE PARTIE : Victoire des ${team}.`);
+
+    players.forEach(p => {
+        let hasWon = false;
+        if (team === "SURVIVANTS" && ['S', 'IM'].includes(p.role)) hasWon = true;
+        if (team === "INFECTES" && ['I', 'A', 'M'].includes(p.role)) hasWon = true;
+        p.conn.send({ type: 'END_GAME', team, reason, personalResult: hasWon ? "MISSION RÉUSSIE" : "MISSION ÉCHOUÉE" });
+    });
 }
