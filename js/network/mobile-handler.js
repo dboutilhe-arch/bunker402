@@ -283,10 +283,33 @@ function showEndGame(data) {
 }
 
 function resetAffichageJ() {
-    // On cache le jeu, on montre le message d'attente
-    document.getElementById('game').classList.add('hidden');
-    document.getElementById('setup').classList.add('hidden'); // Optionnel selon ton UI
-    document.getElementById('main-ui').innerHTML = "Le bunker a été réinitialisé. En attente du Gardien...";
-    // On reset les variables locales sans couper le Peer
+// 1. On nettoie les données locales de la partie finie
     hasUsedPower = false;
+    currentHand = [];
+    
+    // 2. On bascule l'affichage sur un mode "Lobby / Attente"
+    const ui = document.getElementById('main-ui');
+    const gameZone = document.getElementById('game');
+    const memoBox = document.getElementById('memo-box');
+    const jobUi = document.getElementById('job-ui');
+
+    // On cache les éléments de la partie précédente
+    if (memoBox) memoBox.style.display = "none";
+    if (jobUi) jobUi.innerHTML = "";
+    
+    // On réinitialise l'en-tête (Rôle inconnu)
+    document.getElementById('role-display').innerText = "RÔLE : EN ATTENTE...";
+    document.getElementById('role-display').style.color = "#2ecc71";
+    document.getElementById('role-display').parentElement.style.borderColor = "#2ecc71";
+    document.getElementById('metier-display').innerText = "MÉTIER : ???";
+
+    // 3. On affiche le message central pour éviter l'écran noir
+    ui.innerHTML = `
+        <div style="margin-top: 50px;">
+            <h2 style="color: #f1c40f;">SYSTÈME RÉINITIALISÉ</h2>
+            <p>Connexion maintenue avec le Bunker.</p>
+            <div class="loader" style="margin: 20px auto; border: 4px solid #333; border-top: 4px solid #2ecc71; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;"></div>
+            <p style="font-size: 0.8em; color: #888;">En attente du lancement par le Gardien Principal...</p>
+        </div>
+    `;
 }
