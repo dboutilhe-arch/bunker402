@@ -39,6 +39,7 @@ export async function initGame() {
 
     const shuffledJobs = [...JOBS_LIST].sort(() => Math.random() - 0.5);
     const alphaPlayer = players[roles.indexOf('A')];
+    const alphaName = alphaIndex !== -1 ? players[alphaIndex].name : "Inconnu";
 
     // 3. Envoi des données aux terminaux mobiles
     for (let i = 0; i < n; i++) {
