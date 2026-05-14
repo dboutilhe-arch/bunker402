@@ -1,0 +1,22 @@
+/root
+│   index.html        (Console Centrale)
+│   joueur.html       (Terminal Mobile)
+├── css/
+│   ├── central.css   (Extraire le <style> de index.html)
+│   └── mobile.css    (Extraire le <style> de joueur.html)
+├── js/
+|   ├── main.js
+│   ├── core/         (Logique pure et données)
+│   │   ├── state.js      (Variables globales)
+│   │   ├── constants.js  (Rôles, Config, PowerMap)
+│   ├── network/      (Communication PeerJS)
+│   │   ├── peer-manager.js
+│   │   └── handlers.js   (Gestion des messages data.type)
+│   │   └── mobile-handler.js
+│   ├── game/         (Mécaniques de jeu)
+│   │   ├── engine.js     (Cycles de tours, votes)
+│   │   └── rules.js      (Calcul des victoires, répartition rôles)
+│   │   └── powers.js     (Actions spécifiques (Docteur, Cases))
+│   └── ui/           (Affichage et DOM)
+│       ├── renderer.js   (Dessin des plateaux)
+│       └── logger.js     (Gestion du log console)
