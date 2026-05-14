@@ -2,8 +2,7 @@ import { state, players, resetGameState } from '../core/state.js';
 import { JOBS_LIST } from '../core/constants.js';
 import { 
     render, 
-    updateTagsWithJobs, 
-    clearGardienVisuals, 
+    updateTagsWithJobs,  
     displayComposition, 
     updateLastCouncil, 
     syncTerminals, 
@@ -151,8 +150,6 @@ export function resolveVote() {
         document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
         document.getElementById('vote-summary').style.color = "#e74c3c";
         Logger.add(`ALERTE : Rejet du conseil. Oxygène à ${state.oxy}/3.`);
-        
-        clearGardienVisuals();
 
         if(state.oxy <= 0) {
             Logger.add("⚠️ ALERTE : RÉSERVES D'OXYGÈNE ÉPUISÉES !");
