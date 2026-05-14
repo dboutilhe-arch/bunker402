@@ -1,7 +1,7 @@
-import { state, players } from '../core/state.js';
+import { state, players, curG, votes } from '../core/state.js';
 
 // Affichage Composition Partie
-function displayComposition(roles) {
+export function displayComposition(roles) {
     const counts = roles.reduce((acc, r) => {
         acc[r] = (acc[r] || 0) + 1;
         return acc;
@@ -21,19 +21,15 @@ function displayComposition(roles) {
     // Ligne Alpha (Toujours présent)
     html += `<div style="color: #9400d3;">• 1 ALPHA</div>`;
     // Affichage conditionnel du Mycologue (Infiltré)
-    if (counts['M']) {
-        html += `<div style="color: #1b4d3e;">• ${counts['M']} MYCOLOGUE</div>`;
-    }
+    if (counts['M']) { html += `<div style="color: #1b4d3e;">• ${counts['M']} MYCOLOGUE</div>`; }
     // Affichage conditionnel de l'Immunisé (Résistant)
-    if (counts['IM']) {
-        html += `<div style="color: #d4af37;">• ${counts['IM']} IMMUNISÉ</div>`;
-    }
+    if (counts['IM']) { html += `<div style="color: #d4af37;">• ${counts['IM']} IMMUNISÉ</div>`; }
 
     compDiv.innerHTML = html;
 }
 
 // Affichage dernier conseil
-function updateLastCouncil() {
+export function updateLastCouncil() {
     if (state.lastGardien && state.lastSentinelle) {
         document.getElementById('last-council-display').innerHTML = `
             <span style="color: #f1c40f;">${state.lastGardien}</span><br>
