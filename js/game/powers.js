@@ -1,4 +1,4 @@
-import { state, players } from '../core/state.js';
+import { state, players, currentPowerActive } from '../core/state.js';
 import { POWER_MAP } from '../core/constants.js';
 import { Logger } from '../ui/logger.js';
 
@@ -9,9 +9,10 @@ export function checkCasePower(caseNumber) {
 
     if (!power) return;
 
-    currentPowerActive = true;
+    state.currentPowerActive = true;
+    
     const gardien = players.find(p => p.name === state.lastGardien);
-    addLog(`SYSTÈME : Case de Crise ${caseNumber} atteinte. Activation du protocole : ${power}.`);
+    Logger.add(`SYSTÈME : Case de Crise ${caseNumber} atteinte. Activation du protocole : ${power}.`);
 
     switch (power) {
         case 'TEST':
