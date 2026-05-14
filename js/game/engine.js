@@ -107,7 +107,7 @@ export function resolveVote() {
     if(votes.oui > votes.non) {
         document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ";
         document.getElementById('vote-summary').style.color = "#2ecc71";
-        addLog("VOTE ACCEPTÉ : Le conseil entre en session législative.");
+        Logger.add("VOTE ACCEPTÉ : Le conseil entre en session législative.");
         
         currentPhase = "LÉGISLATION_G";
         currentLegislativeCards = [deck.pop(), deck.pop(), deck.pop()];
@@ -127,7 +127,7 @@ export function resolveVote() {
         
         document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
         document.getElementById('vote-summary').style.color = "#e74c3c";
-        addLog(`ALERTE : Rejet du conseil. Oxygène à ${state.oxy}/3.`);
+        Logger.add(`ALERTE : Rejet du conseil. Oxygène à ${state.oxy}/3.`);
         
         clearGardienVisuals();
 
