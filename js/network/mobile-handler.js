@@ -106,8 +106,7 @@ function handleData(data) {
             break;
 
         case 'RESET_TO_LOBBY':
-            sessionStorage.clear();
-            location.reload();
+            resetAffichageJ();
             break;
     }
 }
@@ -281,4 +280,13 @@ function showEndGame(data) {
             <p>Les <b>${data.team}</b> ont gagné.</p>
             <p style="font-size:0.8em; font-style:italic;">"${data.reason}"</p>
         </div>`;
+}
+
+function resetAffichageJ() {
+    // On cache le jeu, on montre le message d'attente
+    document.getElementById('game').classList.add('hidden');
+    document.getElementById('setup').classList.add('hidden'); // Optionnel selon ton UI
+    document.getElementById('main-ui').innerHTML = "Le bunker a été réinitialisé. En attente du Gardien...";
+    // On reset les variables locales sans couper le Peer
+    hasUsedPower = false;
 }
