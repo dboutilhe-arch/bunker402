@@ -1,4 +1,4 @@
-import { state, players, curG, votes } from '../core/state.js';
+import { state, players } from '../core/state.js';
 
 // Affichage Composition Partie
 export function displayComposition(roles) {
