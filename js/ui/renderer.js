@@ -1,3 +1,4 @@
+import { state, players } from '../core/state.js';
 
 // Affichage Composition Partie
 function displayComposition(roles) {
