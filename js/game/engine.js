@@ -1,40 +1,48 @@
-import { state, players, deck, votes, curG, curSIdx, currentPhase, currentLegislativeCards, currentProposedS, isProcessingAction, currentPowerActive } from '../core/state.js';
+import { state, players } from '../core/state.js';
 import { JOBS_LIST } from '../core/constants.js';
-import { render, updateTagsWithJobs, clearGardienVisuals, displayComposition, updateLastCouncil, syncTerminals, triggerWin } from '../ui/renderer.js';
+import { 
+    render, 
+    updateTagsWithJobs, 
+    clearGardienVisuals, 
+    displayComposition, 
+    updateLastCouncil, 
+    syncTerminals, 
+    triggerWin 
+} from '../ui/renderer.js';
 import { Logger } from '../ui/logger.js';
 import { checkCasePower } from './powers.js';
 
 // --- LOGIQUE DE JEU ---
 
+/**
+ * Initialisation de la partie et distribution des rôles/métiers
+ */
 export async function initGame() {
     // 1. Préparation du deck
-    state.deck = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
+    // On vide le tableau et on utilise .push pour garder la référence exportée
+    const newCards = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
+    state.deck.length = 0; 
+    state.deck.push(...newCards);
 
     // 2. Logique de répartition des rôles
     let roles = [];
     const n = players.length;
-
-    if (n <= 6) {
-        roles = ['S', 'S', 'S', 'S', 'I', 'A']; 
-    } else if (n <= 10) {
-        roles = ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'S']; 
-    } else {
+    if (n <= 6) roles = ['S', 'S', 'S', 'S', 'I', 'A'];
+    else if (n <= 10) roles = ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'S'];
+    else {
         roles = ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'M', 'IM'];
-        while (roles.length < n) {
-            roles.push(Math.random() > 0.3 ? 'S' : 'I');
-        }
+        while (roles.length < n) roles.push(Math.random() > 0.3 ? 'S' : 'I');
     }
     roles.sort(() => Math.random() - 0.5);
 
     const shuffledJobs = [...JOBS_LIST].sort(() => Math.random() - 0.5);
     const alphaPlayer = players[roles.indexOf('A')];
 
-    // 3. Envoi progressif
+    // 3. Envoi des données aux terminaux mobiles
     for (let i = 0; i < n; i++) {
         let p = players[i];
         p.role = roles[i];
         p.metier = shuffledJobs[i % shuffledJobs.length];
-
         p.conn.send({
             type: 'INIT',
             role: p.role,
@@ -45,57 +53,68 @@ export async function initGame() {
         await new Promise(r => setTimeout(r, 50));
     }
 
-    // 4. Lancement visuel
+    // 4. Mise à jour visuelle de la console
     updateTagsWithJobs();
-    displayComposition(roles); // Remplissage du bloc vert
+    displayComposition(roles);
     
     document.getElementById('setup-zone').style.display = 'none';
     document.getElementById('game-info-row').style.display = 'flex';
     document.getElementById('game-zone').style.display = 'block';
+    
     nextTurn();
 }
 
+/**
+ * Début d'un nouveau tour (Désignation du conseil)
+ */
 export function nextTurn() {
     state.currentPhase = "DÉSIGNATION";
     
-    const tags = document.querySelectorAll(`[id="tag-${players[state.curG].name.toLowerCase()}"]`);
+    const activeG = players[state.curG];
+    const tags = document.querySelectorAll(`[id="tag-${activeG.name.toLowerCase()}"]`);
     tags.forEach(tag => {
         const nameDiv = tag.querySelector('.p-name');
-        if (nameDiv) nameDiv.innerHTML = `⭐ ${players[state.curG].name.toUpperCase()}`;
+        if (nameDiv) nameDiv.innerHTML = `⭐ ${activeG.name.toUpperCase()}`;
         tag.style.borderColor = "#f1c40f"; 
         tag.style.borderWidth = "2px";
     });
 
-    Logger.add(`SYSTÈME : Désignation du nouveau Gardien : ${players[state.curG].name.toUpperCase()}`);
+    Logger.add(`SYSTÈME : Désignation du nouveau Gardien : ${activeG.name.toUpperCase()}`);
     
-    state.votes = { oui: 0, non: 0, total: 0, list: [] };
+    // Reset des votes sans casser la référence
+    state.votes.oui = 0; 
+    state.votes.non = 0; 
+    state.votes.total = 0; 
+    state.votes.list = [];
     
-    // Reset de l'affichage du conseil actuel dans le bloc jaune
     document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...";
     document.getElementById('vote-summary').style.color = "#3498db";
     
-    document.getElementById('g-name').innerText = players[state.curG].name;
+    document.getElementById('g-name').innerText = activeG.name;
     document.getElementById('g-name').style.color = "#f1c40f"; 
     document.getElementById('s-name').innerText = "?";
     document.getElementById('s-name').style.color = "#e0e0e0";
 
     players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
     players.forEach((p, index) => {
-        if(index !== state.curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[state.curG].name });
+        if(index !== state.curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: activeG.name });
     });
 
     let eligiblePlayers = players.map(p => p.name).filter(name => {
-        if (name === players[state.curG].name) return false;
+        if (name === activeG.name) return false;
         if (name === state.lastSentinelle) return false;
         if (players.length > 5 && name === state.lastGardien) return false;
         return true;
     });
     
-    players[state.curG].conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
+    activeG.conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
     syncTerminals(); 
     render();
 }
 
+/**
+ * Calcul du résultat du vote
+ */
 export function resolveVote() {
     state.votes.list.forEach(v => {
         const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
@@ -124,7 +143,6 @@ export function resolveVote() {
         }, 100);
     } else {
         state.oxy--;
-        
         document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
         document.getElementById('vote-summary').style.color = "#e74c3c";
         Logger.add(`ALERTE : Rejet du conseil. Oxygène à ${state.oxy}/3.`);
@@ -133,7 +151,6 @@ export function resolveVote() {
 
         if(state.oxy <= 0) {
             Logger.add("⚠️ ALERTE : RÉSERVES D'OXYGÈNE ÉPUISÉES !");
-            Logger.add("PROTOCOLE DE SÉCURITÉ : Application forcée d'un décret d'urgence.");
             applyForced();
         }
         else { 
@@ -145,6 +162,9 @@ export function resolveVote() {
     render();
 }
 
+/**
+ * Application d'un décret (Survie, Crise ou Suffrage)
+ */
 export function applyDecret(type) {
     clearGardienVisuals();
     state.lastSentinelle = players[state.curSIdx].name;
@@ -155,7 +175,6 @@ export function applyDecret(type) {
         state.survie++;
     } else if (type === 'C') {
         state.crise++;
-        // --- DÉCLENCHEMENT DES POUVOIRS DE CASE ---
         checkCasePower(state.crise);
     } else if (type === 'F') {
         state.suffrage = "Actif";
@@ -167,8 +186,6 @@ export function applyDecret(type) {
     if (state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
     else if (state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
     else {
-        // On ne passe au tour suivant que si aucun pouvoir n'est en cours 
-        // ou après un petit délai si c'est un décret normal
         if (!state.currentPowerActive) {
             state.curG = (state.curG + 1) % players.length;
             setTimeout(() => { state.isProcessingAction = false; nextTurn(); }, 1000);
@@ -176,6 +193,9 @@ export function applyDecret(type) {
     }
 }
 
+/**
+ * Décret forcé (Oxygène à zéro)
+ */
 export function applyForced() {
     let card = state.deck.pop(); 
     while(card === 'F') card = state.deck.pop(); 
@@ -187,6 +207,9 @@ export function applyForced() {
     state.oxy = 3; 
 }
 
+/**
+ * Restauration de l'interface d'un joueur après reconnexion
+ */
 export function restorePlayerAction(player) {
     const isGardien = (players[state.curG] === player);
     const isSentinelle = (state.curSIdx !== -1 && players[state.curSIdx] === player);
@@ -194,25 +217,18 @@ export function restorePlayerAction(player) {
     switch(state.currentPhase) {
         case "VOTE":
             const aDejaVote = state.votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
-            if (aDejaVote) {
-                player.conn.send({ type: 'CLEAN_UI' });
-            } else {
-                player.conn.send({ 
-                    type: 'VOTE_START', 
-                    g: players[state.curG].name, 
-                    s: state.currentProposedS 
-                });
-            }
+            if (aDejaVote) player.conn.send({ type: 'CLEAN_UI' });
+            else player.conn.send({ type: 'VOTE_START', g: players[state.curG].name, s: state.currentProposedS });
             break;
         
         case "LÉGISLATION_G":
-            if (isGardien)    player.conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
-                else          player.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
+            if (isGardien) player.conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
+            else player.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
             break;
 
         case "LÉGISLATION_S":
             if (isSentinelle) player.conn.send({ type: 'SENTINELLE_PICK', cards: state.currentLegislativeCards });
-            else              player.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' });
+            else player.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' });
             break;
         
         default:
@@ -224,8 +240,7 @@ export function restorePlayerAction(player) {
                     return true;
                 });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
-            } else {
-                player.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[state.curG].name });
             }
+            else player.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[state.curG].name });
     }
 }
