@@ -190,3 +190,37 @@ export function triggerWin(team, reason) {
         p.conn.send({ type: 'END_GAME', team, reason, personalResult: hasWon ? "MISSION RÉUSSIE" : "MISSION ÉCHOUÉE" });
     });
 }
+
+// js/ui/renderer.js
+
+/**
+ * Retire UNIQUEMENT les cadres (jaune/bleu) et l'étoile.
+ * Appelée dès que le vote est fini.
+ */
+export function clearCouncilVisuals() {
+    players.forEach(p => {
+        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+        tags.forEach(tag => {
+            // On reset la bordure sans toucher aux classes CSS (vote)
+            tag.style.borderColor = "";   
+            tag.style.borderWidth = "1px";
+            
+            // On remet le nom sans l'étoile
+            const nameDiv = tag.querySelector('.p-name');
+            if (nameDiv) nameDiv.innerText = p.name.toUpperCase();
+        });
+    });
+}
+
+/**
+ * Retire UNIQUEMENT les couleurs de vote (vert/rouge).
+ * Appelée au début du tour suivant.
+ */
+export function resetVoteColors() {
+    players.forEach(p => {
+        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
+        tags.forEach(tag => {
+            tag.classList.remove('voted-oui', 'voted-non');
+        });
+    });
+}
