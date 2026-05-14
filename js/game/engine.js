@@ -1,5 +1,5 @@
 import { state, players, resetGameState } from '../core/state.js';
-import { JOBS_LIST } from '../core/constants.js';
+import { ROLE_COMPOSITIONS, JOBS_LIST } from '../core/constants.js';
 import { 
     render, 
     updateTagsWithJobs,  
@@ -20,43 +20,56 @@ import { checkCasePower } from './powers.js';
  * Initialisation de la partie et distribution des rôles/métiers
  */
 export async function initGame() {
-    // 1. Préparation du deck
-    // On vide le tableau et on utilise .push pour garder la référence exportée
+    const n = players.length;
+
+    // 1. Préparation du deck de décrets
     const newCards = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
     state.deck.length = 0; 
     state.deck.push(...newCards);
 
-    // 2. Logique de répartition des rôles
+    // 2. Sélection de la composition selon le nombre de joueurs
     let roles = [];
-    const n = players.length;
-    if (n <= 6) roles = ['S', 'S', 'S', 'S', 'I', 'A'];
-    else if (n <= 10) roles = ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'S'];
-    else {
-        roles = ['S', 'S', 'S', 'S', 'S', 'S', 'I', 'I', 'A', 'M', 'IM'];
-        while (roles.length < n) roles.push(Math.random() > 0.3 ? 'S' : 'I');
+    if (ROLE_COMPOSITIONS[n]) {
+        roles = [...ROLE_COMPOSITIONS[n]]; // On crée une copie pour ne pas abîmer la constante
+    } else {
+        roles = ROLE_COMPOSITIONS.default(n);
     }
+
+    // 3. Mélange des rôles
     roles.sort(() => Math.random() - 0.5);
 
-    const shuffledJobs = [...JOBS_LIST].sort(() => Math.random() - 0.5);
-    const alphaPlayer = players[roles.indexOf('A')];
+    // 4. Identification de l'Alpha (Crucial pour les Infectés et Mycologue)
+    // On le cherche AVANT la boucle pour éviter l'erreur "undefined"
+    const alphaIndex = roles.indexOf('A');
     const alphaName = alphaIndex !== -1 ? players[alphaIndex].name : "Inconnu";
 
-    // 3. Envoi des données aux terminaux mobiles
+    // 5. Préparation des métiers
+    const shuffledJobs = [...JOBS_LIST].sort(() => Math.random() - 0.5);
+
+    // 6. Distribution et envoi des données aux terminaux mobiles
     for (let i = 0; i < n; i++) {
         let p = players[i];
         p.role = roles[i];
         p.metier = shuffledJobs[i % shuffledJobs.length];
+        
+        // Initialisation des nouveaux drapeaux de pouvoir
+        p.jobPowerUsed = false;
+        p.casePowerUsed = false;
+
         p.conn.send({
             type: 'INIT',
             role: p.role,
             metier: p.metier,
             all: players.map(pl => pl.name),
-            alphaName: (['I', 'A', 'M'].includes(p.role)) ? alphaPlayer.name : null 
+            // Les rôles infectés (I, A, M) voient qui est l'Alpha
+            alphaName: (['I', 'A', 'M'].includes(p.role)) ? alphaName : null 
         });
+        
+        // Petit délai pour ne pas saturer le flux PeerJS
         await new Promise(r => setTimeout(r, 50));
     }
 
-    // 4. Mise à jour visuelle de la console
+    // 7. Mise à jour visuelle de la console centrale
     updateTagsWithJobs();
     displayComposition(roles);
     
@@ -64,6 +77,7 @@ export async function initGame() {
     document.getElementById('game-info-row').style.display = 'flex';
     document.getElementById('game-zone').style.display = 'block';
     
+    // 8. Lancement du premier tour
     nextTurn();
 }
 
