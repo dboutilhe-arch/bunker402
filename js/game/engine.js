@@ -22,37 +22,39 @@ import { checkCasePower } from './powers.js';
 export async function initGame() {
     const n = players.length;
 
-    // 1. Préparation du deck de décrets
+    // 1. Deck de décrets
     const newCards = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
     state.deck.length = 0; 
     state.deck.push(...newCards);
 
-    // 2. Sélection de la composition selon le nombre de joueurs
-    let roles = [];
-    if (ROLE_COMPOSITIONS[n]) {
-        roles = [...ROLE_COMPOSITIONS[n]]; // On crée une copie pour ne pas abîmer la constante
-    } else {
-        roles = ROLE_COMPOSITIONS.default(n);
-    }
-
-    // 3. Mélange des rôles
+    // 2. Sélection et mélange des rôles (S, I, A...)
+    let roles = ROLE_COMPOSITIONS[n] ? [...ROLE_COMPOSITIONS[n]] : ROLE_COMPOSITIONS.default(n);
     roles.sort(() => Math.random() - 0.5);
 
-    // 4. Identification de l'Alpha (Crucial pour les Infectés et Mycologue)
-    // On le cherche AVANT la boucle pour éviter l'erreur "undefined"
+    // 3. Identification de l'Alpha
     const alphaIndex = roles.indexOf('A');
     const alphaName = alphaIndex !== -1 ? players[alphaIndex].name : "Inconnu";
 
-    // 5. Préparation des métiers
-    const shuffledJobs = [...JOBS_LIST].sort(() => Math.random() - 0.5);
+    // 4. PRÉPARATION ALÉATOIRE DES MÉTIERS
+    let finalJobsDistribution = [];
+    const availableJobs = [...JOBS_LIST].sort(() => Math.random() - 0.5);
 
-    // 6. Distribution et envoi des données aux terminaux mobiles
+    for (let i = 0; i < n; i++) {
+        if (i < availableJobs.length) {
+            finalJobsDistribution.push(availableJobs[i]);
+        } else {
+            finalJobsDistribution.push("Civil");
+        }
+    }
+    // On mélange le tableau final pour que les "Civils" soient n'importe où
+    finalJobsDistribution.sort(() => Math.random() - 0.5);
+
+    // 5. Distribution aux joueurs
     for (let i = 0; i < n; i++) {
         let p = players[i];
         p.role = roles[i];
-        p.metier = shuffledJobs[i % shuffledJobs.length];
-        
-        // Initialisation des nouveaux drapeaux de pouvoir
+        p.metier = finalJobsDistribution[i]; // Distribution mélangée
+
         p.jobPowerUsed = false;
         p.casePowerUsed = false;
 
@@ -61,15 +63,13 @@ export async function initGame() {
             role: p.role,
             metier: p.metier,
             all: players.map(pl => pl.name),
-            // Les rôles infectés (I, A, M) voient qui est l'Alpha
             alphaName: (['I', 'A', 'M'].includes(p.role)) ? alphaName : null 
         });
         
-        // Petit délai pour ne pas saturer le flux PeerJS
         await new Promise(r => setTimeout(r, 50));
     }
 
-    // 7. Mise à jour visuelle de la console centrale
+    // 6. Mise à jour UI
     updateTagsWithJobs();
     displayComposition(roles);
     
@@ -77,7 +77,6 @@ export async function initGame() {
     document.getElementById('game-info-row').style.display = 'flex';
     document.getElementById('game-zone').style.display = 'block';
     
-    // 8. Lancement du premier tour
     nextTurn();
 }
 
