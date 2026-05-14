@@ -1,6 +1,6 @@
 
 // js/network/handlers.js
-import { state, players, votes, curG, curSIdx, currentPhase, currentLegislativeCards, isProcessingAction } from '../core/state.js';
+import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, resetTagColors, createPlayerTag, syncTerminals } from '../ui/renderer.js';
 import { showGov, resolveVote, applyDecret, restorePlayerAction } from '../game/engine.js';
@@ -90,25 +90,25 @@ function handleSentinelle(data) {
 
 function handleVote(data) {
     // 1. SÉCURITÉ : On vérifie si ce joueur a DÉJÀ voté dans ce tour
-    const dejaVote = votes.list.some(v => v.name.toLowerCase() === data.playerName.toLowerCase());
+    const dejaVote = state.votes.list.some(v => v.name.toLowerCase() === data.playerName.toLowerCase());
     
     if (dejaVote) return; // On ignore purement et simplement ce message
   
     // Si c'est un nouveau vote, on l'enregistre normalement
-    votes[data.choice.toLowerCase()]++; 
-    votes.total++;
-    votes.list.push({ name: data.playerName, choice: data.choice });
+    state.votes[data.choice.toLowerCase()]++; 
+    state.votes.total++;
+    state.votes.list.push({ name: data.playerName, choice: data.choice });
   
     // Mise à jour de l'interface console pour voir qui a voté
     const summary = document.getElementById('vote-summary');
-    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${votes.total} / ${players.length}`;
+    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${players.length}`;
     summary.style.color = "#f1c40f"; // Couleur "Alerte" pendant le vote
   
     // On ajoute une ligne dans le log
     Logger.add(`Données de vote reçues de : ${data.playerName}`);
   
     // Si tout le monde a voté, on résout
-    if(votes.total === players.length)  {
+    if(state.votes.total === players.length)  {
         Logger.add("Scrutin terminé. Calcul des résultats...");
         resolveVote();
     }
