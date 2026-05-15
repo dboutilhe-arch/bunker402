@@ -3,6 +3,7 @@
 const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
 let conn, myName, currentHand = [], allPlayers = [];
 let hasUsedPower = false;
+let serverState = {};
 
 // --- INITIALISATION AU CHARGEMENT ---
 
@@ -62,6 +63,7 @@ function handleData(data) {
             break;
 
         case 'SYNC_STATE':
+            serverState = data.state;
             updateMiniBoard(data.state);
             // On vérifie si NOUS sommes morts dans l'état reçu
             const me = data.state.votes.list ? null : null; // Juste pour la structure
@@ -300,15 +302,21 @@ function showLegislativeUI(role, cards) {
 }
 
 function openTargetSelector(actionType, title, isForced = false) {
-    if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
+if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
     
     const ui = document.getElementById('main-ui');
     ui.innerHTML = `<h3>${title}</h3><p>Sélectionnez une cible :</p>`;
-
-    const listToUse = (state && state.aliveNames) ? state.aliveNames : allPlayers;
     
+    // On utilise les noms vivants du serveur, sinon la liste complète par défaut
+    const listToUse = (serverState && serverState.aliveNames) ? serverState.aliveNames : allPlayers;
+    
+    // Vérification de sécurité : si la liste est vide (ne devrait pas arriver)
+    if (listToUse.length === 0) {
+        ui.innerHTML += "<p>Aucune cible éligible détectée.</p>";
+    }
+ 
     listToUse.forEach(name => {
-        if (name !== myName) {
+        if (name.toLowerCase() !== myName.toLowerCase()) {
             const btn = document.createElement('button');
             btn.className = "btn";
             btn.innerText = name.toUpperCase();
