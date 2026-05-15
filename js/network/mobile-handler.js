@@ -1,8 +1,9 @@
 // js/network/mobile-handler.js
-
+ 
 const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
 let conn, myName, currentHand = [], allPlayers = [];
 let hasUsedPower = false;
+let serverState = {};
 
 // --- INITIALISATION AU CHARGEMENT ---
 
@@ -62,7 +63,14 @@ function handleData(data) {
             break;
 
         case 'SYNC_STATE':
+            serverState = data.state;
             updateMiniBoard(data.state);
+            // On vérifie si NOUS sommes morts dans l'état reçu
+            const me = data.state.votes.list ? null : null; // Juste pour la structure
+            // On cherche notre propre état dans la liste des joueurs (non présente dans state, on utilise une autre logique)
+            // Mais plus simple : si l'interface affiche déjà "MORT", on ne traite pas la synchro de boutons
+            if (document.getElementById('main-ui').innerText.includes("VOUS ÊTES MORT")) return;
+      
             // Si on reçoit une synchro et qu'on n'est pas en train de choisir un pouvoir forcé
             // on redonne l'état normal au bouton de métier
             const btn = document.getElementById('btn-power');
@@ -76,6 +84,11 @@ function handleData(data) {
                     btn.style.pointerEvents = "auto";
                 }
             }
+            break;
+        case 'REFRESH_INTERFACE':
+            // On demande au serveur de nous renvoyer notre action en cours
+            // Cela va reconstruire les boutons (Gardien, Pouvoirs, etc.) sans le mort
+            conn.send({ type: 'SYNC_REQUEST' }); 
             break;
 
         case 'YOUR_TURN':
@@ -105,6 +118,16 @@ function handleData(data) {
         case 'BLOOD_TEST_RESULT':
             showBloodResult(data);
             break;
+      case 'YOU_ARE_DEAD':
+            const uiDead = document.getElementById('main-ui');
+            const colReveal = data.reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+            uiDead.innerHTML = `
+                <h1 style="color: #e74c3c;">VOUS ÊTES MORT</h1>
+                <p>Analyse post-mortem : <b style="color: ${colReveal}">${data.reveal}</b></p>
+                <p style="opacity: 0.6;">Vous ne pouvez plus voter ni participer.</p>
+            `;
+            document.getElementById('job-ui').innerHTML = "";
+            break;
 
         case 'FORCE_POWER_SELECT':
             // 1. On grise le bouton de métier pour éviter le conflit
@@ -123,6 +146,12 @@ function handleData(data) {
 
         case 'CLEAN_UI':
             ui.innerHTML = "En attente...";
+            break;
+      
+        case 'REFRESH_INTERFACE':
+            // Demande au serveur de renvoyer l'action en cours (restorePlayerAction)
+            // Cela va reconstruire la liste des cibles (sans le mort) ou l'interface de vote
+            conn.send({ type: 'SYNC_REQUEST' }); 
             break;
 
         case 'END_GAME':
@@ -169,6 +198,7 @@ function setupIdentity(data) {
 
     // Bouton de métier
     jobUi.innerHTML = "";
+    jobUi.style.opacity = "1"; //On s'assure que c'est visible par défaut
     if (data.metier === 'Docteur') {
         const btn = document.createElement('button');
         btn.id = "btn-power";
@@ -180,7 +210,19 @@ function setupIdentity(data) {
         btn.onclick = () => openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE');
         jobUi.appendChild(btn);
     }
+    if (data.metier === 'Militaire') {
+       const btn = document.createElement('button');
+       btn.id = "btn-power";
+       btn.className = "btn";
+       btn.style.background = "#e74c3c";
+       btn.style.color = "white";
+       btn.innerText = "EXÉCUTER UN INDIVIDU";
+       if (hasUsedPower) jobUi.style.opacity = "0.3";
+       btn.onclick = () => openTargetSelector('REQUEST_EXECUTION', 'PROTOCOLE D\'ÉLIMINATION');
+       jobUi.appendChild(btn);
+   }
 }
+
 
 function updateMiniBoard(state) {
     document.getElementById('oxy-mini').style.width = (state.oxy / 3 * 100) + "%";
@@ -261,13 +303,21 @@ function showLegislativeUI(role, cards) {
 }
 
 function openTargetSelector(actionType, title, isForced = false) {
-    if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
+if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
     
     const ui = document.getElementById('main-ui');
     ui.innerHTML = `<h3>${title}</h3><p>Sélectionnez une cible :</p>`;
     
-    allPlayers.forEach(name => {
-        if (name !== myName) {
+    // On utilise les noms vivants du serveur, sinon la liste complète par défaut
+    const listToUse = (serverState && serverState.aliveNames) ? serverState.aliveNames : allPlayers;
+    
+    // Vérification de sécurité : si la liste est vide (ne devrait pas arriver)
+    if (listToUse.length === 0) {
+        ui.innerHTML += "<p>Aucune cible éligible détectée.</p>";
+    }
+ 
+    listToUse.forEach(name => {
+        if (name.toLowerCase() !== myName.toLowerCase()) {
             const btn = document.createElement('button');
             btn.className = "btn";
             btn.innerText = name.toUpperCase();
@@ -319,6 +369,7 @@ function resetAffichageJ() {
 // 1. On nettoie les données locales de la partie finie
     hasUsedPower = false;
     currentHand = [];
+    serverState = {};
     
     // 2. On bascule l'affichage sur un mode "Lobby / Attente"
     const ui = document.getElementById('main-ui');
@@ -328,7 +379,10 @@ function resetAffichageJ() {
 
     // On cache les éléments de la partie précédente
     if (memoBox) memoBox.style.display = "none";
-    if (jobUi) jobUi.innerHTML = "";
+    if (jobUi) {
+        jobUi.innerHTML = "";
+        jobUi.style.opacity = "1"; // On remet l'opacité à 100%
+    }
     
     // On réinitialise l'en-tête (Rôle inconnu)
     document.getElementById('role-display').innerText = "RÔLE : EN ATTENTE...";

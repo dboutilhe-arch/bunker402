@@ -1,9 +1,9 @@
-// js/network/handlers.js
+// js/network/handlers.js 
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors } from '../ui/renderer.js';
 import { showGov, resolveVote, applyDecret, restorePlayerAction } from '../game/engine.js';
-import { testPlayerBlood } from '../game/powers.js';
+import { testPlayerBlood, executePlayer } from '../game/powers.js';
 
 export function handlePlayerData(conn, data) {
     if (state.gameOver) return;
@@ -32,6 +32,10 @@ export function handlePlayerData(conn, data) {
         case 'REQUEST_BLOOD_TEST':
             handleBloodTest(conn, data);
             break;
+            
+        case 'REQUEST_EXECUTION':
+        handleExecution(conn, data);
+        break;
 
         case 'SYNC_REQUEST':
             handleSyncRequest(conn);
@@ -52,14 +56,16 @@ function handleJoin(conn, data) {
         Logger.add(`RECONNEXION : Signal de ${p.name} rétabli.`);
         
         if (document.getElementById('game-zone').style.display === 'block') {
-        p.conn.send({ 
-            type: 'INIT', 
-            role: p.role, 
-            metier: p.metier, 
-            all: players.map(pl => pl.name),
-            alphaName: (['I', 'A', 'M'].includes(p.role)) ? players.find(a => a.role === 'A').name : null,
-            powerUsed: p.jobPowerUsed
-        });
+            const canSeeAlpha = ['I', 'A', 'M'].includes(p.role);
+            const alphaObj = players.find(a => a.role === 'A');
+            p.conn.send({ 
+                type: 'INIT', 
+                role: p.role, 
+                metier: p.metier, 
+                all: players.map(pl => pl.name),
+                alphaName: canSeeAlpha ? (alphaObj ? alphaObj.name : "Inconnu") : null,
+                powerUsed: p.jobPowerUsed
+            });
             syncTerminals();
             restorePlayerAction(p);
         }
@@ -96,26 +102,31 @@ function handleSentinelle(data) {
 }
 
 function handleVote(data) {
-    // 1. SÉCURITÉ : On vérifie si ce joueur a DÉJÀ voté dans ce tour
+    // 1. SÉCURITÉ : On récupère le joueur qui vote
+    const voter = players.find(p => p.name.toLowerCase() === data.playerName.toLowerCase());
+
+    // 2. Si le joueur est mort, on ignore totalement son message
+    if (!voter || !voter.isAlive) return;
+
+    // 3. Vérifie si ce joueur a DÉJÀ voté
     const dejaVote = state.votes.list.some(v => v.name.toLowerCase() === data.playerName.toLowerCase());
-    
-    if (dejaVote) return; // On ignore purement et simplement ce message
+    if (dejaVote) return;
   
-    // Si c'est un nouveau vote, on l'enregistre normalement
+    // Enregistrement du vote
     state.votes[data.choice.toLowerCase()]++; 
     state.votes.total++;
     state.votes.list.push({ name: data.playerName, choice: data.choice });
   
-    // Mise à jour de l'interface console pour voir qui a voté
+    // Calcul basé sur les vivants
+    const aliveCount = players.filter(p => p.isAlive).length;
     const summary = document.getElementById('vote-summary');
-    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${players.length}`;
-    summary.style.color = "#f1c40f"; // Couleur "Alerte" pendant le vote
+    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${aliveCount}`;
+    summary.style.color = "#f1c40f";
   
-    // On ajoute une ligne dans le log
     Logger.add(`Données de vote reçues de : ${data.playerName}`);
   
-    // Si tout le monde a voté, on résout
-    if(state.votes.total === players.length)  {
+    // Si tout le monde (vivant) a voté, on résout
+    if(state.votes.total === aliveCount) {
         Logger.add("Scrutin terminé. Calcul des résultats...");
         resolveVote();
     }
@@ -129,8 +140,8 @@ function handleDiscard(data) {
     Logger.add(`LÉGISLATION : Le Gardien ${players[state.curG].name} a défaussé un décret secret.`);
     Logger.add(`SYSTÈME : Transfert des décrets restants à la Sentinelle.`);
     
-    // 1. On prévient tout le monde (y compris la sentinelle) de l'étape
-    players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
+    // 1. On prévient tout les vivants (y compris la sentinelle) de l'étape
+    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
   
     // 2. On envoie les cartes à la Sentinelle après un micro-délai (100ms)
     // Cela laisse le temps au téléphone de traiter le message précédent
@@ -164,6 +175,23 @@ function handleBloodTest(conn, data) {
         if (!requester.jobPowerUsed) {
             requester.jobPowerUsed = true;
             testPlayerBlood(requester, data.targetName);
+        }
+    }
+}
+
+function handleExecution(conn, data) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive) return;
+
+    if (data.isForced) {
+        if (!requester.casePowerUsed) {
+            requester.casePowerUsed = true;
+            executePlayer(requester, data.targetName);
+        }
+    } else {
+        if (!requester.jobPowerUsed) {
+            requester.jobPowerUsed = true;
+            executePlayer(requester, data.targetName);
         }
     }
 }

@@ -1,8 +1,8 @@
-import { state, players } from '../core/state.js';
-import { nextTurn } from './engine.js';
+import { state, players } from '../core/state.js'; 
+import { nextTurn, resolveVote } from './engine.js';
 import { Logger } from '../ui/logger.js';
 import { POWER_MAP } from '../core/constants.js';
-import { syncTerminals } from '../ui/renderer.js';
+import { syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals } from '../ui/renderer.js';
 
 /**
  * Analyse biologique d'un joueur (Pouvoir du Docteur ou Case de Crise)
@@ -26,6 +26,78 @@ export function testPlayerBlood(requester, targetName) {
     if (state.currentPowerActive) {
         state.currentPowerActive = false;
         syncTerminals();
+        setTimeout(() => {
+            state.curG = (state.curG + 1) % players.length;
+            state.isProcessingAction = false;
+            nextTurn();
+        }, 2000); 
+    }
+}
+
+/**
+ * Exécution (Pouvoir du Militaire ou Case de Crise)
+ */
+export function executePlayer(requester, targetName) {
+    const target = players.find(p => p.name === targetName);
+    if (!target || !target.isAlive) return;
+
+    target.isAlive = false;
+
+    // --- Synchronisation immédiate de la liste des vivants ---
+    syncTerminals();
+
+    // --- CORRECTION VOTE BLOQUÉ ---
+    if (state.currentPhase === "VOTE") {
+        const aliveCount = players.filter(p => p.isAlive).length;
+        if (state.votes.total >= aliveCount) {
+            Logger.add("SYSTÈME : L'exécution a clos le scrutin.");
+            resolveVote();
+        }
+    }
+
+    const isInfected = ['A', 'I', 'IM'].includes(target.role);
+    const revealResult = isInfected ? "INFECTÉ" : "SAIN";
+
+    Logger.add(`🚨 EXÉCUTION : ${requester.name} a éliminé ${targetName}.`);
+    Logger.add(`SYSTÈME : Le sujet ${targetName} était ${revealResult}.`);
+
+    // On envoie le signal de mort
+    target.conn.send({ type: 'YOU_ARE_DEAD', reveal: revealResult });
+
+    // --- LISTES DE CIBLES & INTERFACES ---
+    // On prévient tout le monde de rafraîchir ses listes
+    players.forEach(p => {
+        if (p.conn && p.conn.open) {
+            p.conn.send({ type: 'REFRESH_INTERFACE' }); 
+        }
+    });
+
+    updatePlayerStatusUI(target, revealResult);
+
+    // --- Nettoyage des visuels si le mort était au conseil ---
+    const targetIdx = players.findIndex(p => p.name === targetName);
+    if (targetIdx === state.curG || targetIdx === state.curSIdx) {
+        clearCouncilVisuals(); // Enlève l'étoile et la bordure jaune/bleue
+    }
+
+    if (target.role === 'A') {
+        return triggerWin("SURVIVANTS", "L'Alpha a été éliminé.");
+    }
+
+    // Gestion du tour suivant si membre du conseil tué
+    if (targetIdx === state.curG || targetIdx === state.curSIdx) {
+        Logger.add("SYSTÈME : Membre du conseil éliminé. Passage au tour suivant.");
+        state.currentPowerActive = false;
+        setTimeout(() => {
+            state.curG = (state.curG + 1) % players.length;
+            nextTurn();
+        }, 2000);
+        return;
+    }
+
+    if (state.currentPowerActive) {
+        state.currentPowerActive = false;
+        syncTerminals(); 
         setTimeout(() => {
             state.curG = (state.curG + 1) % players.length;
             state.isProcessingAction = false;
@@ -62,6 +134,13 @@ export function checkCasePower(caseNumber) {
                 type: 'FORCE_POWER_SELECT', 
                 action: 'REQUEST_CENSURE', 
                 title: 'PROTOCOLE DE CENSURE' 
+            });
+            break;
+        case 'EXEC':
+            gardien.conn.send({ 
+                type: 'FORCE_POWER_SELECT', 
+                action: 'REQUEST_EXECUTION', 
+                title: 'EXÉCUTION SOMMAIRE' 
             });
             break;
     }

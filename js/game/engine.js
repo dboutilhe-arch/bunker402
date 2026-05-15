@@ -1,4 +1,4 @@
-import { state, players, resetGameState } from '../core/state.js';
+import { state, players, resetGameState } from '../core/state.js'; 
 import { ROLE_COMPOSITIONS, JOBS_LIST } from '../core/constants.js';
 import { 
     render, 
@@ -57,13 +57,15 @@ export async function initGame() {
 
         p.jobPowerUsed = false;
         p.casePowerUsed = false;
+        p.isAlive = true;
 
+        const canSeeAlpha = ['I', 'A', 'M'].includes(p.role);
         p.conn.send({
             type: 'INIT',
             role: p.role,
             metier: p.metier,
             all: players.map(pl => pl.name),
-            alphaName: (['I', 'A', 'M'].includes(p.role)) ? alphaName : null 
+            alphaName: canSeeAlpha ? alphaName : null 
         });
         
         await new Promise(r => setTimeout(r, 50));
@@ -85,6 +87,13 @@ export async function initGame() {
  */
 export function nextTurn() {
     state.currentPhase = "DÉSIGNATION";
+
+    // On cherche le prochain Gardien VIVANT (sécurité attempts pour éviter freeze)
+    let attempts = 0;
+    while (!players[state.curG].isAlive && attempts < players.length) {
+        state.curG = (state.curG + 1) % players.length;
+        attempts++;
+    }
     
     const activeG = players[state.curG];
     const tags = document.querySelectorAll(`[id="tag-${activeG.name.toLowerCase()}"]`);
@@ -111,18 +120,22 @@ export function nextTurn() {
     document.getElementById('s-name').innerText = "?";
     document.getElementById('s-name').style.color = "#e0e0e0";
 
-    players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
-    players.forEach((p, index) => {
+    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
+    players.filter(p => p.isAlive).forEach((p, index) => {
         if(index !== state.curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: activeG.name });
     });
     players.forEach(p => p.casePowerUsed = false);
 
-    let eligiblePlayers = players.map(p => p.name).filter(name => {
-        if (name === activeG.name) return false;
-        if (name === state.lastSentinelle) return false;
-        if (players.length > 5 && name === state.lastGardien) return false;
-        return true;
-    });
+    // Filtrage des éligibles : Vivants uniquement
+    let eligiblePlayers = players
+        .filter(p => p.isAlive) 
+        .map(p => p.name)
+        .filter(name => {
+            if (name === activeG.name) return false;
+            if (name === state.lastSentinelle) return false;
+            if (players.length > 5 && name === state.lastGardien) return false;
+            return true;
+        });
     
     activeG.conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
     syncTerminals(); 
@@ -149,7 +162,7 @@ export function resolveVote() {
         state.currentLegislativeCards = [state.deck.pop(), state.deck.pop(), state.deck.pop()];
         state.oxy = 3;
 
-        players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
+       players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
 
         if(state.crise >= 3 && players[state.curSIdx].role === 'A') {
             return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
@@ -227,6 +240,11 @@ export function applyForced() {
  * Restauration de l'interface d'un joueur après reconnexion
  */
 export function restorePlayerAction(player) {
+    if (!player.isAlive) {
+        const revealResult = ['A', 'I', 'IM'].includes(player.role) ? "INFECTÉ" : "SAIN";
+        player.conn.send({ type: 'YOU_ARE_DEAD', reveal: revealResult });
+        return;
+    }
     const isGardien = (players[state.curG] === player);
     const isSentinelle = (state.curSIdx !== -1 && players[state.curSIdx] === player);
 
@@ -249,12 +267,15 @@ export function restorePlayerAction(player) {
         
         default:
             if (isGardien) {
-                let eligible = players.map(p => p.name).filter(name => {
-                    if (name === players[state.curG].name) return false;
-                    if (name === state.lastSentinelle) return false;
-                    if (players.length > 5 && name === state.lastGardien) return false;
-                    return true;
-                });
+                let eligible = players
+                    .filter(p => p.isAlive)
+                    .map(p => p.name)
+                    .filter(name => {
+                        if (name === players[state.curG].name) return false;
+                        if (name === state.lastSentinelle) return false;
+                        if (players.length > 5 && name === state.lastGardien) return false;
+                        return true;
+                    });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
             }
             else player.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[state.curG].name });
@@ -300,9 +321,10 @@ export function showGov(g, s) {
     document.getElementById('g-name').style.color = "#f1c40f";
     document.getElementById('s-name').innerText = s; 
     document.getElementById('s-name').style.color = "#3498db";
-    
-    document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS...\nVOTES TRANSMIS : 0 / ${players.length}`;
+
+    const aliveCount = players.filter(p => p.isAlive).length;
+    document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS...\nVOTES TRANSMIS : 0 / ${aliveCount}`;
     
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
-    players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
+    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
 }

@@ -1,4 +1,4 @@
-import { startServer } from './network/peer-manager.js';
+import { startServer } from './network/peer-manager.js'; 
 import { initGame, globalReset } from './game/engine.js';
 
 // Écouteurs d'événements (remplacent les onclick="")

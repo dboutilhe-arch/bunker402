@@ -1,4 +1,4 @@
-
+ 
 // js/network/peer-manager.js
 import { handlePlayerData, handlePlayerDisconnect } from './handlers.js';
 

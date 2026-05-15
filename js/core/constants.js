@@ -1,4 +1,4 @@
-/**
+/** 
  * Répartition des rôles par nombre de joueurs
  * S: Survivant, I: Infecté, A: Alpha, M: Mycologue, IM: Immunisé
  */

@@ -1,4 +1,4 @@
-// state.js
+// state.js 
 // Ce fichier centralise toutes les variables qui évoluent pendant la partie.
 
 export let players = []; // On garde players à part car c'est un tableau de référence
@@ -66,7 +66,8 @@ export function resetGameState() {
     
     // Reset des pouvoirs joueurs sans vider la liste
     players.forEach(p => {
-        p.jobPowerUsed = false;  // Métier
-        p.casePowerUsed = false; // Case
+        p.jobPowerUsed = false;  // Pouvoir de Métier
+        p.casePowerUsed = false; // Pouvoir de Case
+        p.isAlive = true;        // Vivant ?
     });
 }

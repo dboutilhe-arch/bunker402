@@ -57,7 +57,14 @@ export function createPlayerTag(name) {
 
 // Synchronisation
 export function syncTerminals() {
-    players.forEach(p => p.conn.send({ type: 'SYNC_STATE', state: state }));
+    // On injecte la liste des noms vivants juste avant l'envoi
+    state.aliveNames = players.filter(p => p.isAlive).map(p => p.name);
+    
+    players.forEach(p => {
+        if (p.conn && p.conn.open) {
+            p.conn.send({ type: 'SYNC_STATE', state: state });
+        }
+    });
 }
 
 /**
@@ -185,5 +192,23 @@ export function resetVoteColors() {
         tags.forEach(tag => {
             tag.classList.remove('voted-oui', 'voted-non');
         });
+    });
+}
+
+/**
+ * Rayer les morts de l'écran
+ */
+export function updatePlayerStatusUI(player, reveal) {
+    const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
+    const color = reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+    
+    tags.forEach(tag => {
+        tag.style.opacity = "0.4";
+        tag.style.filter = "grayscale(100%)";
+        tag.style.textDecoration = "line-through";
+        const jobDiv = tag.querySelector('.p-job');
+        if (jobDiv) {
+            jobDiv.innerHTML = `<span style="color: ${color}; text-decoration: none;">● DÉCÉDÉ (${reveal})</span>`;
+        }
     });
 }
