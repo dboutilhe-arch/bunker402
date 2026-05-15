@@ -43,6 +43,9 @@ export function executePlayer(requester, targetName) {
 
     target.isAlive = false;
 
+    // --- Synchronisation immédiate de la liste des vivants ---
+    syncTerminals();
+
     // --- CORRECTION VOTE BLOQUÉ ---
     if (state.currentPhase === "VOTE") {
         const aliveCount = players.filter(p => p.isAlive).length;
@@ -62,20 +65,26 @@ export function executePlayer(requester, targetName) {
     target.conn.send({ type: 'YOU_ARE_DEAD', reveal: revealResult });
 
     // --- LISTES DE CIBLES & INTERFACES ---
-    // On prévient TOUT LE MONDE de se rafraîchir
+    // On prévient tout le monde de rafraîchir ses listes
     players.forEach(p => {
         if (p.conn && p.conn.open) {
-            p.conn.send({ type: 'SYNC_STATE', state: state });
-            p.conn.send({ type: 'REFRESH_INTERFACE' });
+            p.conn.send({ type: 'REFRESH_INTERFACE' }); 
         }
     });
 
     updatePlayerStatusUI(target, revealResult);
 
+    // --- Nettoyage des visuels si le mort était au conseil ---
+    const targetIdx = players.findIndex(p => p.name === targetName);
+    if (targetIdx === state.curG || targetIdx === state.curSIdx) {
+        clearCouncilVisuals(); // Enlève l'étoile et la bordure jaune/bleue
+    }
+
     if (target.role === 'A') {
         return triggerWin("SURVIVANTS", "L'Alpha a été éliminé.");
     }
 
+    // Gestion du tour suivant si membre du conseil tué
     const targetIdx = players.findIndex(p => p.name === targetName);
     if (targetIdx === state.curG || targetIdx === state.curSIdx) {
         Logger.add("SYSTÈME : Membre du conseil éliminé. Passage au tour suivant.");
