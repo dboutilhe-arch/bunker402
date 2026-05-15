@@ -42,6 +42,8 @@ export function executePlayer(requester, targetName) {
     if (!target || !target.isAlive) return;
 
     target.isAlive = false;
+
+    // --- CORRECTION VOTE BLOQUÉ ---
     if (state.currentPhase === "VOTE") {
         const aliveCount = players.filter(p => p.isAlive).length;
         if (state.votes.total >= aliveCount) {
@@ -49,32 +51,31 @@ export function executePlayer(requester, targetName) {
             resolveVote();
         }
     }
+
     const isInfected = ['A', 'I', 'IM'].includes(target.role);
     const revealResult = isInfected ? "INFECTÉ" : "SAIN";
 
     Logger.add(`🚨 EXÉCUTION : ${requester.name} a éliminé ${targetName}.`);
     Logger.add(`SYSTÈME : Le sujet ${targetName} était ${revealResult}.`);
 
+    // On envoie le signal de mort
     target.conn.send({ type: 'YOU_ARE_DEAD', reveal: revealResult });
 
-    // Mise à jour visuelle immédiate sur l'écran central
+    // --- LISTES DE CIBLES & INTERFACES ---
+    // On prévient TOUT LE MONDE de se rafraîchir
+    players.forEach(p => {
+        if (p.conn && p.conn.open) {
+            p.conn.send({ type: 'SYNC_STATE', state: state });
+            p.conn.send({ type: 'REFRESH_INTERFACE' });
+        }
+    });
+
     updatePlayerStatusUI(target, revealResult);
 
     if (target.role === 'A') {
         return triggerWin("SURVIVANTS", "L'Alpha a été éliminé.");
     }
 
-    // 1. On prévient tout le monde immédiatement
-    players.forEach(p => {
-        if (p.conn && p.conn.open) {
-            // On renvoie l'état synchronisé (incluant isAlive: false)
-            p.conn.send({ type: 'SYNC_STATE', state: state });
-            // On force le mobile à recalculer son interface actuelle (vote ou sélection)
-            p.conn.send({ type: 'REFRESH_INTERFACE' }); 
-        }
-    });
-
-    // 2. Si le mort était Gardien ou Sentinelle : on saute le tour
     const targetIdx = players.findIndex(p => p.name === targetName);
     if (targetIdx === state.curG || targetIdx === state.curSIdx) {
         Logger.add("SYSTÈME : Membre du conseil éliminé. Passage au tour suivant.");
@@ -83,7 +84,7 @@ export function executePlayer(requester, targetName) {
             state.curG = (state.curG + 1) % players.length;
             nextTurn();
         }, 2000);
-        return; // On arrête là
+        return;
     }
 
     if (state.currentPowerActive) {
