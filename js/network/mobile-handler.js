@@ -134,6 +134,12 @@ function handleData(data) {
         case 'CLEAN_UI':
             ui.innerHTML = "En attente...";
             break;
+      
+        case 'REFRESH_INTERFACE':
+            // Demande au serveur de renvoyer l'action en cours (restorePlayerAction)
+            // Cela va reconstruire la liste des cibles (sans le mort) ou l'interface de vote
+            conn.send({ type: 'SYNC_REQUEST' }); 
+            break;
 
         case 'END_GAME':
             showEndGame(data);
