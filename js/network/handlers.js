@@ -111,15 +111,16 @@ function handleVote(data) {
     state.votes.list.push({ name: data.playerName, choice: data.choice });
   
     // Mise à jour de l'interface console pour voir qui a voté
+    const aliveCount = players.filter(p => p.isAlive).length;
     const summary = document.getElementById('vote-summary');
-    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${players.length}`;
+    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${aliveCount}`;
     summary.style.color = "#f1c40f"; // Couleur "Alerte" pendant le vote
   
     // On ajoute une ligne dans le log
     Logger.add(`Données de vote reçues de : ${data.playerName}`);
   
-    // Si tout le monde a voté, on résout
-    if(state.votes.total === players.length)  {
+    // Si tous les survivants ont voté, on résout
+    if(state.votes.total === aliveCount) { // <--- MODIF
         Logger.add("Scrutin terminé. Calcul des résultats...");
         resolveVote();
     }
