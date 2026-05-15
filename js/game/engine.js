@@ -57,6 +57,7 @@ export async function initGame() {
 
         p.jobPowerUsed = false;
         p.casePowerUsed = false;
+        p.isAlive = true;
 
         p.conn.send({
             type: 'INIT',
