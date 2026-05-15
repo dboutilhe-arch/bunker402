@@ -42,6 +42,13 @@ export function executePlayer(requester, targetName) {
     if (!target || !target.isAlive) return;
 
     target.isAlive = false;
+    if (state.currentPhase === "VOTE") {
+        const aliveCount = players.filter(p => p.isAlive).length;
+        if (state.votes.total >= aliveCount) {
+            Logger.add("SYSTÈME : L'exécution a clos le scrutin.");
+            resolveVote();
+        }
+    }
     const isInfected = ['A', 'I', 'IM'].includes(target.role);
     const revealResult = isInfected ? "INFECTÉ" : "SAIN";
 
