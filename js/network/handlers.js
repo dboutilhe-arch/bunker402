@@ -32,6 +32,10 @@ export function handlePlayerData(conn, data) {
         case 'REQUEST_BLOOD_TEST':
             handleBloodTest(conn, data);
             break;
+            
+        case 'REQUEST_EXECUTION':
+        handleExecution(conn, data);
+        break;
 
         case 'SYNC_REQUEST':
             handleSyncRequest(conn);
@@ -164,6 +168,23 @@ function handleBloodTest(conn, data) {
         if (!requester.jobPowerUsed) {
             requester.jobPowerUsed = true;
             testPlayerBlood(requester, data.targetName);
+        }
+    }
+}
+
+function handleExecution(conn, data) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive) return;
+
+    if (data.isForced) {
+        if (!requester.casePowerUsed) {
+            requester.casePowerUsed = true;
+            executePlayer(requester, data.targetName);
+        }
+    } else {
+        if (!requester.jobPowerUsed) {
+            requester.jobPowerUsed = true;
+            executePlayer(requester, data.targetName);
         }
     }
 }
