@@ -368,6 +368,7 @@ function resetAffichageJ() {
 // 1. On nettoie les données locales de la partie finie
     hasUsedPower = false;
     currentHand = [];
+    serverState = {};
     
     // 2. On bascule l'affichage sur un mode "Lobby / Attente"
     const ui = document.getElementById('main-ui');
