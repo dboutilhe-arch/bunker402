@@ -198,6 +198,7 @@ function setupIdentity(data) {
 
     // Bouton de métier
     jobUi.innerHTML = "";
+    jobUi.style.opacity = "1"; //On s'assure que c'est visible par défaut
     if (data.metier === 'Docteur') {
         const btn = document.createElement('button');
         btn.id = "btn-power";
@@ -378,7 +379,10 @@ function resetAffichageJ() {
 
     // On cache les éléments de la partie précédente
     if (memoBox) memoBox.style.display = "none";
-    if (jobUi) jobUi.innerHTML = "";
+    if (jobUi) {
+        jobUi.innerHTML = "";
+        jobUi.style.opacity = "1"; // On remet l'opacité à 100%
+    }
     
     // On réinitialise l'en-tête (Rôle inconnu)
     document.getElementById('role-display').innerText = "RÔLE : EN ATTENTE...";
