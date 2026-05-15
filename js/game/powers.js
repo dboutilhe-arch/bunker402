@@ -98,7 +98,7 @@ export function checkCasePower(caseNumber) {
                 title: 'PROTOCOLE DE CENSURE' 
             });
             break;
-        case 'CENSURE':
+        case 'EXEC':
             gardien.conn.send({ 
                 type: 'FORCE_POWER_SELECT', 
                 action: 'REQUEST_EXECUTION', 
