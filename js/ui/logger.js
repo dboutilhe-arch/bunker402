@@ -1,4 +1,4 @@
-export const Logger = {
+export const Logger = { 
     add: (message) => {
         const log = document.getElementById('log');
         if (!log) return;
