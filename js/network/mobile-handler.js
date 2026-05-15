@@ -105,6 +105,16 @@ function handleData(data) {
         case 'BLOOD_TEST_RESULT':
             showBloodResult(data);
             break;
+      case 'YOU_ARE_DEAD':
+            const uiDead = document.getElementById('main-ui');
+            const colReveal = data.reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+            uiDead.innerHTML = `
+                <h1 style="color: #e74c3c;">VOUS ÊTES MORT</h1>
+                <p>Analyse post-mortem : <b style="color: ${colReveal}">${data.reveal}</b></p>
+                <p style="opacity: 0.6;">Vous ne pouvez plus voter ni participer.</p>
+            `;
+            document.getElementById('job-ui').innerHTML = "";
+            break;
 
         case 'FORCE_POWER_SELECT':
             // 1. On grise le bouton de métier pour éviter le conflit
@@ -180,7 +190,19 @@ function setupIdentity(data) {
         btn.onclick = () => openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE');
         jobUi.appendChild(btn);
     }
+    if (data.metier === 'Militaire') {
+       const btn = document.createElement('button');
+       btn.id = "btn-power";
+       btn.className = "btn";
+       btn.style.background = "#e74c3c";
+       btn.style.color = "white";
+       btn.innerText = "EXÉCUTER UN INDIVIDU";
+       if (hasUsedPower) jobUi.style.opacity = "0.3";
+       btn.onclick = () => openTargetSelector('REQUEST_EXECUTION', 'PROTOCOLE D\'ÉLIMINATION');
+       jobUi.appendChild(btn);
+   }
 }
+
 
 function updateMiniBoard(state) {
     document.getElementById('oxy-mini').style.width = (state.oxy / 3 * 100) + "%";
