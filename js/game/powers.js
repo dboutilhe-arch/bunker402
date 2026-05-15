@@ -57,6 +57,28 @@ export function executePlayer(requester, targetName) {
         return triggerWin("SURVIVANTS", "L'Alpha a été éliminé.");
     }
 
+    // 1. On prévient tout le monde immédiatement
+    players.forEach(p => {
+        if (p.conn && p.conn.open) {
+            // On renvoie l'état synchronisé (incluant isAlive: false)
+            p.conn.send({ type: 'SYNC_STATE', state: state });
+            // On force le mobile à recalculer son interface actuelle (vote ou sélection)
+            p.conn.send({ type: 'REFRESH_INTERFACE' }); 
+        }
+    });
+
+    // 2. Si le mort était Gardien ou Sentinelle : on saute le tour
+    const targetIdx = players.findIndex(p => p.name === targetName);
+    if (targetIdx === state.curG || targetIdx === state.curSIdx) {
+        Logger.add("SYSTÈME : Membre du conseil éliminé. Passage au tour suivant.");
+        state.currentPowerActive = false;
+        setTimeout(() => {
+            state.curG = (state.curG + 1) % players.length;
+            nextTurn();
+        }, 2000);
+        return; // On arrête là
+    }
+
     if (state.currentPowerActive) {
         state.currentPowerActive = false;
         syncTerminals(); 
