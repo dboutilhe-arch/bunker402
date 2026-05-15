@@ -59,12 +59,13 @@ export async function initGame() {
         p.casePowerUsed = false;
         p.isAlive = true;
 
+        const canSeeAlpha = ['I', 'A', 'M'].includes(p.role);
         p.conn.send({
             type: 'INIT',
             role: p.role,
             metier: p.metier,
             all: players.map(pl => pl.name),
-            alphaName: (['I', 'A', 'M'].includes(p.role)) ? alphaName : null 
+            alphaName: canSeeAlpha ? alphaName : null 
         });
         
         await new Promise(r => setTimeout(r, 50));
