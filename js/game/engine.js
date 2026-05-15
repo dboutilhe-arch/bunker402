@@ -121,7 +121,7 @@ export function nextTurn() {
     document.getElementById('s-name').style.color = "#e0e0e0";
 
     players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
-    players.forEach((p, index) => {
+    players.filter(p => p.isAlive).forEach((p, index) => {
         if(index !== state.curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: activeG.name });
     });
     players.forEach(p => p.casePowerUsed = false);
