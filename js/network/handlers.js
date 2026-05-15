@@ -1,4 +1,4 @@
-// js/network/handlers.js
+// js/network/handlers.js 
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors } from '../ui/renderer.js';
