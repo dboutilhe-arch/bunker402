@@ -2,7 +2,7 @@ import { state, players } from '../core/state.js';
 import { nextTurn } from './engine.js';
 import { Logger } from '../ui/logger.js';
 import { POWER_MAP } from '../core/constants.js';
-import { syncTerminals } from '../ui/renderer.js';
+import { syncTerminals, triggerWin, updatePlayerStatusUI } from '../ui/renderer.js';
 
 /**
  * Analyse biologique d'un joueur (Pouvoir du Docteur ou Case de Crise)
@@ -26,6 +26,40 @@ export function testPlayerBlood(requester, targetName) {
     if (state.currentPowerActive) {
         state.currentPowerActive = false;
         syncTerminals();
+        setTimeout(() => {
+            state.curG = (state.curG + 1) % players.length;
+            state.isProcessingAction = false;
+            nextTurn();
+        }, 2000); 
+    }
+}
+
+/**
+ * Exécution (Pouvoir du Militaire ou Case de Crise)
+ */
+export function executePlayer(requester, targetName) {
+    const target = players.find(p => p.name === targetName);
+    if (!target || !target.isAlive) return;
+
+    target.isAlive = false;
+    const isInfected = ['A', 'I', 'IM'].includes(target.role);
+    const revealResult = isInfected ? "INFECTÉ" : "SAIN";
+
+    Logger.add(`🚨 EXÉCUTION : ${requester.name} a éliminé ${targetName}.`);
+    Logger.add(`SYSTÈME : Le sujet ${targetName} était ${revealResult}.`);
+
+    target.conn.send({ type: 'YOU_ARE_DEAD', reveal: revealResult });
+
+    // Mise à jour visuelle immédiate sur l'écran central
+    updatePlayerStatusUI(target, revealResult);
+
+    if (target.role === 'A') {
+        return triggerWin("SURVIVANTS", "L'Alpha a été éliminé.");
+    }
+
+    if (state.currentPowerActive) {
+        state.currentPowerActive = false;
+        syncTerminals(); 
         setTimeout(() => {
             state.curG = (state.curG + 1) % players.length;
             state.isProcessingAction = false;
@@ -62,6 +96,13 @@ export function checkCasePower(caseNumber) {
                 type: 'FORCE_POWER_SELECT', 
                 action: 'REQUEST_CENSURE', 
                 title: 'PROTOCOLE DE CENSURE' 
+            });
+            break;
+        case 'CENSURE':
+            gardien.conn.send({ 
+                type: 'FORCE_POWER_SELECT', 
+                action: 'REQUEST_EXECUTION', 
+                title: 'EXÉCUTION SOMMAIRE' 
             });
             break;
     }
