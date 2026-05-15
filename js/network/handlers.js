@@ -56,14 +56,16 @@ function handleJoin(conn, data) {
         Logger.add(`RECONNEXION : Signal de ${p.name} rétabli.`);
         
         if (document.getElementById('game-zone').style.display === 'block') {
-        p.conn.send({ 
-            type: 'INIT', 
-            role: p.role, 
-            metier: p.metier, 
-            all: players.map(pl => pl.name),
-            alphaName: (['I', 'A', 'M'].includes(p.role)) ? players.find(a => a.role === 'A').name : null,
-            powerUsed: p.jobPowerUsed
-        });
+            const canSeeAlpha = ['I', 'A', 'M'].includes(p.role);
+            const alphaObj = players.find(a => a.role === 'A');
+            p.conn.send({ 
+                type: 'INIT', 
+                role: p.role, 
+                metier: p.metier, 
+                all: players.map(pl => pl.name),
+                alphaName: canSeeAlpha ? (alphaObj ? alphaObj.name : "Inconnu") : null,
+                powerUsed: p.jobPowerUsed
+            });
             syncTerminals();
             restorePlayerAction(p);
         }
