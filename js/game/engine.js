@@ -240,6 +240,11 @@ export function applyForced() {
  * Restauration de l'interface d'un joueur après reconnexion
  */
 export function restorePlayerAction(player) {
+    if (!player.isAlive) {
+        const revealResult = ['A', 'I', 'IM'].includes(player.role) ? "INFECTÉ" : "SAIN";
+        player.conn.send({ type: 'YOU_ARE_DEAD', reveal: revealResult });
+        return;
+    }
     const isGardien = (players[state.curG] === player);
     const isSentinelle = (state.curSIdx !== -1 && players[state.curSIdx] === player);
 
@@ -262,12 +267,15 @@ export function restorePlayerAction(player) {
         
         default:
             if (isGardien) {
-                let eligible = players.map(p => p.name).filter(name => {
-                    if (name === players[state.curG].name) return false;
-                    if (name === state.lastSentinelle) return false;
-                    if (players.length > 5 && name === state.lastGardien) return false;
-                    return true;
-                });
+                let eligible = players
+                    .filter(p => p.isAlive)
+                    .map(p => p.name)
+                    .filter(name => {
+                        if (name === players[state.curG].name) return false;
+                        if (name === state.lastSentinelle) return false;
+                        if (players.length > 5 && name === state.lastGardien) return false;
+                        return true;
+                    });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
             }
             else player.conn.send({ type: 'WAIT_SENTINELLE', gardienName: players[state.curG].name });
