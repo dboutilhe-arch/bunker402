@@ -57,8 +57,14 @@ export function createPlayerTag(name) {
 
 // Synchronisation
 export function syncTerminals() {
+    // On injecte la liste des noms vivants juste avant l'envoi
     state.aliveNames = players.filter(p => p.isAlive).map(p => p.name);
-    players.forEach(p => p.conn.send({ type: 'SYNC_STATE', state: state }));
+    
+    players.forEach(p => {
+        if (p.conn && p.conn.open) {
+            p.conn.send({ type: 'SYNC_STATE', state: state });
+        }
+    });
 }
 
 /**
