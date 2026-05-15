@@ -85,6 +85,13 @@ export async function initGame() {
  */
 export function nextTurn() {
     state.currentPhase = "DÉSIGNATION";
+
+    // On cherche le prochain Gardien VIVANT (sécurité attempts pour éviter freeze)
+    let attempts = 0;
+    while (!players[state.curG].isAlive && attempts < players.length) {
+        state.curG = (state.curG + 1) % players.length;
+        attempts++;
+    }
     
     const activeG = players[state.curG];
     const tags = document.querySelectorAll(`[id="tag-${activeG.name.toLowerCase()}"]`);
@@ -117,12 +124,16 @@ export function nextTurn() {
     });
     players.forEach(p => p.casePowerUsed = false);
 
-    let eligiblePlayers = players.map(p => p.name).filter(name => {
-        if (name === activeG.name) return false;
-        if (name === state.lastSentinelle) return false;
-        if (players.length > 5 && name === state.lastGardien) return false;
-        return true;
-    });
+    // Filtrage des éligibles : Vivants uniquement
+    let eligiblePlayers = players
+        .filter(p => p.isAlive) 
+        .map(p => p.name)
+        .filter(name => {
+            if (name === activeG.name) return false;
+            if (name === state.lastSentinelle) return false;
+            if (players.length > 5 && name === state.lastGardien) return false;
+            return true;
+        });
     
     activeG.conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
     syncTerminals(); 
@@ -300,8 +311,9 @@ export function showGov(g, s) {
     document.getElementById('g-name').style.color = "#f1c40f";
     document.getElementById('s-name').innerText = s; 
     document.getElementById('s-name').style.color = "#3498db";
-    
-    document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS...\nVOTES TRANSMIS : 0 / ${players.length}`;
+
+    const aliveCount = players.filter(p => p.isAlive).length;
+    document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS...\nVOTES TRANSMIS : 0 / ${aliveCount}`;
     
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
     players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
