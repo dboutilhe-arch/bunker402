@@ -63,6 +63,12 @@ function handleData(data) {
 
         case 'SYNC_STATE':
             updateMiniBoard(data.state);
+            // On vérifie si NOUS sommes morts dans l'état reçu
+            const me = data.state.votes.list ? null : null; // Juste pour la structure
+            // On cherche notre propre état dans la liste des joueurs (non présente dans state, on utilise une autre logique)
+            // Mais plus simple : si l'interface affiche déjà "MORT", on ne traite pas la synchro de boutons
+            if (document.getElementById('main-ui').innerText.includes("VOUS ÊTES MORT")) return;
+      
             // Si on reçoit une synchro et qu'on n'est pas en train de choisir un pouvoir forcé
             // on redonne l'état normal au bouton de métier
             const btn = document.getElementById('btn-power');
