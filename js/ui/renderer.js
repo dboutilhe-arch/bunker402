@@ -187,3 +187,21 @@ export function resetVoteColors() {
         });
     });
 }
+
+/**
+ * Rayer les morts de l'écran
+ */
+export function updatePlayerStatusUI(player, reveal) {
+    const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
+    const color = reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+    
+    tags.forEach(tag => {
+        tag.style.opacity = "0.4";
+        tag.style.filter = "grayscale(100%)";
+        tag.style.textDecoration = "line-through";
+        const jobDiv = tag.querySelector('.p-job');
+        if (jobDiv) {
+            jobDiv.innerHTML = `<span style="color: ${color}; text-decoration: none;">● DÉCÉDÉ (${reveal})</span>`;
+        }
+    });
+}
