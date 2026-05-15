@@ -140,8 +140,8 @@ function handleDiscard(data) {
     Logger.add(`LÉGISLATION : Le Gardien ${players[state.curG].name} a défaussé un décret secret.`);
     Logger.add(`SYSTÈME : Transfert des décrets restants à la Sentinelle.`);
     
-    // 1. On prévient tout le monde (y compris la sentinelle) de l'étape
-    players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
+    // 1. On prévient tout les vivants (y compris la sentinelle) de l'étape
+    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
   
     // 2. On envoie les cartes à la Sentinelle après un micro-délai (100ms)
     // Cela laisse le temps au téléphone de traiter le message précédent
