@@ -66,7 +66,8 @@ export function resetGameState() {
     
     // Reset des pouvoirs joueurs sans vider la liste
     players.forEach(p => {
-        p.jobPowerUsed = false;  // Métier
-        p.casePowerUsed = false; // Case
+        p.jobPowerUsed = false;  // Pouvoir de Métier
+        p.casePowerUsed = false; // Pouvoir de Case
+        p.isAlive = true;        // Vivant ?
     });
 }
