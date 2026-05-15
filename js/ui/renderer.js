@@ -1,4 +1,4 @@
-import { state, players } from '../core/state.js'; 
+import { state, players } from '../core/state.js';
 import { Logger } from './logger.js';
 
 // Affichage Composition Partie
