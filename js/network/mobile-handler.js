@@ -304,8 +304,10 @@ function openTargetSelector(actionType, title, isForced = false) {
     
     const ui = document.getElementById('main-ui');
     ui.innerHTML = `<h3>${title}</h3><p>Sélectionnez une cible :</p>`;
+
+    const listToUse = (state && state.aliveNames) ? state.aliveNames : allPlayers;
     
-    allPlayers.forEach(name => {
+    listToUse.forEach(name => {
         if (name !== myName) {
             const btn = document.createElement('button');
             btn.className = "btn";
