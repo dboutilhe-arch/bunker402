@@ -1,4 +1,4 @@
-import { state, players, resetGameState } from '../core/state.js';
+import { state, players, resetGameState } from '../core/state.js'; 
 import { ROLE_COMPOSITIONS, JOBS_LIST } from '../core/constants.js';
 import { 
     render, 
