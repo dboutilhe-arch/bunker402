@@ -102,27 +102,31 @@ function handleSentinelle(data) {
 }
 
 function handleVote(data) {
-    // 1. SÉCURITÉ : On vérifie si ce joueur a DÉJÀ voté dans ce tour
+    // 1. SÉCURITÉ : On récupère le joueur qui vote
+    const voter = players.find(p => p.name.toLowerCase() === data.playerName.toLowerCase());
+
+    // 2. Si le joueur est mort, on ignore totalement son message
+    if (!voter || !voter.isAlive) return;
+
+    // 3. Vérifie si ce joueur a DÉJÀ voté
     const dejaVote = state.votes.list.some(v => v.name.toLowerCase() === data.playerName.toLowerCase());
-    
-    if (dejaVote) return; // On ignore purement et simplement ce message
+    if (dejaVote) return;
   
-    // Si c'est un nouveau vote, on l'enregistre normalement
+    // Enregistrement du vote
     state.votes[data.choice.toLowerCase()]++; 
     state.votes.total++;
     state.votes.list.push({ name: data.playerName, choice: data.choice });
   
-    // Mise à jour de l'interface console pour voir qui a voté
+    // Calcul basé sur les vivants
     const aliveCount = players.filter(p => p.isAlive).length;
     const summary = document.getElementById('vote-summary');
     summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${aliveCount}`;
-    summary.style.color = "#f1c40f"; // Couleur "Alerte" pendant le vote
+    summary.style.color = "#f1c40f";
   
-    // On ajoute une ligne dans le log
     Logger.add(`Données de vote reçues de : ${data.playerName}`);
   
-    // Si tous les survivants ont voté, on résout
-    if(state.votes.total === aliveCount) { // <--- MODIF
+    // Si tout le monde (vivant) a voté, on résout
+    if(state.votes.total === aliveCount) {
         Logger.add("Scrutin terminé. Calcul des résultats...");
         resolveVote();
     }
