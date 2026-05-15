@@ -120,7 +120,7 @@ export function nextTurn() {
     document.getElementById('s-name').innerText = "?";
     document.getElementById('s-name').style.color = "#e0e0e0";
 
-    players.forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
+    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
     players.forEach((p, index) => {
         if(index !== state.curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: activeG.name });
     });
@@ -162,7 +162,7 @@ export function resolveVote() {
         state.currentLegislativeCards = [state.deck.pop(), state.deck.pop(), state.deck.pop()];
         state.oxy = 3;
 
-        players.forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
+       players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
 
         if(state.crise >= 3 && players[state.curSIdx].role === 'A') {
             return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
@@ -326,5 +326,5 @@ export function showGov(g, s) {
     document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS...\nVOTES TRANSMIS : 0 / ${aliveCount}`;
     
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
-    players.forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
+    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
 }
