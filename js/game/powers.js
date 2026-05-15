@@ -85,7 +85,6 @@ export function executePlayer(requester, targetName) {
     }
 
     // Gestion du tour suivant si membre du conseil tué
-    const targetIdx = players.findIndex(p => p.name === targetName);
     if (targetIdx === state.curG || targetIdx === state.curSIdx) {
         Logger.add("SYSTÈME : Membre du conseil éliminé. Passage au tour suivant.");
         state.currentPowerActive = false;
