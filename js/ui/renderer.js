@@ -57,6 +57,7 @@ export function createPlayerTag(name) {
 
 // Synchronisation
 export function syncTerminals() {
+    state.aliveNames = players.filter(p => p.isAlive).map(p => p.name);
     players.forEach(p => p.conn.send({ type: 'SYNC_STATE', state: state }));
 }
 
