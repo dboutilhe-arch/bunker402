@@ -1,4 +1,4 @@
-// state.js
+// state.js 
 // Ce fichier centralise toutes les variables qui évoluent pendant la partie.
 
 export let players = []; // On garde players à part car c'est un tableau de référence
