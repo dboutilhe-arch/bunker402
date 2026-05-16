@@ -50,7 +50,7 @@
         }
 
         /* Boutons de cartes (Décrets) : plus larges et colorés selon le type */
-        .card { display: block; padding: 20px; margin: 10px auto; width: 90%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.1em; }
+        .card { display: block; padding: 20px; margin: 10px auto; width: 33%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.1em; }
         .S { background: #3498db; } /* Carte Bleue */
         .C { background: #e74c3c; } /* Carte Rouge */
         .F { background: #7f8c8d; } /* Carte Grise */
