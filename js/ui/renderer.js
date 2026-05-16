@@ -50,6 +50,27 @@ export function createPlayerTag(name) {
     document.getElementById('active-player-list').appendChild(nameTagClone);
 }
 
+// Reconstruit la liste active selon le nouvel ordre mélangé des joueurs
+export function rebuildActivePlayerTags() {
+    const activeList = document.getElementById('active-player-list');
+    if (!activeList) return;
+    
+    // 1. On vide la liste désordonnée de la phase de Lobby
+    activeList.innerHTML = "";
+    
+    // 2. On recrée les étiquettes une par une dans le nouvel ordre de jeu
+    players.forEach(p => {
+        const nameTag = document.createElement('div');
+        nameTag.className = 'player-tag'; 
+        nameTag.id = `tag-${p.name.toLowerCase()}`;
+        nameTag.innerHTML = `
+            <div class="p-name">${p.name.toUpperCase()}</div>
+            <div class="p-job" style="font-size: 0.65em; opacity: 0.8; font-weight: normal; margin-top: 2px;"></div>
+        `;
+        activeList.appendChild(nameTag);
+    });
+}
+
 // Synchronisation
 export function syncTerminals() {
     state.aliveNames = players.filter(p => p.isAlive).map(p => p.name);
@@ -212,19 +233,37 @@ export function resetVoteColors() {
 }
 
 /**
- * Rayer les morts
+ * Rayer les morts et nettoyer les restes visuels de vote
  */
 export function updatePlayerStatusUI(player, reveal) {
     const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
-    const color = reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+    const isInfected = reveal === "INFECTÉ";
+    
+    // Définition de couleurs ultra-flashs (Néon) pour le statut
+    const colorStatus = isInfected ? "#ff3333" : "#00ff66";
     
     tags.forEach(tag => {
-        tag.style.opacity = "0.4";
-        tag.style.filter = "grayscale(100%)";
-        tag.style.textDecoration = "line-through";
+        tag.classList.remove('voted-oui', 'voted-non');
+        
+        // On change le fond pour un noir profond "hors-service"
+        tag.style.background = "#050505"; 
+        tag.style.borderColor = isInfected ? "#e74c3c" : "#2ecc71"; // La bordure prend discrètement la couleur
+        tag.style.borderWidth = "1px";
+
+        // On applique le gris/barré UNIQUEMENT sur le nom du joueur pour qu'il ait l'air mort
+        const nameDiv = tag.querySelector('.p-name');
+        if (nameDiv) {
+            nameDiv.style.opacity = "0.3";
+            nameDiv.style.filter = "grayscale(100%)";
+            nameDiv.style.textDecoration = "line-through";
+        }
+
+        // Le job div reste à 100% d'opacité et sans filtre pour flasher l'analyse bio !
         const jobDiv = tag.querySelector('.p-job');
         if (jobDiv) {
-            jobDiv.innerHTML = `<span style="color: ${color}; text-decoration: none;">● DÉCÉDÉ (${reveal})</span>`;
+            jobDiv.style.opacity = "1";
+            jobDiv.style.filter = "none";
+            jobDiv.innerHTML = `<span style="color: ${colorStatus}; display: block; margin-top: 4px; font-weight: bold; font-size: 0.9em; letter-spacing: 0.5px;">☠️ ${reveal}</span>`;
         }
     });
 }

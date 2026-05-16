@@ -9,7 +9,8 @@ import {
     triggerWin,
     resetLobbyVisuals,
     clearCouncilVisuals,
-    resetVoteColors
+    resetVoteColors,
+    rebuildActivePlayerTags
 } from '../ui/renderer.js';
 import { Logger } from '../ui/logger.js';
 import { checkCasePower } from './powers.js';
@@ -22,20 +23,31 @@ import { checkCasePower } from './powers.js';
 export async function initGame() {
     const n = players.length;
 
-    // 1. Deck de décrets
+    // MÉLANGE DE L'ORDRE DES JOUEURS (Algorithme Fisher-Yates)
+    for (let i = players.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [players[i], players[j]] = [players[j], players[i]];
+    }
+
+    // RÉALIGNEMENT DES ÉTIQUETTES SUR L'ÉCRAN CENTRAL
+    rebuildActivePlayerTags();
+
+    Logger.add("SYSTÈME : Ordre opérationnel du personnel mélangé.");
+
+    // Deck de décrets (Anciennement étape 1)
     const newCards = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
     state.deck.length = 0; 
     state.deck.push(...newCards);
 
-    // 2. Sélection et mélange des rôles (S, I, A...)
+    // Sélection et mélange des rôles (Anciennement étape 2)
     let roles = ROLE_COMPOSITIONS[n] ? [...ROLE_COMPOSITIONS[n]] : ROLE_COMPOSITIONS.default(n);
     roles.sort(() => Math.random() - 0.5);
 
-    // 3. Identification de l'Alpha
+    // Identification de l'Alpha (Anciennement étape 3)
     const alphaIndex = roles.indexOf('A');
     const alphaName = alphaIndex !== -1 ? players[alphaIndex].name : "Inconnu";
 
-    // 4. PRÉPARATION ALÉATOIRE DES MÉTIERS
+    // PRÉPARATION ALÉATOIRE DES MÉTIERS
     let finalJobsDistribution = [];
     const availableJobs = [...JOBS_LIST].sort(() => Math.random() - 0.5);
 
@@ -49,7 +61,7 @@ export async function initGame() {
     // On mélange le tableau final pour que les "Civils" soient n'importe où
     finalJobsDistribution.sort(() => Math.random() - 0.5);
 
-    // 5. Distribution aux joueurs
+    // Distribution aux joueurs
     for (let i = 0; i < n; i++) {
         let p = players[i];
         p.role = roles[i];
@@ -71,7 +83,7 @@ export async function initGame() {
         await new Promise(r => setTimeout(r, 50));
     }
 
-    // 6. Mise à jour UI
+    // Mise à jour UI
     updateTagsWithJobs();
     displayComposition(roles);
     
@@ -204,26 +216,41 @@ export function applyDecret(type) {
         state.survie++;
     } else if (type === 'C') {
         state.crise++;
+        // Attention : checkCasePower va passer state.currentPowerActive à true si une case est touchée
         checkCasePower(state.crise);
     } else if (type === 'F') {
         state.suffrage = "Actif";
     }
 
+    // Nettoyage systématique de la censure fin de tour ---
+    players.forEach(p => {
+        p.isCensored = false;
+        p.censoredBy = "";
+    });
+
     render();
     syncTerminals();
 
-    if (state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
-    else if (state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
-    else {
-        if (!state.currentPowerActive) {
-            // La censure se termine ENFIN ici, le décret est posé 
-            players.forEach(p => {
-                p.isCensored = false;
-                p.censoredBy = "";
-            });
-            state.curG = (state.curG + 1) % players.length;
-            setTimeout(() => { state.isProcessingAction = false; nextTurn(); }, 1000);
-        }
+    if (state.survie >= 5) {
+        return triggerWin("SURVIVANTS", "Protocoles rétablis.");
+    } 
+    
+    if (state.crise >= 6) {
+        return triggerWin("INFECTES", "Infection totale.");
+    }
+
+    // --- GESTION DE LA TRANSITION DE TOUR ---
+    if (!state.currentPowerActive) {
+        // Si aucun pouvoir de case n'est actif, on passe normalement au Gardien suivant
+        state.curG = (state.curG + 1) % players.length;
+        setTimeout(() => { 
+            state.isProcessingAction = false; 
+            nextTurn(); 
+        }, 1000);
+    } else {
+        // Si un pouvoir de case s'est activé, c'est la fonction du pouvoir (dans powers.js)
+        // qui gérera elle-même le passage au Gardien suivant (state.curG++) une fois l'action résolue !
+        state.isProcessingAction = true; 
     }
 }
 
