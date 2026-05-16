@@ -38,11 +38,11 @@
         .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 15px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; }
 
         .btn-power {
-            background: #111 !important;
-            border: 2px solid #ff00ff !important;
-            color: #ff00ff !important;
+            background: #ff00ff !important;
+            border: 2px solid #111 !important;
+            color: #111 !important;
             padding: 15px;
-            width: 100%;
+            width: 50%;
             margin: 8px 0;
             border-radius: 8px;
             font-weight: bold;
