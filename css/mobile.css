@@ -65,7 +65,7 @@
             border: 2px solid #ff00ff !important;
             color: #ff00ff !important;
             padding: 15px;
-            width: 50% !important;
+            width: 33% !important;
             margin: 8px 0;
             border-radius: 8px;
             font-weight: bold;
@@ -78,11 +78,13 @@
             border: 2px solid #e74c3c !important;
             color: #e74c3c !important;
             padding: 15px;
-            width: 50% !important;
+            width: 33% !important;
             margin: 8px 0;
             border-radius: 8px;
             font-weight: bold;
             text-transform: uppercase;
+            display: block;
+            margin: 8px auto;
         }
 
         /* Boutons de cartes (Décrets) : plus larges et colorés selon le type */
