@@ -34,13 +34,21 @@
             font-size: 0.9em;
         }
 
+        #main-ui {
+            display: flex;
+            flex-wrap: wrap; /* Permet aux boutons de passer à la ligne */
+            justify-content: center; /* Centre les boutons sur chaque ligne */
+            gap: 10px; /* L'espace exact (en pixels) que tu veux ENTRE tes boutons */
+            width: 100%;
+        }
+
         /* Boutons standards (Lier, Voter...) */
         .btn { 
             background: #111; 
             border: 1px solid #2ecc71; 
             color: #2ecc71; 
             padding: 15px; 
-            width: 50%;
+            width: 40%;
             margin: 8px 0; 
             border-radius: 8px; 
             font-weight: bold; 
@@ -52,8 +60,8 @@
             border: 2px solid #000 !important;
             color: #000 !important;
             padding: 15px;
-            width: 50% !important;
-            margin: 8px 0;
+            width: calc(33.33% - 7px) !important; 
+            margin: 4px 0 !important;
             border-radius: 8px;
             font-weight: bold;
             text-transform: uppercase;
@@ -65,8 +73,8 @@
             border: 2px solid #ff00ff !important;
             color: #ff00ff !important;
             padding: 15px;
-            width: 33% !important;
-            margin: 8px 0;
+            width: calc(33.33% - 7px) !important; 
+            margin: 4px 0 !important;
             border-radius: 8px;
             font-weight: bold;
             text-transform: uppercase;
@@ -78,13 +86,12 @@
             border: 2px solid #e74c3c !important;
             color: #e74c3c !important;
             padding: 15px;
-            width: 33% !important;
-            margin: 8px 0;
+            width: 33.33% !important;
+            margin: 8px auto !important;
             border-radius: 8px;
             font-weight: bold;
             text-transform: uppercase;
             display: block;
-            margin: 8px auto;
         }
 
         /* Boutons de cartes (Décrets) : plus larges et colorés selon le type */
