@@ -95,11 +95,25 @@ function handleData(data) {
             break;
 
         case 'WAIT_SENTINELLE':
-            ui.innerHTML = `<h3>FORMATION DU CONSEIL</h3><p>Le Gardien <b>${data.gardienName}</b> choisit sa Sentinelle...</p>`;
+            ui.innerHTML = `
+                <div style="margin-top: 40px;">
+                    <h2 style="color: #f1c40f; text-transform: uppercase;">FORMATION DU CONSEIL</h2>
+                    <p style="color: #e0e0e0;">Le Gardien <b>${data.gardienName}</b> choisit sa Sentinelle...</p>
+                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite;"></div>
+                    <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[ANALYSE DES ACCÈS RÉSEAU EN COURS]</p>
+                </div>
+            `;
             break;
 
         case 'WAIT_LEGISLATION':
-            ui.innerHTML = `<h3>LÉGISLATION</h3><p>Le Conseil est en session (${data.step})...</p>`;
+            ui.innerHTML = `
+                <div style="margin-top: 40px;">
+                    <h2 style="color: #3498db; text-transform: uppercase;">SESSION LÉGISLATIVE</h2>
+                    <p style="color: #e0e0e0;">Le Conseil applique les protocoles secrets (Aiguillage : <b>${data.step}</b>)...</p>
+                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #3498db; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.5s linear infinite;"></div>
+                    <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[CHIFFREMENT DES DÉCRETS DE SÉCURITÉ]</p>
+                </div>
+            `;
             break;
 
         case 'GARDIEN_PICK':
@@ -151,7 +165,14 @@ function handleData(data) {
             break;
 
         case 'CLEAN_UI':
-            ui.innerHTML = "En attente...";
+            ui.innerHTML = `
+                <div style="margin-top: 40px;">
+                    <h2 style="color: #2ecc71; text-transform: uppercase;">TRANSMISSION REÇUE</h2>
+                    <p style="color: #e0e0e0;">Votre vote a été enregistré par la console centrale.</p>
+                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite;"></div>
+                    <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[SYNCHRONISATION TERMINAL EN ATTENTE DU SCRUTIN]</p>
+                </div>
+            `;
             break;
       
         case 'REFRESH_INTERFACE':
@@ -183,9 +204,9 @@ function setupIdentity(data) {
 
     const roles = {
         'S':  { label: "SURVIVANT", color: "#3498db", goal: "Rétablir les protocoles de survie.", win: "5 décrets BLEUS ou éliminer l'Alpha.", blood: "SAIN", bColor: "#2ecc71" },
-        'I':  { label: "INFECTÉ", color: "#e74c3c", goal: "Propager l'infection.", win: "6 décrets ROUGES ou Alpha Sentinelle.", blood: "INFECTÉ", bColor: "#e74c3c" },
-        'A':  { label: "ALPHA", color: "#9400d3", goal: "Propager l'infection.", win: "6 décrets ROUGES ou être élu Sentinelle.", blood: "INFECTÉ", bColor: "#e74c3c" },
-        'M':  { label: "MYCOLOGUE", color: "#1b4d3e", goal: "Propager l'infection (Infiltré).", win: "6 décrets ROUGES ou victoire de l'Alpha.", blood: "SAIN", bColor: "#2ecc71" },
+        'I':  { label: "INFECTÉ", color: "#e74c3c", goal: "Propager l'infection.", win: "6 décrets ROUGES ou Alpha élu Sentinelle avec 3 décrets ROUGES.", blood: "INFECTÉ", bColor: "#e74c3c" },
+        'A':  { label: "ALPHA", color: "#9400d3", goal: "Propager l'infection.", win: "6 décrets ROUGES ou être élu Sentinelle avec 3 décrets ROUGES.", blood: "INFECTÉ", bColor: "#e74c3c" },
+        'M':  { label: "MYCOLOGUE", color: "#1b4d3e", goal: "Propager l'infection (Infiltré).", win: "6 décrets ROUGES ou Alpha élu Sentinelle avec 3 décrets ROUGES.", blood: "SAIN", bColor: "#2ecc71" },
         'IM': { label: "IMMUNISÉ", color: "#d4af37", goal: "Rétablir les protocoles (Résistant).", win: "5 décrets BLEUS ou éliminer l'Alpha.", blood: "INFECTÉ", bColor: "#e74c3c" }
     };
 
@@ -205,12 +226,11 @@ function setupIdentity(data) {
     // Bouton de métier
     jobUi.innerHTML = "";
     jobUi.style.opacity = "1"; //On s'assure que c'est visible par défaut
+ 
     if (data.metier === 'Docteur') {
         const btn = document.createElement('button');
         btn.id = "btn-power";
-        btn.className = "btn";
-        btn.style.background = "#2ecc71";
-        btn.style.color = "black";
+        btn.className = "btn-power";
         btn.innerText = "TEST SANGUIN";
         if (hasUsedPower) jobUi.style.opacity = "0.3";
         btn.onclick = () => openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE');
@@ -219,9 +239,7 @@ function setupIdentity(data) {
     if (data.metier === 'Militaire') {
        const btn = document.createElement('button');
        btn.id = "btn-power";
-       btn.className = "btn";
-       btn.style.background = "#e74c3c";
-       btn.style.color = "white";
+       btn.className = "btn-power";
        btn.innerText = "EXÉCUTER UN INDIVIDU";
        if (hasUsedPower) jobUi.style.opacity = "0.3";
        btn.onclick = () => openTargetSelector('REQUEST_EXECUTION', 'PROTOCOLE D\'ÉLIMINATION');
@@ -230,9 +248,7 @@ function setupIdentity(data) {
    if (data.metier === 'Intendant') {
           const btn = document.createElement('button');
           btn.id = "btn-power";
-          btn.className = "btn";
-          btn.style.background = "#f1c40f"; // Jaune / Alerte
-          btn.style.color = "black";
+          btn.className = "btn-power";
           btn.innerText = "VERROUILLER UN TERMINAL (CENSURE)";
           if (hasUsedPower) jobUi.style.opacity = "0.3";
           btn.onclick = () => openTargetSelector('REQUEST_CENSURE', 'PROTOCOLE DE CENSURE');
@@ -319,61 +335,76 @@ function showLegislativeUI(role, cards) {
     });
 }
 
+
 function openTargetSelector(actionType, title, isForced = false) {
-if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
-    
+    if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
+        
     const ui = document.getElementById('main-ui');
     ui.innerHTML = `<h3>${title}</h3><p>Sélectionnez une cible :</p>`;
-    
+        
     // On utilise les noms vivants du serveur, sinon la liste complète par défaut
     const listToUse = (serverState && serverState.aliveNames) ? serverState.aliveNames : allPlayers;
-    
-    // Vérification de sécurité : si la liste est vide (ne devrait pas arriver)
+        
+    // Vérification de sécurité
     if (listToUse.length === 0) {
         ui.innerHTML += "<p>Aucune cible éligible détectée.</p>";
     }
- 
-    listToUse.forEach(name => {
-            if (name.toLowerCase() !== myName.toLowerCase()) {
-                
-                // Si c'est une demande de Censure, on cache les cibles déjà censurées
-                if (actionType === 'REQUEST_CENSURE' && serverState.censoredNames && serverState.censoredNames.includes(name)) {
-                    return; // On passe au joueur suivant sans créer de bouton
-                }
-    
-                const btn = document.createElement('button');
-                btn.className = "btn";
-                btn.innerText = name.toUpperCase();
-                btn.onclick = () => {
-                    if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
-                    if (!isForced) {
-                        hasUsedPower = true;
-                        document.getElementById('job-ui').style.opacity = "0.3";
-                    }
-                    conn.send({ type: actionType, targetName: name, isForced: isForced });
-                    ui.innerHTML = "Traitement...";
-                };
-                ui.appendChild(btn);
-            }
-        });
 
-    if (!isForced) {
+    // Le bouton ANNULER (Placé au-dessus ou en dessous selon tes préférences)
+   if (!isForced) {
         const btnCancel = document.createElement('button');
-        btnCancel.className = "btn"; btnCancel.style.color = "#e74c3c"; btnCancel.innerText = "ANNULER";
+        btnCancel.className = "btn-cancel";
+        btnCancel.innerText = "ANNULER";
         btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
         ui.appendChild(btnCancel);
+
+        // Élément invisible pour forcer le retour à la ligne après l'Annuler
+        const breakLine = document.createElement('div');
+        breakLine.style.width = "100%";
+        ui.appendChild(breakLine);
     }
+     
+    // Génération des boutons de cibles
+    listToUse.forEach(name => {
+        if (name.toLowerCase() !== myName.toLowerCase()) {
+                
+            // Si c'est une demande de Censure, on cache les cibles déjà censurées
+            if (actionType === 'REQUEST_CENSURE' && serverState.censoredNames && serverState.censoredNames.includes(name)) {
+                return; 
+            }
+        
+            const btn = document.createElement('button');
+            btn.className = "btn-target";
+            btn.innerText = name.toUpperCase();
+            btn.onclick = () => {
+                if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
+                if (!isForced) {
+                    hasUsedPower = true;
+                    document.getElementById('job-ui').style.opacity = "0.3";
+                }
+                conn.send({ type: actionType, targetName: name, isForced: isForced });
+                ui.innerHTML = "Traitement...";
+            };
+            ui.appendChild(btn);
+        }
+    });
 }
 
 function showBloodResult(data) {
-    const color = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
+    // 1. On détermine la couleur du cadre de l'alerte (Vert si Sain, Rouge si Infecté)
+    const cardColor = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
+    
+    // 2. On détermine la couleur spécifique pour le texte du statut
+    const statusColor = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
+
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid ${color}; padding: 15px; border-radius: 10px;">
-            <h3 style="color: ${color}">RÉSULTAT D'ANALYSE</h3>
-            <p>Sujet : <b>${data.target}</b></p>
-            <p>Statut : <b>${data.result}</b></p>
-            <button class="btn" id="btn-ok">OK</button>
+        <div style="border: 2px solid ${cardColor}; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: ${cardColor}; margin-top: 0; letter-spacing: 1px;">RÉSULTAT D'ANALYSE</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Sujet : <b>${data.target.toUpperCase()}</b></p>
+            <p style="color: #e0e0e0; margin: 10px 0;">Statut : <b style="color: ${statusColor}; font-size: 1.2em; letter-spacing: 1px;">${data.result}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%;">OK</button>
         </div>`;
+        
     document.getElementById('btn-ok').onclick = () => conn.send({ type: 'SYNC_REQUEST' });
 }
 

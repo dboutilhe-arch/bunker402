@@ -1,5 +1,6 @@
 import { state, players } from '../core/state.js';
 import { Logger } from './logger.js';
+import { POWER_MAP } from '../core/constants.js'; // <-- AJOUT : On importe la carte des pouvoirs
 
 // Affichage Composition Partie
 export function displayComposition(roles) {
@@ -10,20 +11,14 @@ export function displayComposition(roles) {
 
     const compDiv = document.getElementById('composition-display');
     
-    // On ne compte que les rôles de base ici
     const totalS = (counts['S'] || 0);
     const totalI = (counts['I'] || 0);
 
     let html = `<div style="color: #FFF; font-weight: bold; margin-bottom: 5px;">${players.length} PERSONNELS :</div>`;
-    // Affichage des Survivants standards
     html += `<div style="color: #3498db;">• ${totalS} SURVIVANTS</div>`;
-    // Affichage des Infectés standards
     html += `<div style="color: #e74c3c;">• ${totalI} INFECTÉS</div>`;
-    // Ligne Alpha (Toujours présent)
     html += `<div style="color: #9400d3;">• 1 ALPHA</div>`;
-    // Affichage conditionnel du Mycologue (Infiltré)
     if (counts['M']) { html += `<div style="color: #1b4d3e;">• ${counts['M']} MYCOLOGUE</div>`; }
-    // Affichage conditionnel de l'Immunisé (Résistant)
     if (counts['IM']) { html += `<div style="color: #d4af37;">• ${counts['IM']} IMMUNISÉ</div>`; }
 
     compDiv.innerHTML = html;
@@ -57,9 +52,7 @@ export function createPlayerTag(name) {
 
 // Synchronisation
 export function syncTerminals() {
-    // On injecte la liste des noms vivants juste avant l'envoi
     state.aliveNames = players.filter(p => p.isAlive).map(p => p.name);
-    // On injecte aussi les noms des censurés
     state.censoredNames = players.filter(p => p.isCensored).map(p => p.name);
     
     players.forEach(p => {
@@ -79,13 +72,37 @@ export function render() {
         oxyBar.className = (state.oxy <= 1) ? "critical" : "";
     }
     
-    // Slots Décrets
+    // Slots Décrets Survie (Bleu)
     document.getElementById('slots-s').innerHTML = Array(5).fill(0)
         .map((_, i) => `<div class="slot ${i < state.survie ? 'filled-s' : ''}"></div>`).join('');
     
+    // Slots Décrets Crise avec affichage des Pouvoirs
+    const n = players.length;
+    const configPouvoirs = POWER_MAP[n] || POWER_MAP['default']; // Récupère la config selon le nombre de joueurs
+
     document.getElementById('slots-c').innerHTML = Array(6).fill(0)
-        .map((_, i) => `<div class="slot ${i < state.crise ? 'filled-c' : ''}"></div>`).join('');
+        .map((_, i) => {
+            const caseNum = i + 1; // Les cases vont de 1 à 6
+            const pouvoirNom = configPouvoirs[caseNum];
+            const estRemplie = caseNum <= state.crise;
+            
+            // Si un pouvoir existe sur cette case (ex: 'CENSURE', 'EXEC'), on prépare un petit badge textuel
+            let badgePouvoir = "";
+            if (pouvoirNom && pouvoirNom !== 'null') {
+                const couleurBadge = "#e74c3c";
+                badgePouvoir = `<div style="font-size: 0.65em; color: ${couleurBadge}; font-weight: bold; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">${pouvoirNom}</div>`;
+            }
+
+            // On englobe le slot et son texte dans un conteneur inline-block pour que le texte reste bien aligné sous sa case
+            return `
+                <div style="display: inline-block; text-align: center; vertical-align: top; margin: 5px;">
+                    <div class="slot ${estRemplie ? 'filled-c' : ''}" style="margin: 0;"></div>
+                    ${badgePouvoir}
+                </div>
+            `;
+        }).join('');
     
+    // Slots Ordre du jour (Gris)
     document.getElementById('slots-f').innerHTML = 
         `<div class="slot ${state.suffrage !== "Aucun" ? 'filled-f' : ''}"></div>`;
 }
@@ -115,7 +132,7 @@ export function resetLobbyVisuals() {
         const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
         tags.forEach(tag => {
             tag.className = 'player-tag';
-            tag.style = ""; // Reset de tous les styles inline
+            tag.style = ""; 
             tag.innerHTML = `
                 <div class="p-name">${p.name.toUpperCase()}</div>
                 <div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal; color: #2ecc71;"></div>
@@ -166,18 +183,14 @@ export function triggerWin(team, reason) {
 }
 
 /**
- * Retire UNIQUEMENT les cadres (jaune/bleu) et l'étoile.
- * Appelée dès que le vote est fini.
+ * Retire Council Visuals
  */
 export function clearCouncilVisuals() {
     players.forEach(p => {
         const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
         tags.forEach(tag => {
-            // On reset la bordure sans toucher aux classes CSS (vote)
             tag.style.borderColor = "";   
             tag.style.borderWidth = "1px";
-            
-            // On remet le nom sans l'étoile
             const nameDiv = tag.querySelector('.p-name');
             if (nameDiv) nameDiv.innerText = p.name.toUpperCase();
         });
@@ -185,8 +198,7 @@ export function clearCouncilVisuals() {
 }
 
 /**
- * Retire UNIQUEMENT les couleurs de vote (vert/rouge).
- * Appelée au début du tour suivant.
+ * Reset Vote Colors
  */
 export function resetVoteColors() {
     players.forEach(p => {
@@ -200,7 +212,7 @@ export function resetVoteColors() {
 }
 
 /**
- * Rayer les morts de l'écran
+ * Rayer les morts
  */
 export function updatePlayerStatusUI(player, reveal) {
     const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
@@ -217,7 +229,6 @@ export function updatePlayerStatusUI(player, reveal) {
     });
 }
 
-// Pour ajouter le badge 🤐 sans effacer le reste
 export function updateCensureUI(player) {
     const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
     tags.forEach(tag => {

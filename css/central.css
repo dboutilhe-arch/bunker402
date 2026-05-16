@@ -18,8 +18,39 @@
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
         /* Mise en page des Plateaux */
-        .main-layout { display: flex; justify-content: space-around; align-items: flex-start; }
-        .board { background: #2d2d2d; padding: 15px; border-radius: 10px; width: 30%; border: 1px solid #555; }
+        .main-layout { 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: stretch; /* Force tous les enfants directs à étirer leur hauteur uniformément */
+            margin-bottom: 30px; 
+        }
+
+        /* --- CONFIGURATION DES PLATEAUX --- */
+        .board { 
+            background: #2d2d2d; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border: 1px solid #555; 
+            min-height: 140px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+        }
+        /* Gestion des titres de plateaux pour éviter les décalages */
+        .board h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        /* Les plateaux Survie et Crise prennent plus de place (40% chacun) */
+        .main-layout .board:first-child,
+        .main-layout .board:last-child {
+            width: 37%;
+        }
+        /* Le plateau du milieu (Ordre du jour) est réduit à 16% */
+        .main-layout .board:nth-child(2) {
+            width: 16%;
+        }
         .slot { width: 40px; height: 60px; border: 2px dashed #555; display: inline-block; margin: 5px; border-radius: 4px; }
         .filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; }
         .filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; }

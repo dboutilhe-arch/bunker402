@@ -34,11 +34,61 @@
             font-size: 0.9em;
         }
 
-        /* Boutons standards (Lier, Voter, Choisir Joueur) */
-        .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 15px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; }
+        /* Boutons standards (Lier, Voter...) */
+        .btn { 
+            background: #111; 
+            border: 1px solid #2ecc71; 
+            color: #2ecc71; 
+            padding: 15px; 
+            width: 40%;
+            margin: 8px 0; 
+            border-radius: 8px; 
+            font-weight: bold; 
+        }
+
+       /* Bouton de métier principal (Rose flash, centré, 50% de largeur) */
+       .btn-power {
+           display: block;
+           background: #ff00ff !important;
+           border: 2px solid #000 !important;
+           color: #000 !important;
+           padding: 15px;
+           width: 50% !important; /* Fixé à 50% pour le bouton principal */
+           margin: 10px auto !important; /* Le centre sur l'écran */
+           border-radius: 8px;
+           font-weight: bold;
+           text-transform: uppercase;
+       }    
+       
+       /* Boutons de choix de cibles (Bordure + texte violet, 33% de largeur, pas de marges briseuses de ligne) */
+       .btn-target {
+           background: #000 !important;
+           border: 2px solid #ff00ff !important;
+           color: #ff00ff !important;
+           padding: 15px;
+           width: calc(33.33% - 7px) !important; /* Ajusté pour le gap de 10px */
+           margin: 0 !important; /* TRÈS IMPORTANT : pas de margin qui pousse à la ligne */
+           border-radius: 8px;
+           font-weight: bold;
+           text-transform: uppercase;
+       }
+       
+       /* Bouton Annuler spécifique (Seul sur sa première ligne, centré, 33% de largeur) */
+       .btn-cancel {
+           display: block !important;
+           background: #000 !important;
+           border: 2px solid #e74c3c !important;
+           color: #e74c3c !important;
+           padding: 15px;
+           width: calc(33.33% - 7px) !important; /* Aligné sur la taille des autres */
+           margin: 0 auto 10px auto !important; /* Seul sur sa ligne, centre horizontal, marge en bas */
+           border-radius: 8px;
+           font-weight: bold;
+           text-transform: uppercase;
+       }
 
         /* Boutons de cartes (Décrets) : plus larges et colorés selon le type */
-        .card { display: block; padding: 20px; margin: 10px auto; width: 90%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.1em; }
+        .card { display: block; padding: 20px; margin: 10px auto; width: 33%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.1em; }
         .S { background: #3498db; } /* Carte Bleue */
         .C { background: #e74c3c; } /* Carte Rouge */
         .F { background: #7f8c8d; } /* Carte Grise */
