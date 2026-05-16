@@ -327,7 +327,8 @@ export function showGov(g, s) {
     document.getElementById('s-name').style.color = "#3498db";
 
     const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
-    document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS...\nVOTES TRANSMIS : 0 / ${eligibleCount}`;
+    document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : 0 / ${eligibleCount}`;
+    document.getElementById('vote-summary').style.color = "#f1c40f"; // Jaune pour le scrutin
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
     
     // FILTRAGE DES ENVOIS 
