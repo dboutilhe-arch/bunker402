@@ -3,7 +3,7 @@ import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors } from '../ui/renderer.js';
 import { showGov, resolveVote, applyDecret, restorePlayerAction } from '../game/engine.js';
-import { testPlayerBlood, executePlayer } from '../game/powers.js';
+import { testPlayerBlood, executePlayer, applyCensure } from '../game/powers.js';
 
 export function handlePlayerData(conn, data) {
     if (state.gameOver) return;
