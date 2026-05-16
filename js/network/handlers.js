@@ -83,7 +83,9 @@ function handleJoin(conn, data) {
         name: data.name, 
         conn: conn, 
         jobPowerUsed: false,
-        casePowerUsed: false
+        casePowerUsed: false,
+        isCensored: false,
+        censoredBy: ""
     });
     createPlayerTag(data.name); // On crée l'étiquette
     
