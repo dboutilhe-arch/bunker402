@@ -190,10 +190,6 @@ export function clearCouncilVisuals() {
  */
 export function resetVoteColors() {
     players.forEach(p => {
-        // RESET DE LA CENSURE
-        p.isCensored = false;
-        p.censoredBy = "";
-        
         const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
         tags.forEach(tag => {
             tag.classList.remove('voted-oui', 'voted-non');
