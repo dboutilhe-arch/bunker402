@@ -232,6 +232,17 @@ function setupIdentity(data) {
        btn.onclick = () => openTargetSelector('REQUEST_EXECUTION', 'PROTOCOLE D\'ÉLIMINATION');
        jobUi.appendChild(btn);
    }
+   if (data.metier === 'Intendant') {
+          const btn = document.createElement('button');
+          btn.id = "btn-power";
+          btn.className = "btn";
+          btn.style.background = "#f1c40f"; // Jaune / Alerte
+          btn.style.color = "black";
+          btn.innerText = "VERROUILLER UN TERMINAL (CENSURE)";
+          if (hasUsedPower) jobUi.style.opacity = "0.3";
+          btn.onclick = () => openTargetSelector('REQUEST_CENSURE', 'PROTOCOLE DE CENSURE');
+          jobUi.appendChild(btn);
+      }
 }
 
 
