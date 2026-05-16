@@ -204,26 +204,41 @@ export function applyDecret(type) {
         state.survie++;
     } else if (type === 'C') {
         state.crise++;
+        // Attention : checkCasePower va passer state.currentPowerActive à true si une case est touchée
         checkCasePower(state.crise);
     } else if (type === 'F') {
         state.suffrage = "Actif";
     }
 
+    // Nettoyage systématique de la censure fin de tour ---
+    players.forEach(p => {
+        p.isCensored = false;
+        p.censoredBy = "";
+    });
+
     render();
     syncTerminals();
 
-    if (state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
-    else if (state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
-    else {
-        if (!state.currentPowerActive) {
-            // La censure se termine ENFIN ici, le décret est posé 
-            players.forEach(p => {
-                p.isCensored = false;
-                p.censoredBy = "";
-            });
-            state.curG = (state.curG + 1) % players.length;
-            setTimeout(() => { state.isProcessingAction = false; nextTurn(); }, 1000);
-        }
+    if (state.survie >= 5) {
+        return triggerWin("SURVIVANTS", "Protocoles rétablis.");
+    } 
+    
+    if (state.crise >= 6) {
+        return triggerWin("INFECTES", "Infection totale.");
+    }
+
+    // --- GESTION DE LA TRANSITION DE TOUR ---
+    if (!state.currentPowerActive) {
+        // Si aucun pouvoir de case n'est actif, on passe normalement au Gardien suivant
+        state.curG = (state.curG + 1) % players.length;
+        setTimeout(() => { 
+            state.isProcessingAction = false; 
+            nextTurn(); 
+        }, 1000);
+    } else {
+        // Si un pouvoir de case s'est activé, c'est la fonction du pouvoir (dans powers.js)
+        // qui gérera elle-même le passage au Gardien suivant (state.curG++) une fois l'action résolue !
+        state.isProcessingAction = true; 
     }
 }
 
