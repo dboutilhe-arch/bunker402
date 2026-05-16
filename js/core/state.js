@@ -11,29 +11,30 @@ export let state = {
     gameOver: false, 
     suffrage: "Aucun",
     
-    // Historique et censure
+    // --- PILES DE CARTES DYNAMIQUES ---
+    deck: [],       // Contient les IDs des cartes de la pioche (ex: ['censure', 'piston'])
+    discard: [],    // Contient les IDs des cartes envoyées en défausse
+    
+    // Historique des décrets physiquement posés sur le plateau pour l'affichage index
+    slotsSurvieCards: [], 
+    slotsCriseCards: [],
+    slotsSuffrageCard: null,
+
+    // Historique et pointeurs du Conseil
     lastSentinelle: null,
     lastGardien: null,
     censoredPlayer: null,
-
-    // Deck et Index
-    deck: [], 
     curG: 0, 
     curSIdx: -1,
 
     // Gestion des votes
-    votes: { 
-        oui: 0, 
-        non: 0, 
-        total: 0, 
-        list: [] 
-    },
-
+    votes: { oui: 0, non: 0, total: 0, list: [] },
+    
     // Variables de phase et contrôle
     isProcessingAction: false,
     currentPhase: "DÉSIGNATION", 
     currentProposedS: null,      
-    currentLegislativeCards: [], 
+    currentLegislativeCards: [], // Contient les 3 (ou 2) cartes en main du Conseil
     currentPowerActive: false
 };
 
