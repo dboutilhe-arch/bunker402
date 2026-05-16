@@ -27,6 +27,15 @@
             border: 1px solid #555; 
             min-height: 140px; /* Stabilise la hauteur du tableau quand le texte apparaît */
         }
+        /* Les plateaux Survie et Crise prennent plus de place (40% chacun) */
+        .main-layout .board:first-child,
+        .main-layout .board:last-child {
+            width: 40%;
+        }
+        /* Le plateau du milieu (Ordre du jour) est réduit à 16% */
+        .main-layout .board:nth-child(2) {
+            width: 16%;
+        }
         .slot { width: 40px; height: 60px; border: 2px dashed #555; display: inline-block; margin: 5px; border-radius: 4px; }
         .filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; }
         .filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; }
