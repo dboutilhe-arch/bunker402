@@ -155,12 +155,21 @@ export function applyCensure(requester, targetName) {
     syncTerminals();
 
     if (state.currentPowerActive) {
-        state.currentPowerActive = false;
-        setTimeout(() => {
-            state.curG = (state.curG + 1) % players.length;
-            state.isProcessingAction = false;
-            nextTurn();
-        }, 2000);
+            state.currentPowerActive = false;
+            setTimeout(() => {
+                state.curG = (state.curG + 1) % players.length;
+                state.isProcessingAction = false;
+                nextTurn();
+            }, 2000);
+        } else {
+            // Si c'est l'Intendant qui a joué de lui-même
+            // On lui demande de rafraîchir son interface pour récupérer son vote en cours
+            setTimeout(() => {
+                if (requester.conn && requester.conn.open) {
+                    requester.conn.send({ type: 'REFRESH_INTERFACE' });
+                }
+            }, 100);
+        }
     }
 }
 
