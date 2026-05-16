@@ -1,5 +1,5 @@
 import { state, players, resetGameState } from '../core/state.js'; 
-import { ROLE_COMPOSITIONS, JOBS_LIST } from '../core/constants.js';
+import { ROLE_COMPOSITIONS, JOBS_LIST, DECK_COMPOSITION } from '../core/constants.js';
 import { 
     render, 
     updateTagsWithJobs,  
@@ -23,23 +23,33 @@ import { checkCasePower } from './powers.js';
 export async function initGame() {
     const n = players.length;
 
-    // MÉLANGE DE L'ORDRE DES JOUEURS (Algorithme Fisher-Yates)
+    // Mélange de l'ordre des joueurs
     for (let i = players.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [players[i], players[j]] = [players[j], players[i]];
     }
 
-    // RÉALIGNEMENT DES ÉTIQUETTES SUR L'ÉCRAN CENTRAL
+    // Réalignement des étiquettes sur l'écran central
     rebuildActivePlayerTags();
 
     Logger.add("SYSTÈME : Ordre opérationnel du personnel mélangé.");
 
-    // Deck de décrets (Anciennement étape 1)
-    const newCards = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
+    // Génération du Deck dynamique
+    const newCards = [];
+    Object.entries(DECK_COMPOSITION).forEach(([type, count]) => {
+        for (let i = 0; i < count; i++) {
+            newCards.push(type);
+        }
+    });
+    // Mélange du paquet
+    newCards.sort(() => Math.random() - 0.5);
+
     state.deck.length = 0; 
     state.deck.push(...newCards);
+    
+    Logger.add(`SYSTÈME : Deck de décrets initialisé avec ${state.deck.length} protocoles.`);
 
-    // Sélection et mélange des rôles (Anciennement étape 2)
+    // Sélection et mélange des rôles
     let roles = ROLE_COMPOSITIONS[n] ? [...ROLE_COMPOSITIONS[n]] : ROLE_COMPOSITIONS.default(n);
     roles.sort(() => Math.random() - 0.5);
 
