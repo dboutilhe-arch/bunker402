@@ -50,6 +50,27 @@ export function createPlayerTag(name) {
     document.getElementById('active-player-list').appendChild(nameTagClone);
 }
 
+// Reconstruit la liste active selon le nouvel ordre mélangé des joueurs
+export function rebuildActivePlayerTags() {
+    const activeList = document.getElementById('active-player-list');
+    if (!activeList) return;
+    
+    // 1. On vide la liste désordonnée de la phase de Lobby
+    activeList.innerHTML = "";
+    
+    // 2. On recrée les étiquettes une par une dans le nouvel ordre de jeu
+    players.forEach(p => {
+        const nameTag = document.createElement('div');
+        nameTag.className = 'player-tag'; 
+        nameTag.id = `tag-${p.name.toLowerCase()}`;
+        nameTag.innerHTML = `
+            <div class="p-name">${p.name.toUpperCase()}</div>
+            <div class="p-job" style="font-size: 0.65em; opacity: 0.8; font-weight: normal; margin-top: 2px;"></div>
+        `;
+        activeList.appendChild(nameTag);
+    });
+}
+
 // Synchronisation
 export function syncTerminals() {
     state.aliveNames = players.filter(p => p.isAlive).map(p => p.name);
