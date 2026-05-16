@@ -212,19 +212,28 @@ export function resetVoteColors() {
 }
 
 /**
- * Rayer les morts
+ * Rayer les morts et nettoyer les restes visuels de vote
  */
 export function updatePlayerStatusUI(player, reveal) {
     const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
     const color = reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
     
     tags.forEach(tag => {
+        // On supprime les classes de vote qui bloquent le fond
+        tag.classList.remove('voted-oui', 'voted-non');
+        
+        // On applique les styles de mort
         tag.style.opacity = "0.4";
         tag.style.filter = "grayscale(100%)";
         tag.style.textDecoration = "line-through";
+        
+        // On s'assure que le background ne force plus une couleur opaque
+        tag.style.background = "#1a1a1a"; 
+
         const jobDiv = tag.querySelector('.p-job');
         if (jobDiv) {
-            jobDiv.innerHTML = `<span style="color: ${color}; text-decoration: none;">● DÉCÉDÉ (${reveal})</span>`;
+            // style="display: block;" s'assure que le texte se place bien en dessous sans être écrasé
+            jobDiv.innerHTML = `<span style="color: ${color}; text-decoration: none; display: block; margin-top: 4px; font-weight: bold;">● DÉCÉDÉ (${reveal})</span>`;
         }
     });
 }
