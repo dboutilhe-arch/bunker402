@@ -69,5 +69,7 @@ export function resetGameState() {
         p.jobPowerUsed = false;  // Pouvoir de Métier
         p.casePowerUsed = false; // Pouvoir de Case
         p.isAlive = true;        // Vivant ?
+        p.isCensored = false;    // Reset de la censure
+        p.censoredBy = "";       // Reset de l'auteur
     });
 }
