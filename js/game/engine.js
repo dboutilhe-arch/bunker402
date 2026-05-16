@@ -250,11 +250,15 @@ export function restorePlayerAction(player) {
 
     switch(state.currentPhase) {
         case "VOTE":
-            const aDejaVote = state.votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
-            if (aDejaVote) player.conn.send({ type: 'CLEAN_UI' });
-            else player.conn.send({ type: 'VOTE_START', g: players[state.curG].name, s: state.currentProposedS });
+            if (player.isCensored) {
+                player.conn.send({ type: 'CENSORED_ALERT', by: player.censoredBy });
+            } else {
+                const aDejaVote = state.votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
+                if (aDejaVote) player.conn.send({ type: 'CLEAN_UI' });
+                else player.conn.send({ type: 'VOTE_START', g: players[state.curG].name, s: state.currentProposedS });
+            }
             break;
-        
+
         case "LÉGISLATION_G":
             if (isGardien) player.conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
             else player.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
@@ -322,9 +326,16 @@ export function showGov(g, s) {
     document.getElementById('s-name').innerText = s; 
     document.getElementById('s-name').style.color = "#3498db";
 
-    const aliveCount = players.filter(p => p.isAlive).length;
-    document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS...\nVOTES TRANSMIS : 0 / ${aliveCount}`;
-    
+    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
+    document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS...\nVOTES TRANSMIS : 0 / ${eligibleCount}`;
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
-    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'VOTE_START', g: g, s: s }));
+    
+    // FILTRAGE DES ENVOIS 
+    players.filter(p => p.isAlive).forEach(p => {
+        if (p.isCensored) {
+            p.conn.send({ type: 'CENSORED_ALERT', by: p.censoredBy });
+        } else {
+            p.conn.send({ type: 'VOTE_START', g: g, s: s });
+        }
+    })
 }
