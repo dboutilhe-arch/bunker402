@@ -34,14 +34,6 @@
             font-size: 0.9em;
         }
 
-        #main-ui {
-            display: flex;
-            flex-wrap: wrap; /* Permet aux boutons de passer à la ligne */
-            justify-content: center; /* Centre les boutons sur chaque ligne */
-            gap: 10px; /* L'espace exact (en pixels) que tu veux ENTRE tes boutons */
-            width: 100%;
-        }
-
         /* Boutons standards (Lier, Voter...) */
         .btn { 
             background: #111; 
