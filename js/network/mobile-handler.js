@@ -85,11 +85,6 @@ function handleData(data) {
                 }
             }
             break;
-        case 'REFRESH_INTERFACE':
-            // On demande au serveur de nous renvoyer notre action en cours
-            // Cela va reconstruire les boutons (Gardien, Pouvoirs, etc.) sans le mort
-            conn.send({ type: 'SYNC_REQUEST' }); 
-            break;
 
         case 'YOUR_TURN':
             showGardienUI(data.eligible);
