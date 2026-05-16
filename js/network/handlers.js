@@ -1,8 +1,9 @@
 // js/network/handlers.js 
+import { DECREETS_DATABASE } from '../core/constants.js';
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors } from '../ui/renderer.js';
-import { showGov, resolveVote, applyDecret, restorePlayerAction } from '../game/engine.js';
+import { showGov, resolveVote, applyDecret, restorePlayerAction, handleDiscardFromNet } from '../game/engine.js';
 import { testPlayerBlood, executePlayer, applyCensure } from '../game/powers.js';
 
 export function handlePlayerData(conn, data) {
@@ -139,31 +140,21 @@ function handleVote(data) {
 }
 
 function handleDiscard(data) {
-    state.currentPhase = "LÉGISLATION_S"; // On change la phase
-    state.currentLegislativeCards = data.remaining; // On stocke les 2 cartes restantes
-    
-    document.getElementById('vote-summary').innerText = "DÉCRET REÇU : La Sentinelle choisit le décret final";
-    Logger.add(`LÉGISLATION : Le Gardien ${players[state.curG].name} a défaussé un décret secret.`);
-    Logger.add(`SYSTÈME : Transfert des décrets restants à la Sentinelle.`);
-    
-    // 1. On prévient tout les vivants (y compris la sentinelle) de l'étape
-    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
-  
-    // 2. On envoie les cartes à la Sentinelle après un micro-délai (100ms)
-    // Cela laisse le temps au téléphone de traiter le message précédent
-    setTimeout(() => {
-        if (players[state.curSIdx] && players[state.curSIdx].conn.open) {
-            players[state.curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: state.currentLegislativeCards });
-        }
-    }, 100);
+    handleDiscardFromNet(data.discardedCardId, data.remaining);
 }
 
 function handleFinalChoice(data) {
-    const typeLabel = data.card === 'S' ? "SURVIE" : (data.card === 'C' ? "CRISE" : "SUFFRAGE");
-    Logger.add(`LÉGISLATION : La Sentinelle a promulgué le décret : ${typeLabel}`);
-    
+    const cardId = data.card; // La carte choisie
+    const cardData = DECREETS_DATABASE[cardId];
+    if (!cardData) return;
+    const discardedBySentinelle = state.currentLegislativeCards.find(id => id !== cardId);
+    if (discardedBySentinelle) {
+        state.discard.push(discardedBySentinelle);
+    }
+    const typeLabel = cardData.type === 'S' ? "SURVIE" : (cardData.type === 'C' ? "CRISE" : "SUFFRAGE");
+    Logger.add(`LÉGISLATION : La Sentinelle a promulgué le décret : ${cardData.name.toUpperCase()}`);
     state.isProcessingAction = true;
-    applyDecret(data.card);
+    applyDecret(cardId, cardData.type);
 }
 
 function handleBloodTest(conn, data) {

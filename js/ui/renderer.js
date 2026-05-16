@@ -1,6 +1,6 @@
 import { state, players } from '../core/state.js';
 import { Logger } from './logger.js';
-import { POWER_MAP } from '../core/constants.js'; // <-- AJOUT : On importe la carte des pouvoirs
+import { POWER_MAP, DECREETS_DATABASE } from '../core/constants.js'; // <-- AJOUT : On importe la carte des pouvoirs
 
 // Affichage Composition Partie
 export function displayComposition(roles) {
@@ -95,37 +95,49 @@ export function render() {
     
     // Slots Décrets Survie (Bleu)
     document.getElementById('slots-s').innerHTML = Array(5).fill(0)
-        .map((_, i) => `<div class="slot ${i < state.survie ? 'filled-s' : ''}"></div>`).join('');
+    .map((_, i) => {
+        const cardId = state.slotsSurvieCards[i];
+        const nameLabel = cardId ? `<div style="font-size:0.6em; color:#3498db; font-weight:bold; margin-top:4px;">${DECREETS_DATABASE[cardId].name.toUpperCase()}</div>` : "";
+        return `
+            <div style="display: inline-block; text-align: center; vertical-align: top; margin: 5px;">
+                <div class="slot ${cardId ? 'filled-s' : ''}" style="margin: 0;"></div>
+                ${nameLabel}
+            </div>`;
+    }).join('');
     
     // Slots Décrets Crise avec affichage des Pouvoirs
     const n = players.length;
     const configPouvoirs = POWER_MAP[n] || POWER_MAP['default']; // Récupère la config selon le nombre de joueurs
 
     document.getElementById('slots-c').innerHTML = Array(6).fill(0)
-        .map((_, i) => {
-            const caseNum = i + 1; // Les cases vont de 1 à 6
-            const pouvoirNom = configPouvoirs[caseNum];
-            const estRemplie = caseNum <= state.crise;
-            
-            // Si un pouvoir existe sur cette case (ex: 'CENSURE', 'EXEC'), on prépare un petit badge textuel
-            let badgePouvoir = "";
-            if (pouvoirNom && pouvoirNom !== 'null') {
-                const couleurBadge = "#e74c3c";
-                badgePouvoir = `<div style="font-size: 0.65em; color: ${couleurBadge}; font-weight: bold; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">${pouvoirNom}</div>`;
-            }
+    .map((_, i) => {
+        const caseNum = i + 1;
+        const cardId = state.slotsCriseCards[i];
+        const pouvoirNom = configPouvoirs[caseNum];
+        
+        // Priorité au nom du décret s'il est posé, sinon affiche le pouvoir de la case
+        let labelText = "";
+        if (cardId) {
+            labelText = `<div style="font-size:0.6em; color:#e74c3c; font-weight:bold; margin-top:4px;">${DECREETS_DATABASE[cardId].name.toUpperCase()}</div>`;
+        } else if (pouvoirNom && pouvoirNom !== 'null') {
+            labelText = `<div style="font-size: 0.65em; color: #e74c3c; font-weight: bold; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">${pouvoirNom}</div>`;
+        }
 
-            // On englobe le slot et son texte dans un conteneur inline-block pour que le texte reste bien aligné sous sa case
-            return `
-                <div style="display: inline-block; text-align: center; vertical-align: top; margin: 5px;">
-                    <div class="slot ${estRemplie ? 'filled-c' : ''}" style="margin: 0;"></div>
-                    ${badgePouvoir}
-                </div>
-            `;
-        }).join('');
+        return `
+            <div style="display: inline-block; text-align: center; vertical-align: top; margin: 5px;">
+                <div class="slot ${cardId ? 'filled-c' : ''}" style="margin: 0;"></div>
+                ${labelText}
+            </div>`;
+    }).join('');
     
     // Slots Ordre du jour (Gris)
-    document.getElementById('slots-f').innerHTML = 
-        `<div class="slot ${state.suffrage !== "Aucun" ? 'filled-f' : ''}"></div>`;
+    const cardIdF = state.slotsSuffrageCard;
+    const nameLabelF = cardIdF ? `<div style="font-size:0.6em; color:#7f8c8d; font-weight:bold; margin-top:4px;">${DECREETS_DATABASE[cardIdF].name.toUpperCase()}</div>` : "";
+    document.getElementById('slots-f').innerHTML = `
+        <div style="display: inline-block; text-align: center; vertical-align: top; margin: 5px;">
+            <div class="slot ${cardIdF ? 'filled-f' : ''}" style="margin: 0;"></div>
+            ${nameLabelF}
+        </div>`;
 }
 
 /**

@@ -4,6 +4,33 @@ const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:1
 let conn, myName, currentHand = [], allPlayers = [];
 let hasUsedPower = false;
 let serverState = {};
+const DECREETS_DB_LOCAL = {
+    'test_sanguin': { name: "Test Sanguin", type: "S", symbol: "⚡", desc: "Le Gardien actuel vérifie secrètement la carte de Test Sanguin d'un joueur." },
+    'reorganisation': { name: "Réorganisation", type: "S", symbol: "⚡", desc: "Le Gardien force 2 joueurs à échanger leur carte Test Sanguin (y compris lui-même)." },
+    'commission': { name: "Commission", type: "S", symbol: "⚡", desc: "La Sentinelle regarde la défausse de la partie pour voir ce qui a été jeté." },
+    'purge': { name: "Purge des Systèmes", type: "S", symbol: "⚡", desc: "Le Gardien défausse la carte Décret de son choix sur le plateau des Directives de Crise." },
+    'presse': { name: "Liberté de la Presse", type: "S", symbol: "♾️", desc: "Le Gardien doit montrer la carte qu'il défausse avant de donner les 2 autres à la Sentinelle." },
+    'rebellion': { name: "Rébellion", type: "S", symbol: "♾️", desc: "L'Alpha ne peut pas gagner par élection. S'annule dès qu'un Décret de Crise est voté." },
+    'transparence': { name: "Transparence", type: "S", symbol: "♾️", desc: "La Sentinelle doit annoncer à haute voix les deux cartes reçues." },
+    'contre_pouvoir': { name: "Contre-Pouvoir", type: "S", symbol: "♾️", desc: "C’est la Sentinelle qui pioche les 3 cartes, en défausse une, et donne les 2 au Gardien." },
+    'fuite_air_s': { name: "Fuite d'Air", type: "S", symbol: "♾️", desc: "L'Oxygène est à -1 par défaut et est bridé au Niveau 2 au maximum." },
+    'censure': { name: "Censure", type: "C", symbol: "⚡", desc: "Le Gardien désigne un joueur qui ne pourra pas voter au prochain tour." },
+    'loi_493': { name: "49.3", type: "C", symbol: "⚡", desc: "Le prochain Gardien choisit le décret parmi les 2 restants après les avoir montrés." },
+    'reelection': { name: "Réélection", type: "C", symbol: "⚡", desc: "Le binôme Gardien/Sentinelle actuel reste en place pour un tour supplémentaire." },
+    'sabotage': { name: "Sabotage", type: "C", symbol: "⚡", desc: "Réduire le Niveau d'Oxygène de 1." },
+    'coup_etat': { name: "Coup d'État", type: "C", symbol: "⚡", desc: "Le Gardien choisit le prochain Gardien. Le prochain tour sera extraordinaire." },
+    'court_circuit': { name: "Court-Circuit", type: "C", symbol: "⚡", desc: "Défaussez la carte de Suffrage active. Si aucune active, réduire l'Oxygène de 1." },
+    'licenciement': { name: "Licenciement", type: "C", symbol: "⚡", desc: "Le Gardien cible un joueur qui ne pourra plus utiliser son pouvoir de carte Métier." },
+    'silence': { name: "Code de Silence", type: "C", symbol: "♾️", desc: "Le Gardien interdit un mot. Si un joueur le prononce, il perd son vote au tour suivant." },
+    'prophete': { name: "Prophète", type: "C", symbol: "♾️", desc: "Le Gardien devient Prophète. Il gère la pioche de 4 cartes mais ne vote plus." },
+    'talion': { name: "Loi du Talion", type: "C", symbol: "♾️", desc: "Si un vote échoue, le joueur qui devait être Gardien est privé de vote au tour suivant." },
+    'fuite_air_c': { name: "Fuite d'Air", type: "C", symbol: "♾️", desc: "L'Oxygène est à -1 par défaut et est bridé au Niveau 2." },
+    'secret_etat': { name: "Secret d’État", type: "C", symbol: "♾️", desc: "Tous les pouvoirs de type 'Regarder la pioche' ou 'Regarder la défausse' sont annulés." },
+    'conseil_restreint': { name: "Conseil Restreint", type: "F", symbol: "🗳️", desc: "Les votes du Gardien et de la Sentinelle comptent double." },
+    'greve_zele': { name: "Grève du Zèle", type: "F", symbol: "🗳️", desc: "Les votes NON comptent double." },
+    'appel_nominal': { name: "Appel Nominal", type: "F", symbol: "🗳️", desc: "Les joueurs votent l'un après l'autre dans le sens horaire." },
+    'piston': { name: "Piston", type: "F", symbol: "🗳️", desc: "Le Gardien choisit une caractéristique sociale dont le vote compte double." }
+};
 
 // --- INITIALISATION AU CHARGEMENT ---
 
@@ -324,28 +351,53 @@ function sendVote(v) {
     conn.send({ type: 'VOTE_DONE', choice: v, playerName: myName });
 }
 
+
 function showLegislativeUI(role, cards) {
     const ui = document.getElementById('main-ui');
-    currentHand = cards;
-    ui.innerHTML = `<h3>LÉGISLATION : ${role}</h3>`;
-    ui.innerHTML += `<p>${role === 'GARDIEN' ? 'DÉFAUSSEZ UN DÉCRET' : 'APPLIQUER UN DÉCRET'}</p>`;
+    currentHand = cards; // Contient maintenant les IDs de cartes
     
-    cards.forEach((c, i) => {
-        const btn = document.createElement('button');
-        const label = c === 'S' ? 'SURVIE' : (c === 'C' ? 'CRISE' : 'SUFFRAGE');
-        btn.className = `card ${c}`;
-        btn.innerText = label;
-        btn.onclick = () => {
+    ui.innerHTML = `<h3>LÉGISLATION : ${role}</h3>`;
+    ui.innerHTML += `<p style="font-size:0.85em; color:#888;">${role === 'GARDIEN' ? 'SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER' : 'SÉLECTIONNEZ LE DÉCRET À PROMULGUER'}</p>`;
+    
+    // Conteneur Flex pour aligner nos belles cartes de jeu de société
+    const cardContainer = document.createElement('div');
+    cardContainer.className = "legislative-container";
+    
+    cards.forEach((cardId, i) => {
+        const data = DECREETS_DB_LOCAL[cardId];
+        if (!data) return;
+
+        const cardElement = document.createElement('div');
+        cardElement.className = `decree-card card-type-${data.type}`;
+        
+        let typeText = data.type === 'S' ? "SURVIE" : (data.type === 'C' ? "CRISE" : "SUFFRAGE");
+
+        cardElement.innerHTML = `
+            <div class="card-header card-header-${data.type}">
+                <span>${typeText}</span>
+                <span>${data.symbol}</span>
+            </div>
+            <div class="card-title">${data.name}</div>
+            <div class="card-desc">${data.desc}</div>
+        `;
+        
+        cardElement.onclick = () => {
             if (role === 'GARDIEN') {
-                let remaining = [...currentHand]; remaining.splice(i, 1);
-                conn.send({ type: 'DISCARD_DONE', remaining: remaining });
+                if (!confirm(`Défausser définitivement la carte : ${data.name} ?`)) return;
+                let remaining = [...currentHand]; 
+                remaining.splice(i, 1); // Retire la carte cliquée
+                conn.send({ type: 'DISCARD_DONE', discardedCardId: cardId, remaining: remaining });
             } else {
-                conn.send({ type: 'FINAL_CHOICE', card: c });
+                if (!confirm(`Promulguer et appliquer le décret : ${data.name} ?`)) return;
+                conn.send({ type: 'FINAL_CHOICE', card: cardId });
             }
-            ui.innerHTML = "Traitement...";
+            ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
         };
-        ui.appendChild(btn);
+        
+        cardContainer.appendChild(cardElement);
     });
+    
+    ui.appendChild(cardContainer);
 }
 
 
