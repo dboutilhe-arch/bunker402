@@ -216,24 +216,33 @@ export function resetVoteColors() {
  */
 export function updatePlayerStatusUI(player, reveal) {
     const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
-    const color = reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+    const isInfected = reveal === "INFECTÉ";
+    
+    // Définition de couleurs ultra-flashs (Néon) pour le statut
+    const colorStatus = isInfected ? "#ff3333" : "#00ff66";
     
     tags.forEach(tag => {
-        // On supprime les classes de vote qui bloquent le fond
         tag.classList.remove('voted-oui', 'voted-non');
         
-        // On applique les styles de mort
-        tag.style.opacity = "0.4";
-        tag.style.filter = "grayscale(100%)";
-        tag.style.textDecoration = "line-through";
-        
-        // On s'assure que le background ne force plus une couleur opaque
-        tag.style.background = "#1a1a1a"; 
+        // On change le fond pour un noir profond "hors-service"
+        tag.style.background = "#050505"; 
+        tag.style.borderColor = isInfected ? "#e74c3c" : "#2ecc71"; // La bordure prend discrètement la couleur
+        tag.style.borderWidth = "1px";
 
+        // On applique le gris/barré UNIQUEMENT sur le nom du joueur pour qu'il ait l'air mort
+        const nameDiv = tag.querySelector('.p-name');
+        if (nameDiv) {
+            nameDiv.style.opacity = "0.3";
+            nameDiv.style.filter = "grayscale(100%)";
+            nameDiv.style.textDecoration = "line-through";
+        }
+
+        // Le job div reste à 100% d'opacité et sans filtre pour flasher l'analyse bio !
         const jobDiv = tag.querySelector('.p-job');
         if (jobDiv) {
-            // style="display: block;" s'assure que le texte se place bien en dessous sans être écrasé
-            jobDiv.innerHTML = `<span style="color: ${color}; text-decoration: none; display: block; margin-top: 4px; font-weight: bold;">● DÉCÉDÉ (${reveal})</span>`;
+            jobDiv.style.opacity = "1";
+            jobDiv.style.filter = "none";
+            jobDiv.innerHTML = `<span style="color: ${colorStatus}; display: block; margin-top: 4px; font-weight: bold; font-size: 0.9em; letter-spacing: 0.5px;">☠️ ${reveal}</span>`;
         }
     });
 }
