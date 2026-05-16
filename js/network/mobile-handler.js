@@ -328,22 +328,28 @@ if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
     }
  
     listToUse.forEach(name => {
-        if (name.toLowerCase() !== myName.toLowerCase()) {
-            const btn = document.createElement('button');
-            btn.className = "btn";
-            btn.innerText = name.toUpperCase();
-            btn.onclick = () => {
-                if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
-                if (!isForced) {
-                    hasUsedPower = true;
-                    document.getElementById('job-ui').style.opacity = "0.3";
+            if (name.toLowerCase() !== myName.toLowerCase()) {
+                
+                // Si c'est une demande de Censure, on cache les cibles déjà censurées
+                if (actionType === 'REQUEST_CENSURE' && serverState.censoredNames && serverState.censoredNames.includes(name)) {
+                    return; // On passe au joueur suivant sans créer de bouton
                 }
-                conn.send({ type: actionType, targetName: name, isForced: isForced });
-                ui.innerHTML = "Traitement...";
-            };
-            ui.appendChild(btn);
-        }
-    });
+    
+                const btn = document.createElement('button');
+                btn.className = "btn";
+                btn.innerText = name.toUpperCase();
+                btn.onclick = () => {
+                    if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
+                    if (!isForced) {
+                        hasUsedPower = true;
+                        document.getElementById('job-ui').style.opacity = "0.3";
+                    }
+                    conn.send({ type: actionType, targetName: name, isForced: isForced });
+                    ui.innerHTML = "Traitement...";
+                };
+                ui.appendChild(btn);
+            }
+        });
 
     if (!isForced) {
         const btnCancel = document.createElement('button');
