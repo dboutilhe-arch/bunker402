@@ -327,6 +327,14 @@ if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
     if (listToUse.length === 0) {
         ui.innerHTML += "<p>Aucune cible éligible détectée.</p>";
     }
+
+    if (!isForced) {
+       const btnCancel = document.createElement('button');
+       btnCancel.className = "btn";
+       btnCancel.innerText = "ANNULER";
+       btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
+       ui.appendChild(btnCancel);
+   }
  
     listToUse.forEach(name => {
             if (name.toLowerCase() !== myName.toLowerCase()) {
@@ -352,13 +360,7 @@ if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
             }
         });
 
-        if (!isForced) {
-            const btnCancel = document.createElement('button');
-            btnCancel.className = "btn";
-            btnCancel.innerText = "ANNULER";
-            btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
-            ui.appendChild(btnCancel);
-        }
+
 }
 
 function showBloodResult(data) {
