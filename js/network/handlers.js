@@ -144,11 +144,15 @@ function handleDiscard(data) {
 }
 
 function handleFinalChoice(data) {
-    const cardId = data.card;
+    const cardId = data.card; // La carte choisie
     const cardData = DECREETS_DATABASE[cardId];
     if (!cardData) return;
+    const discardedBySentinelle = state.currentLegislativeCards.find(id => id !== cardId);
+    if (discardedBySentinelle) {
+        state.discard.push(discardedBySentinelle);
+    }
     const typeLabel = cardData.type === 'S' ? "SURVIE" : (cardData.type === 'C' ? "CRISE" : "SUFFRAGE");
-    Logger.add(`LÉGISLATION : La Sentinelle a promulgué le décret : ${cardData.name.toUpperCase()} (${typeLabel})`);
+    Logger.add(`LÉGISLATION : La Sentinelle a promulgué le décret : ${cardData.name.toUpperCase()}`);
     state.isProcessingAction = true;
     applyDecret(cardId, cardData.type);
 }
