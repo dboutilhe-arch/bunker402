@@ -348,7 +348,7 @@ function openTargetSelector(actionType, title, isForced = false) {
             }
         
             const btn = document.createElement('button');
-            btn.className = "btn-power";
+            btn.className = "btn-target";
             btn.innerText = name.toUpperCase();
             btn.onclick = () => {
                 if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
