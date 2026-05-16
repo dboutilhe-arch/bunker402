@@ -18,14 +18,29 @@
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
         /* Mise en page des Plateaux */
-        .main-layout { display: flex; justify-content: space-around; align-items: flex-start; }
+        .main-layout { 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: stretch; /* Force tous les enfants directs à étirer leur hauteur uniformément */
+            margin-bottom: 30px; 
+        }
+
+        /* --- CONFIGURATION DES PLATEAUX --- */
         .board { 
             background: #2d2d2d; 
             padding: 15px; 
             border-radius: 10px; 
-            width: 30%; 
             border: 1px solid #555; 
-            min-height: 140px; /* Stabilise la hauteur du tableau quand le texte apparaît */
+            min-height: 140px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+        }
+        /* Gestion des titres de plateaux pour éviter les décalages */
+        .board h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
         }
         /* Les plateaux Survie et Crise prennent plus de place (40% chacun) */
         .main-layout .board:first-child,
