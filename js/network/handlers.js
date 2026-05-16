@@ -34,8 +34,12 @@ export function handlePlayerData(conn, data) {
             break;
             
         case 'REQUEST_EXECUTION':
-        handleExecution(conn, data);
-        break;
+            handleExecution(conn, data);
+            break;
+
+        case 'REQUEST_CENSURE':
+            handleCensure(conn, data);
+            break;
 
         case 'SYNC_REQUEST':
             handleSyncRequest(conn);
@@ -192,6 +196,23 @@ function handleExecution(conn, data) {
         if (!requester.jobPowerUsed) {
             requester.jobPowerUsed = true;
             executePlayer(requester, data.targetName);
+        }
+    }
+}
+
+function handleCensure(conn, data) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive) return;
+
+    if (data.isForced) {
+        if (!requester.casePowerUsed) {
+            requester.casePowerUsed = true;
+            applyCensure(requester, data.targetName);
+        }
+    } else {
+        if (!requester.jobPowerUsed) {
+            requester.jobPowerUsed = true;
+            applyCensure(requester, data.targetName);
         }
     }
 }
