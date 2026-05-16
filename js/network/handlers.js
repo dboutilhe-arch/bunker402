@@ -139,8 +139,6 @@ function handleVote(data) {
 }
 
 function handleDiscard(data) {
-    // data.discardedCardId doit être envoyé par le mobile, et data.remaining contient les 2 autres cartes
-    import { handleDiscardFromNet } from '../game/engine.js';
     handleDiscardFromNet(data.discardedCardId, data.remaining);
 }
 
