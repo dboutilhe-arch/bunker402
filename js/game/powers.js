@@ -137,7 +137,7 @@ export function applyCensure(requester, targetName) {
         }
     }
 
-    updatePlayerStatusUI(target); // On réutilise cette fonction ou on en crée une pour le badge 🤐
+    updateCensureUI(target);
     syncTerminals();
 
     if (state.currentPowerActive) {
