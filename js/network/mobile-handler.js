@@ -25,7 +25,20 @@ function connect(isReconnect = false) {
     let nameInput = isReconnect ? sessionStorage.getItem('bunker_name') : document.getElementById('p-name').value.trim();
     let codeInput = isReconnect ? sessionStorage.getItem('bunker_code') : document.getElementById('r-code').value.trim();
 
-    if (!nameInput || nameInput.length < 2 || !codeInput) return;
+    if (!nameInput || !codeInput) return;
+
+    // --- SÉCURITÉ : Expression régulière pour n'autoriser que A-Z, 0-9, _ et -
+    const validPattern = /^[a-zA-Z0-9\-_]+$/;
+    
+    if (!validPattern.test(nameInput)) {
+        alert("Pseudo invalide ! Uniquement des lettres, chiffres, '-' ou '_'. No d'espaces.");
+        return;
+    }
+
+    if (nameInput.length < 2) {
+        alert("Le pseudo doit contenir au moins 2 caractères.");
+        return;
+    }
 
     myName = nameInput;
     conn = peer.connect(codeInput);
