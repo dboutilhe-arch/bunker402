@@ -50,27 +50,23 @@ export function resetGameState() {
     state.lastSentinelle = null;
     state.lastGardien = null;
     state.censoredPlayer = null;
-    
     state.deck = [];
-    state.curG = 0;
-    state.curSIdx = -1;
-    
+    state.discard = [];
+    state.slotsSurvieCards = [];
+    state.slotsCriseCards = [];
+    state.slotsSuffrageCard = null;
     state.votes = { oui: 0, non: 0, total: 0, list: [] };
-    
     state.isProcessingAction = false;
     state.currentPhase = "DÉSIGNATION";
     state.currentProposedS = null;
     state.currentLegislativeCards = [];
     state.currentPowerActive = false;
-    state.jobPowerUsed = false;
-    state.casePowerUsed = false;
     
-    // Reset des pouvoirs joueurs sans vider la liste
     players.forEach(p => {
-        p.jobPowerUsed = false;  // Pouvoir de Métier
-        p.casePowerUsed = false; // Pouvoir de Case
-        p.isAlive = true;        // Vivant ?
-        p.isCensored = false;    // Reset de la censure
-        p.censoredBy = "";       // Reset de l'auteur
+        p.jobPowerUsed = false;  
+        p.casePowerUsed = false; 
+        p.isAlive = true;        
+        p.isCensored = false;    
+        p.censoredBy = "";       
     });
 }
