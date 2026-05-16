@@ -2,7 +2,7 @@
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors } from '../ui/renderer.js';
-import { showGov, resolveVote, applyDecret, restorePlayerAction } from '../game/engine.js';
+import { showGov, resolveVote, applyDecret, restorePlayerAction, handleDiscardFromNet } from '../game/engine.js';
 import { testPlayerBlood, executePlayer, applyCensure } from '../game/powers.js';
 
 export function handlePlayerData(conn, data) {
@@ -139,23 +139,9 @@ function handleVote(data) {
 }
 
 function handleDiscard(data) {
-    state.currentPhase = "LÉGISLATION_S"; // On change la phase
-    state.currentLegislativeCards = data.remaining; // On stocke les 2 cartes restantes
-    
-    document.getElementById('vote-summary').innerText = "DÉCRET REÇU : La Sentinelle choisit le décret final";
-    Logger.add(`LÉGISLATION : Le Gardien ${players[state.curG].name} a défaussé un décret secret.`);
-    Logger.add(`SYSTÈME : Transfert des décrets restants à la Sentinelle.`);
-    
-    // 1. On prévient tout les vivants (y compris la sentinelle) de l'étape
-    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
-  
-    // 2. On envoie les cartes à la Sentinelle après un micro-délai (100ms)
-    // Cela laisse le temps au téléphone de traiter le message précédent
-    setTimeout(() => {
-        if (players[state.curSIdx] && players[state.curSIdx].conn.open) {
-            players[state.curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: state.currentLegislativeCards });
-        }
-    }, 100);
+    // data.discardedCardId doit être envoyé par le mobile, et data.remaining contient les 2 autres cartes
+    import { handleDiscardFromNet } from '../game/engine.js';
+    handleDiscardFromNet(data.discardedCardId, data.remaining);
 }
 
 function handleFinalChoice(data) {
