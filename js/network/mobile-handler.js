@@ -346,6 +346,7 @@ if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
     
                 const btn = document.createElement('button');
                 btn.className = "btn";
+                btn.style.color = '#ff00ff'
                 btn.innerText = name.toUpperCase();
                 btn.onclick = () => {
                     if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
