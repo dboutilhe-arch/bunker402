@@ -391,14 +391,20 @@ function openTargetSelector(actionType, title, isForced = false) {
 }
 
 function showBloodResult(data) {
-    const color = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
+    // 1. On détermine la couleur du cadre de l'alerte (Vert si Sain, Rouge si Infecté)
+    const cardColor = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
+    
+    // 2. On détermine la couleur spécifique pour le texte du statut
+    const statusColor = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
+
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid ${color}; padding: 15px; border-radius: 10px;">
-            <h3 style="color: ${color}">RÉSULTAT D'ANALYSE</h3>
-            <p>Sujet : <b>${data.target}</b></p>
-            <p>Statut : <b>${data.result}</b></p>
-            <button class="btn" id="btn-ok">OK</button>
+        <div style="border: 2px solid ${cardColor}; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: ${cardColor}; margin-top: 0; letter-spacing: 1px;">RÉSULTAT D'ANALYSE</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Sujet : <b>${data.target.toUpperCase()}</b></p>
+            <p style="color: #e0e0e0; margin: 10px 0;">Statut : <b style="color: ${statusColor}; font-size: 1.2em; letter-spacing: 1px;">${data.result}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%;">OK</button>
         </div>`;
+        
     document.getElementById('btn-ok').onclick = () => conn.send({ type: 'SYNC_REQUEST' });
 }
 
