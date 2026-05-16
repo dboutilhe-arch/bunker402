@@ -95,11 +95,25 @@ function handleData(data) {
             break;
 
         case 'WAIT_SENTINELLE':
-            ui.innerHTML = `<h3>FORMATION DU CONSEIL</h3><p>Le Gardien <b>${data.gardienName}</b> choisit sa Sentinelle...</p>`;
+            ui.innerHTML = `
+                <div style="margin-top: 40px;">
+                    <h2 style="color: #f1c40f; text-transform: uppercase;">FORMATION DU CONSEIL</h2>
+                    <p style="color: #e0e0e0;">Le Gardien <b>${data.gardienName}</b> choisit sa Sentinelle...</p>
+                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite;"></div>
+                    <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[ANALYSE DES ACCÈS RÉSEAU EN COURS]</p>
+                </div>
+            `;
             break;
 
         case 'WAIT_LEGISLATION':
-            ui.innerHTML = `<h3>LÉGISLATION</h3><p>Le Conseil est en session (${data.step})...</p>`;
+            ui.innerHTML = `
+                <div style="margin-top: 40px;">
+                    <h2 style="color: #3498db; text-transform: uppercase;">SESSION LÉGISLATIVE</h2>
+                    <p style="color: #e0e0e0;">Le Conseil applique les protocoles secrets (Aiguillage : <b>${data.step}</b>)...</p>
+                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #3498db; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.5s linear infinite;"></div>
+                    <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[CHIFFREMENT DES DÉCRETS DE SÉCURITÉ]</p>
+                </div>
+            `;
             break;
 
         case 'GARDIEN_PICK':
@@ -151,7 +165,14 @@ function handleData(data) {
             break;
 
         case 'CLEAN_UI':
-            ui.innerHTML = "En attente...";
+            ui.innerHTML = `
+                <div style="margin-top: 40px;">
+                    <h2 style="color: #2ecc71; text-transform: uppercase;">TRANSMISSION REÇUE</h2>
+                    <p style="color: #e0e0e0;">Votre vote a été enregistré par la console centrale.</p>
+                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite;"></div>
+                    <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[SYNCHRONISATION TERMINAL EN ATTENTE DU SCRUTIN]</p>
+                </div>
+            `;
             break;
       
         case 'REFRESH_INTERFACE':
