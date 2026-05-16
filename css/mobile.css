@@ -37,6 +37,18 @@
         /* Boutons standards (Lier, Voter, Choisir Joueur) */
         .btn { background: #111; border: 1px solid #2ecc71; color: #2ecc71; padding: 15px; width: 100%; margin: 8px 0; border-radius: 8px; font-weight: bold; }
 
+        .btn-power {
+            background: #111 !important;
+            border: 2px solid #ff00ff !important;
+            color: #ff00ff !important;
+            padding: 15px;
+            width: 100%;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
         /* Boutons de cartes (Décrets) : plus larges et colorés selon le type */
         .card { display: block; padding: 20px; margin: 10px auto; width: 90%; border-radius: 10px; font-weight: bold; color: white; border: none; font-size: 1.1em; }
         .S { background: #3498db; } /* Carte Bleue */
