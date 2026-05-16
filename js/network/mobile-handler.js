@@ -85,11 +85,6 @@ function handleData(data) {
                 }
             }
             break;
-        case 'REFRESH_INTERFACE':
-            // On demande au serveur de nous renvoyer notre action en cours
-            // Cela va reconstruire les boutons (Gardien, Pouvoirs, etc.) sans le mort
-            conn.send({ type: 'SYNC_REQUEST' }); 
-            break;
 
         case 'YOUR_TURN':
             showGardienUI(data.eligible);
@@ -118,6 +113,7 @@ function handleData(data) {
         case 'BLOOD_TEST_RESULT':
             showBloodResult(data);
             break;
+      
       case 'YOU_ARE_DEAD':
             const uiDead = document.getElementById('main-ui');
             const colReveal = data.reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
@@ -127,6 +123,16 @@ function handleData(data) {
                 <p style="opacity: 0.6;">Vous ne pouvez plus voter ni participer.</p>
             `;
             document.getElementById('job-ui').innerHTML = "";
+            break;
+      
+      case 'CENSORED_ALERT':
+            ui.innerHTML = `
+                <div style="border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; background: rgba(231, 76, 60, 0.1);">
+                    <h2 style="color: #e74c3c;">🤐 CENSURE ACTIVÉE</h2>
+                    <p>Le joueur <b>${data.by}</b> a suspendu vos droits de vote pour ce scrutin.</p>
+                    <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">Attendez la fin du tour...</p>
+                </div>
+            `;
             break;
 
         case 'FORCE_POWER_SELECT':
@@ -221,6 +227,17 @@ function setupIdentity(data) {
        btn.onclick = () => openTargetSelector('REQUEST_EXECUTION', 'PROTOCOLE D\'ÉLIMINATION');
        jobUi.appendChild(btn);
    }
+   if (data.metier === 'Intendant') {
+          const btn = document.createElement('button');
+          btn.id = "btn-power";
+          btn.className = "btn";
+          btn.style.background = "#f1c40f"; // Jaune / Alerte
+          btn.style.color = "black";
+          btn.innerText = "VERROUILLER UN TERMINAL (CENSURE)";
+          if (hasUsedPower) jobUi.style.opacity = "0.3";
+          btn.onclick = () => openTargetSelector('REQUEST_CENSURE', 'PROTOCOLE DE CENSURE');
+          jobUi.appendChild(btn);
+      }
 }
 
 
@@ -317,22 +334,28 @@ if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
     }
  
     listToUse.forEach(name => {
-        if (name.toLowerCase() !== myName.toLowerCase()) {
-            const btn = document.createElement('button');
-            btn.className = "btn";
-            btn.innerText = name.toUpperCase();
-            btn.onclick = () => {
-                if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
-                if (!isForced) {
-                    hasUsedPower = true;
-                    document.getElementById('job-ui').style.opacity = "0.3";
+            if (name.toLowerCase() !== myName.toLowerCase()) {
+                
+                // Si c'est une demande de Censure, on cache les cibles déjà censurées
+                if (actionType === 'REQUEST_CENSURE' && serverState.censoredNames && serverState.censoredNames.includes(name)) {
+                    return; // On passe au joueur suivant sans créer de bouton
                 }
-                conn.send({ type: actionType, targetName: name, isForced: isForced });
-                ui.innerHTML = "Traitement...";
-            };
-            ui.appendChild(btn);
-        }
-    });
+    
+                const btn = document.createElement('button');
+                btn.className = "btn";
+                btn.innerText = name.toUpperCase();
+                btn.onclick = () => {
+                    if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
+                    if (!isForced) {
+                        hasUsedPower = true;
+                        document.getElementById('job-ui').style.opacity = "0.3";
+                    }
+                    conn.send({ type: actionType, targetName: name, isForced: isForced });
+                    ui.innerHTML = "Traitement...";
+                };
+                ui.appendChild(btn);
+            }
+        });
 
     if (!isForced) {
         const btnCancel = document.createElement('button');

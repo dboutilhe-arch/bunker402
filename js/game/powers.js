@@ -2,7 +2,7 @@ import { state, players } from '../core/state.js';
 import { nextTurn, resolveVote } from './engine.js';
 import { Logger } from '../ui/logger.js';
 import { POWER_MAP } from '../core/constants.js';
-import { syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals } from '../ui/renderer.js';
+import { syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals, updateCensureUI } from '../ui/renderer.js';
 
 /**
  * Analyse biologique d'un joueur (Pouvoir du Docteur ou Case de Crise)
@@ -107,8 +107,73 @@ export function executePlayer(requester, targetName) {
 }
 
 /**
+ * Censure (Pouvoir du Décret Censure ou Case de Crise)
+ */
+export function applyCensure(requester, targetName) {
+    const target = players.find(p => p.name === targetName);
+    if (!target || !target.isAlive || target.isCensored) return;
+
+    target.isCensored = true;
+    target.censoredBy = requester.name;
+
+    Logger.add(`🚫 CENSURE : ${requester.name} a réduit ${targetName} au silence.`);
+
+    // Si un vote est en cours, on agit immédiatement sur le scrutin
+    if (state.currentPhase === "VOTE") {
+        const voteIdx = state.votes.list.findIndex(v => v.name.toLowerCase() === targetName.toLowerCase());
+        if (voteIdx !== -1) {
+            const oldVote = state.votes.list[voteIdx];
+            state.votes[oldVote.choice.toLowerCase()]--;
+            state.votes.total--;
+            state.votes.list.splice(voteIdx, 1);
+            Logger.add(`SYSTÈME : Le vote de ${targetName} a été retiré du scrutin.`);
+        }
+        
+        // On envoie l'écran de censure au mobile ciblé immédiatement
+        target.conn.send({ type: 'CENSORED_ALERT', by: requester.name });
+        
+        // --- SÉCURITÉ ANTI-BLOCAGE ---
+        // On compte combien de joueurs éligibles doivent ENCORE voter physiquement
+        const votesAttendusRestants = players.filter(p => 
+            p.isAlive && 
+            !p.isCensored && 
+            !state.votes.list.some(v => v.name.toLowerCase() === p.name.toLowerCase())
+        ).length;
+    
+        // Si plus personne ne peut ou ne doit voter, on clôture le scrutin immédiatement !
+        if (votesAttendusRestants === 0) {
+            Logger.add("SYSTÈME : Plus aucun vote n'est attendu. Clôture automatique du scrutin.");
+            resolveVote();
+        } else {
+            // Sinon, on met juste à jour le compteur sur l'écran PC avec le nouveau total
+            const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
+            document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${eligibleCount}`;
+        }
+    }
+
+    updateCensureUI(target);
+    syncTerminals();
+
+    if (state.currentPowerActive) {
+        state.currentPowerActive = false;
+        setTimeout(() => {
+            state.curG = (state.curG + 1) % players.length;
+            state.isProcessingAction = false;
+            nextTurn();
+        }, 2000);
+    } else {
+        // Si c'est l'Intendant qui a joué de lui-même
+        // On lui demande de rafraîchir son interface pour récupérer son vote en cours
+        setTimeout(() => {
+            if (requester.conn && requester.conn.open) {
+                requester.conn.send({ type: 'REFRESH_INTERFACE' });
+            }
+        }, 100);
+    }
+}
+
+/**
  * Vérification des pouvoirs lors de l'atteinte d'une case de crise
- * (A déplacer ici si ce n'est pas déjà fait)
  */
 export function checkCasePower(caseNumber) {
     const n = players.length;

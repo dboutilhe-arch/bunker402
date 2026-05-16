@@ -59,6 +59,8 @@ export function createPlayerTag(name) {
 export function syncTerminals() {
     // On injecte la liste des noms vivants juste avant l'envoi
     state.aliveNames = players.filter(p => p.isAlive).map(p => p.name);
+    // On injecte aussi les noms des censurés
+    state.censoredNames = players.filter(p => p.isCensored).map(p => p.name);
     
     players.forEach(p => {
         if (p.conn && p.conn.open) {
@@ -191,6 +193,8 @@ export function resetVoteColors() {
         const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
         tags.forEach(tag => {
             tag.classList.remove('voted-oui', 'voted-non');
+            const cTag = tag.querySelector('.censure-tag');
+            if (cTag) cTag.remove();
         });
     });
 }
@@ -209,6 +213,17 @@ export function updatePlayerStatusUI(player, reveal) {
         const jobDiv = tag.querySelector('.p-job');
         if (jobDiv) {
             jobDiv.innerHTML = `<span style="color: ${color}; text-decoration: none;">● DÉCÉDÉ (${reveal})</span>`;
+        }
+    });
+}
+
+// Pour ajouter le badge 🤐 sans effacer le reste
+export function updateCensureUI(player) {
+    const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
+    tags.forEach(tag => {
+        const jobDiv = tag.querySelector('.p-job');
+        if (jobDiv && !jobDiv.innerHTML.includes("🤐")) {
+            jobDiv.innerHTML += ` <span class="censure-tag" style="color:#e74c3c; font-weight:bold;">🤐</span>`;
         }
     });
 }
