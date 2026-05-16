@@ -205,12 +205,11 @@ function setupIdentity(data) {
     // Bouton de métier
     jobUi.innerHTML = "";
     jobUi.style.opacity = "1"; //On s'assure que c'est visible par défaut
+ 
     if (data.metier === 'Docteur') {
         const btn = document.createElement('button');
         btn.id = "btn-power";
-        btn.className = "btn";
-        btn.style.background = "#2ecc71";
-        btn.style.color = "black";
+        btn.className = "btn-power";
         btn.innerText = "TEST SANGUIN";
         if (hasUsedPower) jobUi.style.opacity = "0.3";
         btn.onclick = () => openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE');
@@ -219,9 +218,7 @@ function setupIdentity(data) {
     if (data.metier === 'Militaire') {
        const btn = document.createElement('button');
        btn.id = "btn-power";
-       btn.className = "btn";
-       btn.style.background = "#e74c3c";
-       btn.style.color = "white";
+       btn.className = "btn-power";
        btn.innerText = "EXÉCUTER UN INDIVIDU";
        if (hasUsedPower) jobUi.style.opacity = "0.3";
        btn.onclick = () => openTargetSelector('REQUEST_EXECUTION', 'PROTOCOLE D\'ÉLIMINATION');
@@ -230,9 +227,7 @@ function setupIdentity(data) {
    if (data.metier === 'Intendant') {
           const btn = document.createElement('button');
           btn.id = "btn-power";
-          btn.className = "btn";
-          btn.style.background = "#f1c40f"; // Jaune / Alerte
-          btn.style.color = "black";
+          btn.className = "btn-power";
           btn.innerText = "VERROUILLER UN TERMINAL (CENSURE)";
           if (hasUsedPower) jobUi.style.opacity = "0.3";
           btn.onclick = () => openTargetSelector('REQUEST_CENSURE', 'PROTOCOLE DE CENSURE');
@@ -357,12 +352,13 @@ if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
             }
         });
 
-    if (!isForced) {
-        const btnCancel = document.createElement('button');
-        btnCancel.className = "btn"; btnCancel.style.color = "#e74c3c"; btnCancel.innerText = "ANNULER";
-        btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
-        ui.appendChild(btnCancel);
-    }
+        if (!isForced) {
+            const btnCancel = document.createElement('button');
+            btnCancel.className = "btn";
+            btnCancel.innerText = "ANNULER";
+            btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
+            ui.appendChild(btnCancel);
+        }
 }
 
 function showBloodResult(data) {
