@@ -330,8 +330,7 @@ if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
 
     if (!isForced) {
        const btnCancel = document.createElement('button');
-       btnCancel.className = "btn";
-       btnCancel.innerText = "ANNULER";
+       btnCancel.className = "btn"; btnCancel.style.color = "#e74c3c"; btnCancel.innerText = "ANNULER";
        btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
        ui.appendChild(btnCancel);
    }
@@ -344,11 +343,11 @@ if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
                     return; // On passe au joueur suivant sans créer de bouton
                 }
     
-                const btn = document.createElement('button');
-                btn.className = "btn";
-                btn.style.color = '#ff00ff'
-                btn.innerText = name.toUpperCase();
-                btn.onclick = () => {
+                const btnTarget = document.createElement('button');
+                btnTarget.className = "btn";
+                btnTarget.style.color = '#ff00ff'
+                btnTarget.innerText = name.toUpperCase();
+                btnTarget.onclick = () => {
                     if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
                     if (!isForced) {
                         hasUsedPower = true;
