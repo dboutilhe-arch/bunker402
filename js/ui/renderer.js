@@ -76,7 +76,7 @@ export function render() {
     document.getElementById('slots-s').innerHTML = Array(5).fill(0)
         .map((_, i) => `<div class="slot ${i < state.survie ? 'filled-s' : ''}"></div>`).join('');
     
-    // --- MODIFICATION ICI : Slots Décrets Crise avec affichage des Pouvoirs ---
+    // Slots Décrets Crise avec affichage des Pouvoirs
     const n = players.length;
     const configPouvoirs = POWER_MAP[n] || POWER_MAP['default']; // Récupère la config selon le nombre de joueurs
 
@@ -89,9 +89,7 @@ export function render() {
             // Si un pouvoir existe sur cette case (ex: 'CENSURE', 'EXEC'), on prépare un petit badge textuel
             let badgePouvoir = "";
             if (pouvoirNom && pouvoirNom !== 'null') {
-                let couleurBadge = "#ff00ff"; // Violet par défaut pour les pouvoirs
-                if (pouvoirNom === 'EXEC') couleurBadge = "#e74c3c"; // Rouge pour l'exécution d'urgence
-                
+                const couleurBadge = "#e74c3c";
                 badgePouvoir = `<div style="font-size: 0.65em; color: ${couleurBadge}; font-weight: bold; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">${pouvoirNom}</div>`;
             }
 
