@@ -1,5 +1,5 @@
 import { state, players, resetGameState } from '../core/state.js'; 
-import { ROLE_COMPOSITIONS, JOBS_LIST, DECK_COMPOSITION } from '../core/constants.js';
+import { ROLE_COMPOSITIONS, JOBS_LIST, INITIAL_DECK_LIST } from '../core/constants.js';
 import { 
     render, 
     updateTagsWithJobs,  
@@ -18,65 +18,57 @@ import { checkCasePower } from './powers.js';
 // --- LOGIQUE DE JEU ---
 
 /**
+ * Fonction utilitaire de pioche sécurisée avec recyclage de la défausse
+ */
+function drawCard() {
+    if (state.deck.length === 0) {
+        if (state.discard.length === 0) {
+            Logger.add("ALERTE CRITIQUE : Plus aucune carte disponible dans tout le complexe !");
+            return null;
+        }
+        // Recyclage
+        state.deck = [...state.discard].sort(() => Math.random() - 0.5);
+        state.discard = [];
+        Logger.add("🔊 SYSTÈME : Pioche épuisée. Défausse recyclée et remélangée.");
+    }
+    return state.deck.pop();
+}
+
+/**
  * Initialisation de la partie et distribution des rôles/métiers
  */
 export async function initGame() {
     const n = players.length;
 
-    // Mélange de l'ordre des joueurs
     for (let i = players.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [players[i], players[j]] = [players[j], players[i]];
     }
-
-    // Réalignement des étiquettes sur l'écran central
     rebuildActivePlayerTags();
-
     Logger.add("SYSTÈME : Ordre opérationnel du personnel mélangé.");
 
-    // Génération du Deck dynamique
-    const newCards = [];
-    Object.entries(DECK_COMPOSITION).forEach(([type, count]) => {
-        for (let i = 0; i < count; i++) {
-            newCards.push(type);
-        }
-    });
-    // Mélange du paquet
-    newCards.sort(() => Math.random() - 0.5);
-
-    state.deck.length = 0; 
-    state.deck.push(...newCards);
+    // --- INITIALISATION DU PAQUET VIA L'ORDRE DES CARTES COMPLETS ---
+    state.deck = [...INITIAL_DECK_LIST].sort(() => Math.random() - 0.5);
+    state.discard = [];
     
-    Logger.add(`SYSTÈME : Deck de décrets initialisé avec ${state.deck.length} protocoles.`);
+    Logger.add(`SYSTÈME : Deck de décrets sécurisés initialisé (${state.deck.length} cartes).`);
 
-    // Sélection et mélange des rôles
     let roles = ROLE_COMPOSITIONS[n] ? [...ROLE_COMPOSITIONS[n]] : ROLE_COMPOSITIONS.default(n);
     roles.sort(() => Math.random() - 0.5);
-
-    // Identification de l'Alpha (Anciennement étape 3)
     const alphaIndex = roles.indexOf('A');
     const alphaName = alphaIndex !== -1 ? players[alphaIndex].name : "Inconnu";
 
-    // PRÉPARATION ALÉATOIRE DES MÉTIERS
     let finalJobsDistribution = [];
     const availableJobs = [...JOBS_LIST].sort(() => Math.random() - 0.5);
-
     for (let i = 0; i < n; i++) {
-        if (i < availableJobs.length) {
-            finalJobsDistribution.push(availableJobs[i]);
-        } else {
-            finalJobsDistribution.push("Civil");
-        }
+        finalJobsDistribution.push(i < availableJobs.length ? availableJobs[i] : "Civil");
     }
-    // On mélange le tableau final pour que les "Civils" soient n'importe où
     finalJobsDistribution.sort(() => Math.random() - 0.5);
 
-    // Distribution aux joueurs
     for (let i = 0; i < n; i++) {
         let p = players[i];
         p.role = roles[i];
-        p.metier = finalJobsDistribution[i]; // Distribution mélangée
-
+        p.metier = finalJobsDistribution[i];
         p.jobPowerUsed = false;
         p.casePowerUsed = false;
         p.isAlive = true;
@@ -89,18 +81,14 @@ export async function initGame() {
             all: players.map(pl => pl.name),
             alphaName: canSeeAlpha ? alphaName : null 
         });
-        
         await new Promise(r => setTimeout(r, 50));
     }
 
-    // Mise à jour UI
     updateTagsWithJobs();
     displayComposition(roles);
-    
     document.getElementById('setup-zone').style.display = 'none';
     document.getElementById('game-info-row').style.display = 'flex';
     document.getElementById('game-zone').style.display = 'block';
-    
     nextTurn();
 }
 
@@ -109,8 +97,6 @@ export async function initGame() {
  */
 export function nextTurn() {
     state.currentPhase = "DÉSIGNATION";
-
-    // On cherche le prochain Gardien VIVANT (sécurité attempts pour éviter freeze)
     let attempts = 0;
     while (!players[state.curG].isAlive && attempts < players.length) {
         state.curG = (state.curG + 1) % players.length;
@@ -122,42 +108,27 @@ export function nextTurn() {
     tags.forEach(tag => {
         const nameDiv = tag.querySelector('.p-name');
         if (nameDiv) nameDiv.innerHTML = `⭐ ${activeG.name.toUpperCase()}`;
-        tag.style.borderColor = "#f1c40f"; 
-        tag.style.borderWidth = "2px";
+        tag.style.borderColor = "#f1c40f"; tag.style.borderWidth = "2px";
     });
 
     Logger.add(`SYSTÈME : Désignation du nouveau Gardien : ${activeG.name.toUpperCase()}`);
+    state.votes.oui = 0; state.votes.non = 0; state.votes.total = 0; state.votes.list = [];
     
-    // Reset des votes sans casser la référence
-    state.votes.oui = 0; 
-    state.votes.non = 0; 
-    state.votes.total = 0; 
-    state.votes.list = [];
-    
-    document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL : Le Gardien choisit sa Sentinelle...";
-    document.getElementById('vote-summary').style.color = "#3498db";
-    
+    document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL... ";
     document.getElementById('g-name').innerText = activeG.name;
-    document.getElementById('g-name').style.color = "#f1c40f"; 
     document.getElementById('s-name').innerText = "?";
-    document.getElementById('s-name').style.color = "#e0e0e0";
 
     players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
     players.filter(p => p.isAlive).forEach((p, index) => {
         if(index !== state.curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: activeG.name });
     });
-    players.forEach(p => p.casePowerUsed = false);
 
-    // Filtrage des éligibles : Vivants uniquement
-    let eligiblePlayers = players
-        .filter(p => p.isAlive) 
-        .map(p => p.name)
-        .filter(name => {
-            if (name === activeG.name) return false;
-            if (name === state.lastSentinelle) return false;
-            if (players.length > 5 && name === state.lastGardien) return false;
-            return true;
-        });
+    let eligiblePlayers = players.filter(p => p.isAlive).map(p => p.name).filter(name => {
+        if (name === activeG.name) return false;
+        if (name === state.lastSentinelle) return false;
+        if (players.length > 5 && name === state.lastGardien) return false;
+        return true;
+    });
     
     activeG.conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
     syncTerminals(); 
@@ -173,94 +144,81 @@ export function resolveVote() {
         tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
     });
 
-    Logger.add(`RÉSULTAT DU SCRUTIN : ${state.votes.oui} OUI vs ${state.votes.non} NON`);
-    
     if(state.votes.oui > state.votes.non) {
-        document.getElementById('vote-summary').innerText = "VOTE ACCEPTÉ";
-        document.getElementById('vote-summary').style.color = "#2ecc71";
-        Logger.add("VOTE ACCEPTÉ : Le conseil entre en session législative.");
-        
         state.currentPhase = "LÉGISLATION_G";
-        state.currentLegislativeCards = [state.deck.pop(), state.deck.pop(), state.deck.pop()];
+        
+        state.currentLegislativeCards = [drawCard(), drawCard(), drawCard()].filter(Boolean);
         state.oxy = 3;
 
-       players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
-
+        players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
         if(state.crise >= 3 && players[state.curSIdx].role === 'A') {
             return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
         }
-
         setTimeout(() => {
             players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
         }, 100);
     } else {
         state.oxy--;
-        document.getElementById('vote-summary').innerText = "VOTE REJETÉ";
-        document.getElementById('vote-summary').style.color = "#e74c3c";
-        Logger.add(`ALERTE : Rejet du conseil. Oxygène à ${state.oxy}/3.`);
-
         if(state.oxy <= 0) {
-            Logger.add("⚠️ ALERTE : RÉSERVES D'OXYGÈNE ÉPUISÉES !");
             applyForced();
-        }
-        else { 
+        } else { 
             state.curG = (state.curG + 1) % players.length; 
             setTimeout(nextTurn, 1500); 
         }
-        clearCouncilVisuals(); // On enlève les cadres ⭐ immédiatement
+        clearCouncilVisuals();
     }
     syncTerminals(); 
     render();
 }
 
+// Handler pour la défausse du Gardien
+export function handleDiscardFromNet(cardId, remainingCards) {
+    state.discard.push(cardId); // Envoi immédiat en défausse
+    state.currentPhase = "LÉGISLATION_S";
+    state.currentLegislativeCards = remainingCards;
+    
+    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
+    setTimeout(() => {
+        if (players[state.curSIdx] && players[state.curSIdx].conn.open) {
+            players[state.curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: state.currentLegislativeCards });
+        }
+    }, 100);
+}
+
 /**
  * Application d'un décret (Survie, Crise ou Suffrage)
  */
-export function applyDecret(type) {
-    clearCouncilVisuals(); // Sécurité pour enlever les cadres
+export function applyDecret(cardId, type) {
+    clearCouncilVisuals();
     state.lastSentinelle = players[state.curSIdx].name;
     state.lastGardien = players[state.curG].name;
     updateLastCouncil();
 
     if (type === 'S') {
         state.survie++;
+        state.slotsSurvieCards.push(cardId);
     } else if (type === 'C') {
         state.crise++;
-        // Attention : checkCasePower va passer state.currentPowerActive à true si une case est touchée
+        state.slotsCriseCards.push(cardId);
         checkCasePower(state.crise);
     } else if (type === 'F') {
         state.suffrage = "Actif";
+        state.slotsSuffrageCard = cardId;
     }
 
-    // Nettoyage systématique de la censure fin de tour ---
-    players.forEach(p => {
-        p.isCensored = false;
-        p.censoredBy = "";
-    });
-
+    players.forEach(p => { p.isCensored = false; p.censoredBy = ""; });
     render();
     syncTerminals();
 
-    if (state.survie >= 5) {
-        return triggerWin("SURVIVANTS", "Protocoles rétablis.");
-    } 
-    
-    if (state.crise >= 6) {
-        return triggerWin("INFECTES", "Infection totale.");
-    }
-
-    // --- GESTION DE LA TRANSITION DE TOUR ---
-    if (!state.currentPowerActive) {
-        // Si aucun pouvoir de case n'est actif, on passe normalement au Gardien suivant
-        state.curG = (state.curG + 1) % players.length;
-        setTimeout(() => { 
-            state.isProcessingAction = false; 
-            nextTurn(); 
-        }, 1000);
-    } else {
-        // Si un pouvoir de case s'est activé, c'est la fonction du pouvoir (dans powers.js)
-        // qui gérera elle-même le passage au Gardien suivant (state.curG++) une fois l'action résolue !
-        state.isProcessingAction = true; 
+    if (state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
+    else if (state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
+    else {
+        if (!state.currentPowerActive) {
+            state.curG = (state.curG + 1) % players.length;
+            setTimeout(() => { state.isProcessingAction = false; nextTurn(); }, 1000);
+        } else {
+            state.isProcessingAction = true;
+        }
     }
 }
 
@@ -268,13 +226,17 @@ export function applyDecret(type) {
  * Décret forcé (Oxygène à zéro)
  */
 export function applyForced() {
-    let card = state.deck.pop(); 
-    while(card === 'F') card = state.deck.pop(); 
+    let cardId = drawCard(); 
+    // On s'assure qu'un décret forcé n'est pas un suffrage selon tes anciennes règles
+    while(cardId && DECREETS_DATABASE[cardId].type === 'F') {
+        state.discard.push(cardId);
+        cardId = drawCard();
+    }
     
-    const typeLabel = card === 'S' ? "SURVIE" : "CRISE";
-    Logger.add(`URGENCE : Le système a déployé un décret de type ${typeLabel}.`);
-    
-    applyDecret(card); 
+    if(cardId) {
+        Logger.add(`URGENCE : Déploiement forcé du décret : ${DECREETS_DATABASE[cardId].name.toUpperCase()}`);
+        applyDecret(cardId, DECREETS_DATABASE[cardId].type); 
+    }
     state.oxy = 3; 
 }
 
