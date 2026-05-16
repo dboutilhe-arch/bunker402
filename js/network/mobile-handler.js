@@ -343,11 +343,11 @@ if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
                     return; // On passe au joueur suivant sans créer de bouton
                 }
     
-                const btnTarget = document.createElement('button');
-                btnTarget.className = "btn";
-                btnTarget.style.color = '#ff00ff'
-                btnTarget.innerText = name.toUpperCase();
-                btnTarget.onclick = () => {
+                const btn = document.createElement('button');
+                btn.className = "btn";
+                btn.style.color = '#ff00ff'
+                btn.innerText = name.toUpperCase();
+                btn.onclick = () => {
                     if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
                     if (!isForced) {
                         hasUsedPower = true;
