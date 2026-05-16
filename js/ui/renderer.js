@@ -188,9 +188,15 @@ export function clearCouncilVisuals() {
  */
 export function resetVoteColors() {
     players.forEach(p => {
+        // RESET DE LA CENSURE
+        p.isCensored = false;
+        p.censoredBy = "";
+        
         const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
         tags.forEach(tag => {
             tag.classList.remove('voted-oui', 'voted-non');
+            const cTag = tag.querySelector('.censure-tag');
+            if (cTag) cTag.remove();
         });
     });
 }
@@ -209,6 +215,17 @@ export function updatePlayerStatusUI(player, reveal) {
         const jobDiv = tag.querySelector('.p-job');
         if (jobDiv) {
             jobDiv.innerHTML = `<span style="color: ${color}; text-decoration: none;">● DÉCÉDÉ (${reveal})</span>`;
+        }
+    });
+}
+
+// Pour ajouter le badge 🤐 sans effacer le reste
+export function updateCensureUI(player) {
+    const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
+    tags.forEach(tag => {
+        const jobDiv = tag.querySelector('.p-job');
+        if (jobDiv && !jobDiv.innerHTML.includes("🤐")) {
+            jobDiv.innerHTML += ` <span class="censure-tag" style="color:#e74c3c; font-weight:bold;">🤐</span>`;
         }
     });
 }
