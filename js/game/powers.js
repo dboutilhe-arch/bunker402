@@ -107,8 +107,51 @@ export function executePlayer(requester, targetName) {
 }
 
 /**
+ * Censure (Pouvoir du Décret Censure ou Case de Crise)
+ */
+export function applyCensure(requester, targetName) {
+    const target = players.find(p => p.name === targetName);
+    if (!target || !target.isAlive || target.isCensored) return;
+
+    target.isCensored = true;
+    target.censoredBy = requester.name;
+
+    Logger.add(`🚫 CENSURE : ${requester.name} a réduit ${targetName} au silence.`);
+
+    // Si un vote est en cours, on agit immédiatement sur le scrutin
+    if (state.currentPhase === "VOTE") {
+        const voteIdx = state.votes.list.findIndex(v => v.name.toLowerCase() === targetName.toLowerCase());
+        if (voteIdx !== -1) {
+            const oldVote = state.votes.list[voteIdx];
+            state.votes[oldVote.choice.toLowerCase()]--;
+            state.votes.total--;
+            state.votes.list.splice(voteIdx, 1);
+        }
+        // On lui envoie l'écran de censure tout de suite
+        target.conn.send({ type: 'CENSORED_ALERT', by: requester.name });
+        
+        // On vérifie si cela termine le vote
+        const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
+        if (state.votes.total >= eligibleCount) {
+            resolveVote();
+        }
+    }
+
+    updatePlayerStatusUI(target); // On réutilise cette fonction ou on en crée une pour le badge 🤐
+    syncTerminals();
+
+    if (state.currentPowerActive) {
+        state.currentPowerActive = false;
+        setTimeout(() => {
+            state.curG = (state.curG + 1) % players.length;
+            state.isProcessingAction = false;
+            nextTurn();
+        }, 2000);
+    }
+}
+
+/**
  * Vérification des pouvoirs lors de l'atteinte d'une case de crise
- * (A déplacer ici si ce n'est pas déjà fait)
  */
 export function checkCasePower(caseNumber) {
     const n = players.length;
