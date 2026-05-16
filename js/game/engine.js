@@ -9,7 +9,8 @@ import {
     triggerWin,
     resetLobbyVisuals,
     clearCouncilVisuals,
-    resetVoteColors
+    resetVoteColors,
+    rebuildActivePlayerTags
 } from '../ui/renderer.js';
 import { Logger } from '../ui/logger.js';
 import { checkCasePower } from './powers.js';
@@ -22,20 +23,31 @@ import { checkCasePower } from './powers.js';
 export async function initGame() {
     const n = players.length;
 
-    // 1. Deck de décrets
+    // MÉLANGE DE L'ORDRE DES JOUEURS (Algorithme Fisher-Yates)
+    for (let i = players.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [players[i], players[j]] = [players[j], players[i]];
+    }
+
+    // RÉALIGNEMENT DES ÉTIQUETTES SUR L'ÉCRAN CENTRAL
+    rebuildActivePlayerTags();
+
+    Logger.add("SYSTÈME : Ordre opérationnel du personnel mélangé.");
+
+    // Deck de décrets (Anciennement étape 1)
     const newCards = [...Array(40).fill('S'), ...Array(60).fill('C'), ...Array(10).fill('F')].sort(() => Math.random() - 0.5);
     state.deck.length = 0; 
     state.deck.push(...newCards);
 
-    // 2. Sélection et mélange des rôles (S, I, A...)
+    // Sélection et mélange des rôles (Anciennement étape 2)
     let roles = ROLE_COMPOSITIONS[n] ? [...ROLE_COMPOSITIONS[n]] : ROLE_COMPOSITIONS.default(n);
     roles.sort(() => Math.random() - 0.5);
 
-    // 3. Identification de l'Alpha
+    // Identification de l'Alpha (Anciennement étape 3)
     const alphaIndex = roles.indexOf('A');
     const alphaName = alphaIndex !== -1 ? players[alphaIndex].name : "Inconnu";
 
-    // 4. PRÉPARATION ALÉATOIRE DES MÉTIERS
+    // PRÉPARATION ALÉATOIRE DES MÉTIERS
     let finalJobsDistribution = [];
     const availableJobs = [...JOBS_LIST].sort(() => Math.random() - 0.5);
 
@@ -49,7 +61,7 @@ export async function initGame() {
     // On mélange le tableau final pour que les "Civils" soient n'importe où
     finalJobsDistribution.sort(() => Math.random() - 0.5);
 
-    // 5. Distribution aux joueurs
+    // Distribution aux joueurs
     for (let i = 0; i < n; i++) {
         let p = players[i];
         p.role = roles[i];
@@ -71,7 +83,7 @@ export async function initGame() {
         await new Promise(r => setTimeout(r, 50));
     }
 
-    // 6. Mise à jour UI
+    // Mise à jour UI
     updateTagsWithJobs();
     displayComposition(roles);
     
