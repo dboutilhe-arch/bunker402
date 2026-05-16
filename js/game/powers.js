@@ -126,14 +126,28 @@ export function applyCensure(requester, targetName) {
             state.votes[oldVote.choice.toLowerCase()]--;
             state.votes.total--;
             state.votes.list.splice(voteIdx, 1);
+            Logger.add(`SYSTÈME : Le vote de ${targetName} a été retiré du scrutin.`);
         }
-        // On lui envoie l'écran de censure tout de suite
+        
+        // On envoie l'écran de censure au mobile ciblé immédiatement
         target.conn.send({ type: 'CENSORED_ALERT', by: requester.name });
         
-        // On vérifie si cela termine le vote
-        const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
-        if (state.votes.total >= eligibleCount) {
+        // --- SÉCURITÉ ANTI-BLOCAGE ---
+        // On compte combien de joueurs éligibles doivent ENCORE voter physiquement
+        const votesAttendusRestants = players.filter(p => 
+            p.isAlive && 
+            !p.isCensored && 
+            !state.votes.list.some(v => v.name.toLowerCase() === p.name.toLowerCase())
+        ).length;
+    
+        // Si plus personne ne peut ou ne doit voter, on clôture le scrutin immédiatement !
+        if (votesAttendusRestants === 0) {
+            Logger.add("SYSTÈME : Plus aucun vote n'est attendu. Clôture automatique du scrutin.");
             resolveVote();
+        } else {
+            // Sinon, on met juste à jour le compteur sur l'écran PC avec le nouveau total
+            const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
+            document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${eligibleCount}`;
         }
     }
 
