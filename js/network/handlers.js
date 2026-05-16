@@ -109,8 +109,8 @@ function handleVote(data) {
     // 1. SÉCURITÉ : On récupère le joueur qui vote
     const voter = players.find(p => p.name.toLowerCase() === data.playerName.toLowerCase());
 
-    // 2. Si le joueur est mort, on ignore totalement son message
-    if (!voter || !voter.isAlive) return;
+    // 2. Si le joueur est mort ou censuré, on ignore totalement son message
+    if (!voter || !voter.isAlive || voter.isCensored) return;
 
     // 3. Vérifie si ce joueur a DÉJÀ voté
     const dejaVote = state.votes.list.some(v => v.name.toLowerCase() === data.playerName.toLowerCase());
@@ -121,16 +121,16 @@ function handleVote(data) {
     state.votes.total++;
     state.votes.list.push({ name: data.playerName, choice: data.choice });
   
-    // Calcul basé sur les vivants
-    const aliveCount = players.filter(p => p.isAlive).length;
+    // Calcul basé uniquement sur les joueurs éligibles (Vivants ET Non-censurés)
+    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
     const summary = document.getElementById('vote-summary');
-    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${aliveCount}`;
+    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${eligibleCount}`;
     summary.style.color = "#f1c40f";
   
     Logger.add(`Données de vote reçues de : ${data.playerName}`);
   
-    // Si tout le monde (vivant) a voté, on résout
-    if(state.votes.total === aliveCount) {
+    // Si tout le monde éligible a voté, on résout
+    if (state.votes.total === eligibleCount) {
         Logger.add("Scrutin terminé. Calcul des résultats...");
         resolveVote();
     }
