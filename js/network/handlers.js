@@ -1,4 +1,5 @@
 // js/network/handlers.js 
+import { DECREETS_DATABASE } from '../core/constants.js';
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors } from '../ui/renderer.js';
@@ -143,11 +144,13 @@ function handleDiscard(data) {
 }
 
 function handleFinalChoice(data) {
-    const typeLabel = data.card === 'S' ? "SURVIE" : (data.card === 'C' ? "CRISE" : "SUFFRAGE");
-    Logger.add(`LÉGISLATION : La Sentinelle a promulgué le décret : ${typeLabel}`);
-    
+    const cardId = data.card;
+    const cardData = DECREETS_DATABASE[cardId];
+    if (!cardData) return;
+    const typeLabel = cardData.type === 'S' ? "SURVIE" : (cardData.type === 'C' ? "CRISE" : "SUFFRAGE");
+    Logger.add(`LÉGISLATION : La Sentinelle a promulgué le décret : ${cardData.name.toUpperCase()} (${typeLabel})`);
     state.isProcessingAction = true;
-    applyDecret(data.card);
+    applyDecret(cardId, cardData.type);
 }
 
 function handleBloodTest(conn, data) {
