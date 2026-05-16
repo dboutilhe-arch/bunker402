@@ -45,9 +45,22 @@
             border-radius: 8px; 
             font-weight: bold; 
         }
-        
-        /* Boutons de choix de cibles et de pouvoirs (Texte violet, fond noir, bordure violette) */
+
+         /* Boutons de choix de cibles (Texte violet, fond noir, bordure violette) */
         .btn-power {
+            background: #ff00ff !important;
+            border: 2px solid #000 !important;
+            color: #000 !important;
+            padding: 15px;
+            width: 50% !important;
+            margin: 8px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }    
+
+        /* Boutons de choix de cibles (Texte violet, fond noir, bordure violette) */
+        .btn-target {
             background: #000 !important;
             border: 2px solid #ff00ff !important;
             color: #ff00ff !important;
