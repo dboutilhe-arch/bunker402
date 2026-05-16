@@ -314,53 +314,54 @@ function showLegislativeUI(role, cards) {
     });
 }
 
+
 function openTargetSelector(actionType, title, isForced = false) {
-if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
-    
+    if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
+        
     const ui = document.getElementById('main-ui');
     ui.innerHTML = `<h3>${title}</h3><p>Sélectionnez une cible :</p>`;
-    
+        
     // On utilise les noms vivants du serveur, sinon la liste complète par défaut
     const listToUse = (serverState && serverState.aliveNames) ? serverState.aliveNames : allPlayers;
-    
-    // Vérification de sécurité : si la liste est vide (ne devrait pas arriver)
+        
+    // Vérification de sécurité
     if (listToUse.length === 0) {
         ui.innerHTML += "<p>Aucune cible éligible détectée.</p>";
     }
 
+    // Le bouton ANNULER (Placé au-dessus ou en dessous selon tes préférences)
     if (!isForced) {
-       const btnCancel = document.createElement('button');
-       btnCancel.className = "btn"; btnCancel.style.color = "#e74c3c"; btnCancel.innerText = "ANNULER";
-       btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
-       ui.appendChild(btnCancel);
-   }
- 
+        const btnCancel = document.createElement('button');
+        btnCancel.className = "btn-cancel";
+        btnCancel.innerText = "ANNULER";
+        btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
+        ui.appendChild(btnCancel);
+    }
+     
+    // Génération des boutons de cibles
     listToUse.forEach(name => {
-            if (name.toLowerCase() !== myName.toLowerCase()) {
+        if (name.toLowerCase() !== myName.toLowerCase()) {
                 
-                // Si c'est une demande de Censure, on cache les cibles déjà censurées
-                if (actionType === 'REQUEST_CENSURE' && serverState.censoredNames && serverState.censoredNames.includes(name)) {
-                    return; // On passe au joueur suivant sans créer de bouton
-                }
-    
-                const btn = document.createElement('button');
-                btn.className = "btn";
-                btn.style.color = '#ff00ff'
-                btn.innerText = name.toUpperCase();
-                btn.onclick = () => {
-                    if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
-                    if (!isForced) {
-                        hasUsedPower = true;
-                        document.getElementById('job-ui').style.opacity = "0.3";
-                    }
-                    conn.send({ type: actionType, targetName: name, isForced: isForced });
-                    ui.innerHTML = "Traitement...";
-                };
-                ui.appendChild(btn);
+            // Si c'est une demande de Censure, on cache les cibles déjà censurées
+            if (actionType === 'REQUEST_CENSURE' && serverState.censoredNames && serverState.censoredNames.includes(name)) {
+                return; 
             }
-        });
-
-
+        
+            const btn = document.createElement('button');
+            btn.className = "btn-power";
+            btn.innerText = name.toUpperCase();
+            btn.onclick = () => {
+                if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
+                if (!isForced) {
+                    hasUsedPower = true;
+                    document.getElementById('job-ui').style.opacity = "0.3";
+                }
+                conn.send({ type: actionType, targetName: name, isForced: isForced });
+                ui.innerHTML = "Traitement...";
+            };
+            ui.appendChild(btn);
+        }
+    });
 }
 
 function showBloodResult(data) {
