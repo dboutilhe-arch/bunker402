@@ -118,6 +118,7 @@ function handleData(data) {
         case 'BLOOD_TEST_RESULT':
             showBloodResult(data);
             break;
+      
       case 'YOU_ARE_DEAD':
             const uiDead = document.getElementById('main-ui');
             const colReveal = data.reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
@@ -127,6 +128,16 @@ function handleData(data) {
                 <p style="opacity: 0.6;">Vous ne pouvez plus voter ni participer.</p>
             `;
             document.getElementById('job-ui').innerHTML = "";
+            break;
+      
+      case 'CENSORED_ALERT':
+            ui.innerHTML = `
+                <div style="border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; background: rgba(231, 76, 60, 0.1);">
+                    <h2 style="color: #e74c3c;">🤐 CENSURE ACTIVÉE</h2>
+                    <p>Le joueur <b>${data.by}</b> a suspendu vos droits de vote pour ce scrutin.</p>
+                    <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">Attendez la fin du tour...</p>
+                </div>
+            `;
             break;
 
         case 'FORCE_POWER_SELECT':
