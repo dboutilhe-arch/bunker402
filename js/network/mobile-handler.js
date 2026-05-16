@@ -330,12 +330,17 @@ function openTargetSelector(actionType, title, isForced = false) {
     }
 
     // Le bouton ANNULER (Placé au-dessus ou en dessous selon tes préférences)
-    if (!isForced) {
+   if (!isForced) {
         const btnCancel = document.createElement('button');
         btnCancel.className = "btn-cancel";
         btnCancel.innerText = "ANNULER";
         btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
         ui.appendChild(btnCancel);
+
+        // Élément invisible pour forcer le retour à la ligne après l'Annuler
+        const breakLine = document.createElement('div');
+        breakLine.style.width = "100%";
+        ui.appendChild(breakLine);
     }
      
     // Génération des boutons de cibles
