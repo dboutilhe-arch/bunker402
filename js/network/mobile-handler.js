@@ -27,11 +27,11 @@ function connect(isReconnect = false) {
 
     if (!nameInput || !codeInput) return;
 
-    // --- SÉCURITÉ : Expression régulière pour n'autoriser que A-Z, 0-9, _ et -
-    const validPattern = /^[a-zA-Z0-9\-_]+$/;
+    // --- SÉCURITÉ : Expression régulière pour n'autoriser que Lettres, chiffres, accents français, tirets et espaces
+    const validPattern = /^[a-zA-Z0-9àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ\-_ ]+$/;
     
     if (!validPattern.test(nameInput)) {
-        alert("Pseudo invalide ! Uniquement des lettres, chiffres, '-' ou '_'. No d'espaces.");
+        alert("Pseudo invalide ! Uniquement des lettres (avec ou sans accent), chiffres, espaces, '-' ou '_'.");
         return;
     }
 
