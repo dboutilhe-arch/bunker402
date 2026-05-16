@@ -216,6 +216,11 @@ export function applyDecret(type) {
     else if (state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
     else {
         if (!state.currentPowerActive) {
+            // La censure se termine ENFIN ici, le décret est posé 
+            players.forEach(p => {
+                p.isCensored = false;
+                p.censoredBy = "";
+            });
             state.curG = (state.curG + 1) % players.length;
             setTimeout(() => { state.isProcessingAction = false; nextTurn(); }, 1000);
         }
