@@ -326,6 +326,22 @@ function setupIdentity(data) {
         
         jobUi.appendChild(btn);
    }
+   if (data.metier === 'Fossoyeur') {
+        const btn = document.createElement('button');
+        btn.id = "btn-power";
+        btn.className = "btn-power";
+        // Texte initial (sera écrasé par la synchronisation juste après)
+        btn.innerText = "NÉCROLOGIE : +0 VOIX (0 MORT)"; 
+        
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+        btn.style.background = "#1a1105";     /* Terre/Cendre très sombre */
+        btn.style.borderColor = "#964b00";    /* Bordure brun/rouille */
+        btn.style.color = "#d2b48c";          /* Texte couleur os / beige */
+        btn.style.pointerEvents = "none";
+        
+        jobUi.appendChild(btn);
+   }
 }
 
 
