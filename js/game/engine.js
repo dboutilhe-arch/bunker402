@@ -1,5 +1,5 @@
 import { state, players, resetGameState } from '../core/state.js'; 
-import { ROLE_COMPOSITIONS, JOBS_LIST, INITIAL_DECK_LIST } from '../core/constants.js';
+import { ROLE_COMPOSITIONS, JOBS_LIST, INITIAL_DECK_LIST, DECREETS_DATABASE } from '../core/constants.js';
 import { 
     render, 
     updateTagsWithJobs,  
