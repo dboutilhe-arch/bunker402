@@ -293,12 +293,12 @@ function setupIdentity(data) {
           if (hasUsedPower) jobUi.style.opacity = "0.3";
           btn.onclick = () => openTargetSelector('REQUEST_CENSURE', 'PROTOCOLE DE CENSURE');
           jobUi.appendChild(btn);
-      }
+   }
    if (data.metier === 'Shérif') {
         const btn = document.createElement('button');
         btn.id = "btn-power";
         btn.className = "btn-power";
-        btn.innerText = "VOTE DOUBLE (PASSIF ACTIF)";
+        btn.innerText = "PASSIF: VOTE DOUBLE";
         
         // Bridation pour le rendre purement informatif
         btn.disabled = true;
@@ -307,6 +307,22 @@ function setupIdentity(data) {
         btn.style.borderColor = "#ff00ff";    /* Garde la bordure rose flash */
         btn.style.color = "#ff00ff";          /* Texte rose qui brille */
         btn.style.pointerEvents = "none";     /* Sécurité anti-clic */
+        
+        jobUi.appendChild(btn);
+   }
+   if (data.metier === 'Journaliste') {
+        const btn = document.createElement('button');
+        btn.id = "btn-power";
+        btn.className = "btn-power";
+        btn.innerText = "PASSIF: IMMUNITÉ CENSURE";
+        
+        // Verrouillage visuel et technique
+        btn.disabled = true;
+        btn.style.opacity = "0.6";
+        btn.style.background = "#002b36";     /* Un bleu canard très sombre style archive */
+        btn.style.borderColor = "#00ffff";    /* Bordure cyan rétro-futuriste */
+        btn.style.color = "#00ffff";          /* Texte cyan lumineux */
+        btn.style.pointerEvents = "none";
         
         jobUi.appendChild(btn);
    }
