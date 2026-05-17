@@ -294,6 +294,22 @@ function setupIdentity(data) {
           btn.onclick = () => openTargetSelector('REQUEST_CENSURE', 'PROTOCOLE DE CENSURE');
           jobUi.appendChild(btn);
       }
+   if (data.metier === 'Shérif') {
+        const btn = document.createElement('button');
+        btn.id = "btn-power";
+        btn.className = "btn-power";
+        btn.innerText = "VOTE DOUBLE (PASSIF ACTIF)";
+        
+        // Bridation pour le rendre purement informatif
+        btn.disabled = true;
+        btn.style.opacity = "0.6";           /* Légèrement plus sombre pour le distinguer d'un bouton actif */
+        btn.style.background = "#4a004a";     /* Un violet/rose plus sombre et institutionnel */
+        btn.style.borderColor = "#ff00ff";    /* Garde la bordure rose flash */
+        btn.style.color = "#ff00ff";          /* Texte rose qui brille */
+        btn.style.pointerEvents = "none";     /* Sécurité anti-clic */
+        
+        jobUi.appendChild(btn);
+   }
 }
 
 
