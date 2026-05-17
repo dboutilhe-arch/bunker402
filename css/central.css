@@ -108,6 +108,13 @@
         /* Coloration des étiquettes */
         .voted-oui { background: #2ecc71 !important; color: #000 !important; border-color: #FFF !important; }
         .voted-non { background: #e74c3c !important; color: #fff !important; border-color: #FFF !important; }
+        /* CHAMBRE NOIRE : Look rétro-dark ultra-sombre pour les votes anonymes */
+        .voted-secret { 
+            background: #050505 !important; 
+            border-color: #222222 !important; 
+            color: #555555 !important; /* Texte grisé sombre */
+            box-shadow: none !important;
+        }
 
         .p-name {
             font-size: 1.1em;
