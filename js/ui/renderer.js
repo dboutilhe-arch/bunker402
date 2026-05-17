@@ -237,7 +237,7 @@ export function resetVoteColors() {
     players.forEach(p => {
         const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
         tags.forEach(tag => {
-            tag.classList.remove('voted-oui', 'voted-non');
+            tag.classList.remove('voted-oui', 'voted-non', 'voted-secret');
             const cTag = tag.querySelector('.censure-tag');
             if (cTag) cTag.remove();
         });

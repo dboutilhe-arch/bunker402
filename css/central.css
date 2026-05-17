@@ -108,6 +108,20 @@
         /* Coloration des étiquettes */
         .voted-oui { background: #2ecc71 !important; color: #000 !important; border-color: #FFF !important; }
         .voted-non { background: #e74c3c !important; color: #fff !important; border-color: #FFF !important; }
+        /* CHAMBRE NOIRE : Look rétro-dark ultra-sombre pour les votes anonymes */
+        .voted-secret { 
+            background: #0d0514 !important;      /* Un noir très profond teinté de violet */
+            border-color: #8e44ad !important;     /* Une bordure violette intermédiaire */
+            color: #dfa6ff !important;            /* Un texte violet très clair, presque blanc au centre */
+            /* 🌌 Aura lumineuse autour de la case (interne et externe) */
+            box-shadow: 0 0 15px rgba(142, 68, 173, 0.6), 
+                        inset 0 0 10px rgba(142, 68, 173, 0.4) !important;
+            /* 🔮 Effet néon / rayonnement sur le texte */
+            text-shadow: 0 0 8px rgba(223, 166, 255, 0.8), 
+                         0 0 2px #8e44ad !important;
+                         
+            transition: all 0.5s ease;
+        }
 
         .p-name {
             font-size: 1.1em;

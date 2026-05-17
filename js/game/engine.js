@@ -139,27 +139,43 @@ export function nextTurn() {
  * Calcul du résultat du vote
  */
 export function resolveVote() {
-    state.votes.list.forEach(v => {
-        const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
-        tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
+    // NETTOYAGE DES CENSURES : Le vote est fini, on réinitialise les statuts pour le prochain tour
+    players.forEach(p => { 
+        p.isCensored = false; 
+        p.censoredBy = ""; 
     });
 
-    if(state.votes.oui > state.votes.non) {
-        state.currentPhase = "LÉGISLATION_G";
+    // 1. Gestion de l'affichage des couleurs (Prend en compte la Chambre Noire)
+    state.votes.list.forEach(v => {
+        const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
         
+        if (state.slotsSuffrageCard === 'chambre_noire') {
+            // ✨ On applique la classe CSS pour le mode secret
+            tags.forEach(t => t.classList.add('voted-secret'));
+        } else {
+            // Affichage classique (Vert pour OUI, Rouge pour NON)
+            tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
+        }
+    });
+
+    // 2. Calcul du résultat (La suite de ton code reste inchangée...)
+    if (state.votes.oui > state.votes.non) {
+        state.currentPhase = "LÉGISLATION_G";
         state.currentLegislativeCards = [drawCard(), drawCard(), drawCard()].filter(Boolean);
         state.oxy = 3;
 
         players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
-        if(state.crise >= 3 && players[state.curSIdx].role === 'A') {
+        if (state.crise >= 3 && players[state.curSIdx].role === 'A') {
             return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
         }
         setTimeout(() => {
             players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
         }, 100);
+
     } else {
+        // REJET CLASSIQUE
         state.oxy--;
-        if(state.oxy <= 0) {
+        if (state.oxy <= 0) {
             applyForced();
         } else { 
             state.curG = (state.curG + 1) % players.length; 
@@ -192,6 +208,7 @@ export function handleDiscardFromNet(cardId, remainingCards) {
  * @param {boolean} isForced - true si le décret est parachuté par manque d'oxygène
  */
 export function applyDecret(cardId, type, isForced = false) {
+    const card = DECREETS_DATABASE[cardId];
     clearCouncilVisuals();
     state.lastSentinelle = players[state.curSIdx].name;
     state.lastGardien = players[state.curG].name;
@@ -220,16 +237,15 @@ export function applyDecret(cardId, type, isForced = false) {
         }
         
     } else if (type === 'F') {
-        state.suffrage = "Actif";
-        state.slotsSuffrageCard = cardId;
-        if (!isForced) {
-            decreetBloquant = executeDecreetPower(cardId);
+        // Si un suffrage était déjà actif, on remet son ID dans la défausse
+        if (state.slotsSuffrageCard) {
+            state.discard.push(state.slotsSuffrageCard);
+            Logger.add(`🗳️ SUFFRAGE : L'ancien décret '${state.slotsSuffrageCard}' est écrasé et envoyé à la défausse.`);
         }
-    }
-
-    // On nettoie les censures du tour uniquement si c'est une législation normale (hors décret forcé au milieu d'un vote)
-    if (!isForced) {
-        players.forEach(p => { p.isCensored = false; p.censoredBy = ""; });
+        
+        // On installe le nouveau suffrage
+        state.slotsSuffrageCard = cardId;
+        state.suffrage = card.name;
     }
 
     render();
@@ -357,7 +373,7 @@ export function globalReset() {
 export function showGov(g, s) {
     state.currentPhase = "VOTE"; 
     state.currentProposedS = s;  
-    const sTags = document.querySelectorAll(`[id="tag-${s.toLowerCase()}"]`);
+    const sTags = document.querySelectorAll(`[id=\"tag-${s.toLowerCase()}\"]`);
     sTags.forEach(tag => { 
         tag.style.borderColor = "#3498db"; 
         tag.style.borderWidth = "2px"; 
@@ -371,15 +387,17 @@ export function showGov(g, s) {
 
     const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
     document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : 0 / ${eligibleCount}`;
-    document.getElementById('vote-summary').style.color = "#f1c40f"; // Jaune pour le scrutin
+    document.getElementById('vote-summary').style.color = "#f1c40f"; 
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
     
-    // FILTRAGE DES ENVOIS 
+    // On envoie les bonnes interfaces (Vote ou Alerte de censure)
     players.filter(p => p.isAlive).forEach(p => {
         if (p.isCensored) {
             p.conn.send({ type: 'CENSORED_ALERT', by: p.censoredBy });
         } else {
             p.conn.send({ type: 'VOTE_START', g: g, s: s });
         }
-    })
+    });
+
+    // ✨ LE NETTOYAGE A ÉTÉ RETIRÉ D'ICI POUR RESTER ACTIF DURANT TOUT LE VOTE
 }

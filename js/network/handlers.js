@@ -108,6 +108,8 @@ function handleSentinelle(data) {
     showGov(data.gardienName, data.sentinelleName);
 }
 
+// js/network/handlers.js
+
 function handleVote(data) {
     // 1. SÉCURITÉ : On récupère le joueur qui vote
     const voter = players.find(p => p.name.toLowerCase() === data.playerName.toLowerCase());
@@ -119,21 +121,48 @@ function handleVote(data) {
     const dejaVote = state.votes.list.some(v => v.name.toLowerCase() === data.playerName.toLowerCase());
     if (dejaVote) return;
   
-    // Enregistrement du vote
-    state.votes[data.choice.toLowerCase()]++; 
-    state.votes.total++;
+    // --- 4. CALCUL DYNAMIQUE DU POIDS DU VOTE (SUFFRAGE) ---
+    let voteWeight = 1;
+    const choiceKey = data.choice.toLowerCase(); // 'oui' ou 'non'
+    
+    // CAS A : Conseil Restreint (Gardien & Sentinelle comptent double)
+    if (state.slotsSuffrageCard === 'conseil_restreint') {
+        const isGardien = (voter.name === players[state.curG].name);
+        const isSentinelle = (state.curSIdx !== -1 && voter.name === players[state.curSIdx].name);
+        if (isGardien || isSentinelle) {
+            voteWeight = 2;
+            Logger.add(`🗳️ SUFFRAGE [Conseil Restreint] : Vote doublé pour l'élu ${voter.name}.`);
+        }
+    } 
+    // CAS B : Grève du Zèle (Les votes NON comptent double)
+    else if (state.slotsSuffrageCard === 'greve_zele' && choiceKey === 'non') {
+        voteWeight = 2;
+        Logger.add(`🗳️ SUFFRAGE [Grève du Zèle] : Le vote REFUSER de ${voter.name} compte DOUBLE.`);
+    }
+    // CAS C : Insurrection Populaire (Les Civils comptent double)
+    else if (state.slotsSuffrageCard === 'insurrection_populaire' && voter.metier === 'Civil') {
+        voteWeight = 2;
+        Logger.add(`🗳️ SUFFRAGE [Insurrection Populaire] : Le vote du Civil ${voter.name} compte DOUBLE.`);
+    }
+
+    // Enregistrement du vote sur le serveur
+    state.votes[choiceKey] += voteWeight; 
+    state.votes.total += voteWeight; 
     state.votes.list.push({ name: data.playerName, choice: data.choice });
   
-    // Calcul basé uniquement sur les joueurs éligibles (Vivants ET Non-censurés)
+    // --- 5. COMPTEUR DE PERSONNES PHYSIQUES ATTENDUES ---
     const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
+    const totalJoueursAyantVote = state.votes.list.length;
+
+    // Mise à jour du compteur PC
     const summary = document.getElementById('vote-summary');
-    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${state.votes.total} / ${eligibleCount}`;
+    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${totalJoueursAyantVote} / ${eligibleCount}`;
     summary.style.color = "#f1c40f";
   
     Logger.add(`Données de vote reçues de : ${data.playerName}`);
   
-    // Si tout le monde éligible a voté, on résout
-    if (state.votes.total === eligibleCount) {
+    // 6. CLÔTURE DU SCRUTIN
+    if (totalJoueursAyantVote === eligibleCount) {
         Logger.add("Scrutin terminé. Calcul des résultats...");
         resolveVote();
     }

@@ -78,8 +78,8 @@ export const DECREETS_DATABASE = {
     // --- SUFFRAGE (GRIS) ---
     'conseil_restreint': { name: "Conseil Restreint", type: "F", symbol: "🗳️", desc: "Les votes du Gardien et de la Sentinelle comptent double." },
     'greve_zele': { name: "Grève du Zèle", type: "F", symbol: "🗳️", desc: "Les votes NON comptent double." },
-    'appel_nominal': { name: "Appel Nominal", type: "F", symbol: "🗳️", desc: "Les joueurs votent l'un après l'autre dans le sens horaire en commençant par le Gardien." },
-    'piston': { name: "Piston", type: "F", symbol: "🗳️", desc: "Le Gardien choisit une caractéristique sociale dont le vote compte double." }
+    'chambre_noire': { name: "Chambre Noire", type: "F", symbol: "🗳️", desc: "Le choix individuel des votes (Oui/Non) reste anonyme sur la console centrale." },
+    'insurrection_populaire': { name: "Insurrection Populaire", type: "F", symbol: "🗳️", desc: "Les votes du personnel ayant le métier de Civil comptent double." }
 };
 
 /**
@@ -87,11 +87,11 @@ export const DECREETS_DATABASE = {
  */
 export const INITIAL_DECK_LIST = [
     // 10 Bleues
-    'test_sanguin', 'test_sanguin', 'reorganisation', 'commission', 'purge', 'presse', 'rebellion', 'transparence', 'contre_pouvoir', 'fuite_air_s',
+    //'test_sanguin', 'test_sanguin', 'reorganisation', 'commission', 'purge', 'presse', 'rebellion', 'transparence', 'contre_pouvoir', 'fuite_air_s',
     // 15 Rouges
     //'censure', 'censure', 'censure', 'loi_493', 'loi_493', 'reelection', 'sabotage', 'coup_etat', 'court_circuit', 'licenciement', 'silence', 'prophete', 'talion', 'fuite_air_c', 'secret_etat',
     //TEST
-    'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage',
+    //'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage', 'sabotage',
     // 4 Grises
-    'conseil_restreint', 'greve_zele', 'appel_nominal', 'piston'
+    'conseil_restreint', 'greve_zele', 'chambre_noire', 'insurrection_populaire'
 ];
