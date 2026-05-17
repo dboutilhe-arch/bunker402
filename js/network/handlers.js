@@ -230,7 +230,7 @@ function handleExecution(conn, data) {
 
 function handleCensure(conn, data) {
     const requester = players.find(p => p.conn === conn);
-    if (!requester || !requester.isAlive) return;
+    const target = players.find(p => p.name.toLowerCase() === data.targetName.toLowerCase());
 
     // PASSIF MÉTIER : Journaliste (Inciblable par la censure)
     if (target.metier === 'Journaliste') {
@@ -243,6 +243,8 @@ function handleCensure(conn, data) {
         }
         return; 
     }
+    
+    if (!requester || !requester.isAlive) return;
 
     if (data.isForced) {
         if (!requester.casePowerUsed) {
