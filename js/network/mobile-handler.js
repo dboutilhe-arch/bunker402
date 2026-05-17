@@ -123,6 +123,13 @@ function handleData(data) {
                     btn.style.opacity = "1";
                     btn.style.pointerEvents = "auto";
                 }
+                // ✨ 2. MISE À JOUR DYNAMIQUE DU BOUTON PASSIF DU FOSSOYEUR
+                // On vérifie si l'en-tête du métier contient "Fossoyeur" et si le serveur a envoyé le compteur de morts
+                const isFossoyeur = document.getElementById('metier-display').innerText.includes("Fossoyeur");
+                if (isFossoyeur && data.state.deadCount !== undefined) {
+                    const bonus = data.state.deadCount;
+                    btn.innerText = `NÉCROLOGIE : +${bonus} VOIX (${bonus} CADAVRE${bonus > 1 ? 'S' : ''})`;
+                }
             }
             break;
 
