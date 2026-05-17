@@ -239,11 +239,15 @@ export function applyDecret(cardId, type, isForced = false) {
         }
         
     } else if (type === 'F') {
-        state.suffrage = "Actif";
-        state.slotsSuffrageCard = cardId;
-        if (!isForced) {
-            decreetBloquant = executeDecreetPower(cardId);
+        // Si un suffrage était déjà actif, on remet son ID dans la défausse
+        if (state.slotsSuffrageCard) {
+            state.discard.push(state.slotsSuffrageCard);
+            Logger.add(`🗳️ SUFFRAGE : L'ancien décret '${state.slotsSuffrageCard}' est écrasé et envoyé à la défausse.`);
         }
+        
+        // On installe le nouveau suffrage
+        state.slotsSuffrageCard = cardId;
+        state.suffrage = card.name;
     }
 
     render();
