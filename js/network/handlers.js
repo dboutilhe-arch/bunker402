@@ -230,19 +230,6 @@ function handleExecution(conn, data) {
 
 function handleCensure(conn, data) {
     const requester = players.find(p => p.conn === conn);
-    const target = players.find(p => p.name.toLowerCase() === data.targetName.toLowerCase());
-
-    // PASSIF MÉTIER : Journaliste (Inciblable par la censure)
-    if (target.metier === 'Journaliste') {
-        Logger.add(`❌ CENSURE : L'Intendant a tenté de censurer ${target.name}, mais la liberté de la Presse (Journaliste) bloque l'action !`);
-        
-        // Optionnel : On peut envoyer un petit message d'erreur à l'Intendant pour lui notifier le refus
-        const intendant = players.find(p => p.name.toLowerCase() === data.playerName.toLowerCase());
-        if (intendant && intendant.conn) {
-            intendant.conn.send({ type: 'NOTIF_ERROR', message: "Action impossible : Cette cible est protégée par son statut de Journaliste." });
-        }
-        return; 
-    }
     
     if (!requester || !requester.isAlive) return;
 
