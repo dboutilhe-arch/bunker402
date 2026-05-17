@@ -469,6 +469,11 @@ function openTargetSelector(actionType, title, isForced = false) {
             if (actionType === 'REQUEST_CENSURE' && serverState.censoredNames && serverState.censoredNames.includes(name)) {
                 return; 
             }
+            
+            // ✨ SÉCURITÉ JOURNALISTE : S'il s'agit d'une censure, on n'affiche PAS le Journaliste dans la liste
+            if (actionType === 'REQUEST_CENSURE' && serverState.journalisteNames && serverState.journalisteNames.includes(name)) {
+                return; 
+            }
         
             const btn = document.createElement('button');
             btn.className = "btn-target";
