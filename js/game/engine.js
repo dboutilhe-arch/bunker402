@@ -211,6 +211,7 @@ export function handleDiscardFromNet(cardId, remainingCards) {
  * @param {boolean} isForced - true si le décret est parachuté par manque d'oxygène
  */
 export function applyDecret(cardId, type, isForced = false) {
+    const card = DECREETS_DATABASE[cardId];
     clearCouncilVisuals();
     state.lastSentinelle = players[state.curSIdx].name;
     state.lastGardien = players[state.curG].name;
