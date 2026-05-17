@@ -210,3 +210,21 @@ export function checkCasePower(caseNumber) {
             break;
     }
 }
+
+/**
+ * Exécute l'effet immédiat (symbole ⚡) d'un décret promulgué
+ * @param {string} cardId - L'identifiant unique du décret (ex: 'sabotage', 'censure')
+ * @returns {boolean} - true si le décret demande une action interactive (sélection de cible), false sinon
+ */
+export function executeDecreetPower(cardId) {
+    switch (cardId) {
+        case 'sabotage':
+            state.oxy--;
+            Logger.add("🚨 SABOTAGE : Les systèmes de ventilation ont été ciblés. L'oxygène baisse de 1 !");
+            return false; // Effet instantané, ne bloque pas le flux du tour
+
+        default:
+            // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
+            return false;
+    }
+}
