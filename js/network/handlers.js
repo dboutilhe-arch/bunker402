@@ -124,6 +124,12 @@ function handleVote(data) {
     // --- 4. CALCUL DYNAMIQUE DU POIDS DU VOTE (SUFFRAGE) ---
     let voteWeight = 1;
     const choiceKey = data.choice.toLowerCase(); // 'oui' ou 'non'
+
+    // PASSIF MÉTIER : Shérif (Son vote compte double de base)
+    if (voter.metier === 'Shérif') {
+        voteWeight = 2;
+        Logger.add(`🗳️ MÉTIER [Shérif] : Le vote de base de ${voter.name} compte DOUBLE.`);
+    }
     
     // CAS A : Conseil Restreint (Gardien & Sentinelle comptent double)
     if (state.slotsSuffrageCard === 'conseil_restreint') {
