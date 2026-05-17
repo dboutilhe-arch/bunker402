@@ -13,7 +13,7 @@ import {
     rebuildActivePlayerTags
 } from '../ui/renderer.js';
 import { Logger } from '../ui/logger.js';
-import { checkCasePower } from './powers.js';
+import { checkCasePower, executeDecreetPower } from './powers.js';
 
 // --- LOGIQUE DE JEU ---
 
@@ -194,31 +194,50 @@ export function applyDecret(cardId, type) {
     state.lastGardien = players[state.curG].name;
     updateLastCouncil();
 
+    let decreetBloquant = false;
+
     if (type === 'S') {
         state.survie++;
         state.slotsSurvieCards.push(cardId);
+        // Exécution de l'effet de la carte Survie
+        decreetBloquant = executeDecreetPower(cardId);
+        
     } else if (type === 'C') {
         state.crise++;
         state.slotsCriseCards.push(cardId);
+        
+        // 1. On applique d'abord l'effet de la carte Crise
+        decreetBloquant = executeDecreetPower(cardId);
+        
+        // 2. On applique ensuite le pouvoir de la Case atteint (si elle en a un)
         checkCasePower(state.crise);
+        
     } else if (type === 'F') {
         state.suffrage = "Actif";
         state.slotsSuffrageCard = cardId;
+        decreetBloquant = executeDecreetPower(cardId);
     }
 
-    players.forEach(p => { p.isCensored = false; p.censoredBy = ""; });
     render();
     syncTerminals();
 
-    if (state.survie >= 5) triggerWin("SURVIVANTS", "Protocoles rétablis.");
-    else if (state.crise >= 6) triggerWin("INFECTES", "Infection totale.");
-    else {
-        if (!state.currentPowerActive) {
-            state.curG = (state.curG + 1) % players.length;
-            setTimeout(() => { state.isProcessingAction = false; nextTurn(); }, 1000);
-        } else {
-            state.isProcessingAction = true;
-        }
+    if (state.survie >= 5) {
+        return triggerWin("SURVIVANTS", "Protocoles rétablis.");
+    }
+    if (state.crise >= 6) {
+        return triggerWin("INFECTES", "Infection totale.");
+    }
+
+    // --- LOGIQUE DE TRANSITION DE TOUR ---
+    // Le tour ne passe au suivant que si NI la case NI le décret ne retiennent le jeu
+    if (!state.currentPowerActive && !decreetBloquant) {
+        state.curG = (state.curG + 1) % players.length;
+        setTimeout(() => { 
+            state.isProcessingAction = false; 
+            nextTurn(); 
+        }, 1000);
+    } else {
+        state.isProcessingAction = true;
     }
 }
 
