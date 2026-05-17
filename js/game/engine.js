@@ -139,19 +139,29 @@ export function nextTurn() {
  * Calcul du résultat du vote
  */
 export function resolveVote() {
-    // ✨ NETTOYAGE DES CENSURES : Le vote est fini, on réinitialise les statuts pour le prochain tour
+    // NETTOYAGE DES CENSURES : Le vote est fini, on réinitialise les statuts pour le prochain tour
     players.forEach(p => { 
         p.isCensored = false; 
         p.censoredBy = ""; 
     });
 
-    // 1. Gestion de l'affichage des couleurs (reprise de ton code d'origine)
+    // 1. Gestion de l'affichage des couleurs (Prend en compte la Chambre Noire)
     state.votes.list.forEach(v => {
         const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
-        tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
+        
+        if (state.slotsSuffrageCard === 'chambre_noire') {
+            // Sous Chambre Noire, on applique une couleur neutre (on triche en enlevant les classes oui/non)
+            tags.forEach(t => {
+                t.style.background = "#f1c40f"; // Jaune
+                t.style.color = "#000";
+            });
+        } else {
+            // Affichage classique (Vert pour OUI, Rouge pour NON)
+            tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
+        }
     });
 
-    // 2. Calcul du résultat
+    // 2. Calcul du résultat (La suite de ton code reste inchangée...)
     if (state.votes.oui > state.votes.non) {
         state.currentPhase = "LÉGISLATION_G";
         state.currentLegislativeCards = [drawCard(), drawCard(), drawCard()].filter(Boolean);
