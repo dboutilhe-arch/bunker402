@@ -124,6 +124,19 @@ function handleVote(data) {
     // --- 4. CALCUL DYNAMIQUE DU POIDS DU VOTE (SUFFRAGE) ---
     let voteWeight = 1;
     const choiceKey = data.choice.toLowerCase(); // 'oui' ou 'non'
+
+    // PASSIF MÉTIER : Shérif (Son vote compte double de base)
+    if (voter.metier === 'Shérif') {
+        voteWeight = 2;
+        Logger.add(`🗳️ MÉTIER [Shérif] : Le vote de base de ${voter.name} compte DOUBLE.`);
+    }
+
+    // PASSIF MÉTIER : Fossoyeur (+1 voix par joueur mort)
+    if (voter.metier === 'Fossoyeur') {
+        const deadCount = players.filter(p => !p.isAlive).length;
+        voteWeight += deadCount;
+        Logger.add(`🗳️ MÉTIER [Fossoyeur] : ${voter.name} obtient +${deadCount} voix grâce aux morts (Poids total : ${voteWeight}).`);
+    }
     
     // CAS A : Conseil Restreint (Gardien & Sentinelle comptent double)
     if (state.slotsSuffrageCard === 'conseil_restreint') {
@@ -224,6 +237,7 @@ function handleExecution(conn, data) {
 
 function handleCensure(conn, data) {
     const requester = players.find(p => p.conn === conn);
+    
     if (!requester || !requester.isAlive) return;
 
     if (data.isForced) {

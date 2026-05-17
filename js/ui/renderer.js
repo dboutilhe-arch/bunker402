@@ -76,6 +76,11 @@ export function syncTerminals() {
     state.aliveNames = players.filter(p => p.isAlive).map(p => p.name);
     state.censoredNames = players.filter(p => p.isCensored).map(p => p.name);
     
+    // ON ENVOIE LES JOURNALISTES AU STATE POUR LES SMARTPHONES
+    state.journalisteNames = players.filter(p => p.isAlive && p.metier === 'Journaliste').map(p => p.name);
+    // ON ENVOIE LE NOMBRE DE MORTS AU STATE POUR LE FOSSOYEUR
+    state.deadCount = players.filter(p => !p.isAlive).length;
+    
     players.forEach(p => {
         if (p.conn && p.conn.open) {
             p.conn.send({ type: 'SYNC_STATE', state: state });

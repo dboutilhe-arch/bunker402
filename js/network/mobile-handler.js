@@ -123,6 +123,13 @@ function handleData(data) {
                     btn.style.opacity = "1";
                     btn.style.pointerEvents = "auto";
                 }
+                // ✨ 2. MISE À JOUR DYNAMIQUE DU BOUTON PASSIF DU FOSSOYEUR
+                // On vérifie si l'en-tête du métier contient "Fossoyeur" et si le serveur a envoyé le compteur de morts
+                const isFossoyeur = document.getElementById('metier-display').innerText.includes("Fossoyeur");
+                if (isFossoyeur && data.state.deadCount !== undefined) {
+                    const bonus = data.state.deadCount;
+                    btn.innerText = `NÉCROLOGIE : +${bonus} VOIX (${bonus} CADAVRE${bonus > 1 ? 'S' : ''})`;
+                }
             }
             break;
 
@@ -293,7 +300,55 @@ function setupIdentity(data) {
           if (hasUsedPower) jobUi.style.opacity = "0.3";
           btn.onclick = () => openTargetSelector('REQUEST_CENSURE', 'PROTOCOLE DE CENSURE');
           jobUi.appendChild(btn);
-      }
+   }
+   if (data.metier === 'Shérif') {
+        const btn = document.createElement('button');
+        btn.id = "btn-power";
+        btn.className = "btn-power";
+        btn.innerText = "PASSIF: VOTE DOUBLE";
+        
+        // Bridation pour le rendre purement informatif
+        btn.disabled = true;
+        btn.style.opacity = "0.6";           /* Légèrement plus sombre pour le distinguer d'un bouton actif */
+        btn.style.background = "#4a004a";     /* Un violet/rose plus sombre et institutionnel */
+        btn.style.borderColor = "#ff00ff";    /* Garde la bordure rose flash */
+        btn.style.color = "#ff00ff";          /* Texte rose qui brille */
+        btn.style.pointerEvents = "none";     /* Sécurité anti-clic */
+        
+        jobUi.appendChild(btn);
+   }
+   if (data.metier === 'Journaliste') {
+        const btn = document.createElement('button');
+        btn.id = "btn-power";
+        btn.className = "btn-power";
+        btn.innerText = "PASSIF: IMMUNITÉ CENSURE";
+        
+        // Verrouillage visuel et technique
+        btn.disabled = true;
+        btn.style.opacity = "0.6";
+        btn.style.background = "#002b36";     /* Un bleu canard très sombre style archive */
+        btn.style.borderColor = "#00ffff";    /* Bordure cyan rétro-futuriste */
+        btn.style.color = "#00ffff";          /* Texte cyan lumineux */
+        btn.style.pointerEvents = "none";
+        
+        jobUi.appendChild(btn);
+   }
+   if (data.metier === 'Fossoyeur') {
+        const btn = document.createElement('button');
+        btn.id = "btn-power";
+        btn.className = "btn-power";
+        // Texte initial (sera écrasé par la synchronisation juste après)
+        btn.innerText = "NÉCROLOGIE : +0 VOIX (0 MORT)"; 
+        
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+        btn.style.background = "#1a1105";     /* Terre/Cendre très sombre */
+        btn.style.borderColor = "#964b00";    /* Bordure brun/rouille */
+        btn.style.color = "#d2b48c";          /* Texte couleur os / beige */
+        btn.style.pointerEvents = "none";
+        
+        jobUi.appendChild(btn);
+   }
 }
 
 
@@ -435,6 +490,11 @@ function openTargetSelector(actionType, title, isForced = false) {
                 
             // Si c'est une demande de Censure, on cache les cibles déjà censurées
             if (actionType === 'REQUEST_CENSURE' && serverState.censoredNames && serverState.censoredNames.includes(name)) {
+                return; 
+            }
+            
+            // ✨ SÉCURITÉ JOURNALISTE : S'il s'agit d'une censure, on n'affiche PAS le Journaliste dans la liste
+            if (actionType === 'REQUEST_CENSURE' && serverState.journalisteNames && serverState.journalisteNames.includes(name)) {
                 return; 
             }
         
