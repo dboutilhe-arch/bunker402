@@ -185,10 +185,13 @@ export function handleDiscardFromNet(cardId, remainingCards) {
     }, 100);
 }
 
-/**
+/*
  * Application d'un décret (Survie, Crise ou Suffrage)
+ * @param {string} cardId - L'ID du décret
+ * @param {string} type - 'S', 'C' ou 'F'
+ * @param {boolean} isForced - true si le décret est parachuté par manque d'oxygène
  */
-export function applyDecret(cardId, type) {
+export function applyDecret(cardId, type, isForced = false) {
     clearCouncilVisuals();
     state.lastSentinelle = players[state.curSIdx].name;
     state.lastGardien = players[state.curG].name;
@@ -199,37 +202,54 @@ export function applyDecret(cardId, type) {
     if (type === 'S') {
         state.survie++;
         state.slotsSurvieCards.push(cardId);
-        // Exécution de l'effet de la carte Survie
-        decreetBloquant = executeDecreetPower(cardId);
+        // On n'exécute le pouvoir QUE si le décret n'est pas forcé
+        if (!isForced) {
+            decreetBloquant = executeDecreetPower(cardId);
+        }
         
     } else if (type === 'C') {
         state.crise++;
         state.slotsCriseCards.push(cardId);
         
-        // 1. On applique d'abord l'effet de la carte Crise
-        decreetBloquant = executeDecreetPower(cardId);
-        
-        // 2. On applique ensuite le pouvoir de la Case atteint (si elle en a un)
-        checkCasePower(state.crise);
+        // On n'exécute les pouvoirs QUE si le décret n'est pas forcé
+        if (!isForced) {
+            // 1. Effet de la carte
+            decreetBloquant = executeDecreetPower(cardId);
+            // 2. Pouvoir de la case jauge
+            checkCasePower(state.crise);
+        }
         
     } else if (type === 'F') {
         state.suffrage = "Actif";
         state.slotsSuffrageCard = cardId;
-        decreetBloquant = executeDecreetPower(cardId);
+        if (!isForced) {
+            decreetBloquant = executeDecreetPower(cardId);
+        }
+    }
+
+    // On nettoie les censures du tour uniquement si c'est une législation normale (hors décret forcé au milieu d'un vote)
+    if (!isForced) {
+        players.forEach(p => { p.isCensored = false; p.censoredBy = ""; });
     }
 
     render();
     syncTerminals();
 
-    if (state.survie >= 5) {
-        return triggerWin("SURVIVANTS", "Protocoles rétablis.");
-    }
-    if (state.crise >= 6) {
-        return triggerWin("INFECTES", "Infection totale.");
+    // --- SÉCURITÉS CONDITIONS DE VICTOIRE ---
+    if (state.survie >= 5) return triggerWin("SURVIVANTS", "Protocoles rétablis.");
+    if (state.crise >= 6) return triggerWin("INFECTES", "Infection totale.");
+
+    // --- SÉCURITÉ URGENCE OXYGÈNE À ZÉRO (Si un sabotage normal nous y a menés) ---
+    if (state.oxy <= 0) {
+        Logger.add("⚠️ ALERTE : Le niveau d'oxygène a atteint le seuil critique 0 !");
+        state.isProcessingAction = false; 
+        setTimeout(() => {
+            applyForced();
+        }, 1500);
+        return;
     }
 
     // --- LOGIQUE DE TRANSITION DE TOUR ---
-    // Le tour ne passe au suivant que si NI la case NI le décret ne retiennent le jeu
     if (!state.currentPowerActive && !decreetBloquant) {
         state.curG = (state.curG + 1) % players.length;
         setTimeout(() => { 
@@ -246,15 +266,15 @@ export function applyDecret(cardId, type) {
  */
 export function applyForced() {
     let cardId = drawCard(); 
-    // On s'assure qu'un décret forcé n'est pas un suffrage selon tes anciennes règles
     while(cardId && DECREETS_DATABASE[cardId].type === 'F') {
         state.discard.push(cardId);
         cardId = drawCard();
     }
     
     if(cardId) {
-        Logger.add(`URGENCE : Déploiement forcé du décret : ${DECREETS_DATABASE[cardId].name.toUpperCase()}`);
-        applyDecret(cardId, DECREETS_DATABASE[cardId].type); 
+        Logger.add(`URGENCE : Déploiement forcé du décret : ${DECREETS_DATABASE[cardId].name.toUpperCase()} (Pouvoirs désactivés)`);
+        // --- ANCRE DE SÉCURITÉ : On passe true pour signaler le mode forcé ---
+        applyDecret(cardId, DECREETS_DATABASE[cardId].type, true); 
     }
     state.oxy = 3; 
 }
