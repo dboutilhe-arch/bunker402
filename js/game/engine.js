@@ -150,11 +150,8 @@ export function resolveVote() {
         const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
         
         if (state.slotsSuffrageCard === 'chambre_noire') {
-            // Sous Chambre Noire, on applique une couleur neutre (on triche en enlevant les classes oui/non)
-            tags.forEach(t => {
-                t.style.background = "#f1c40f"; // Jaune
-                t.style.color = "#000";
-            });
+            // ✨ On applique la classe CSS pour le mode secret
+            tags.forEach(t => t.classList.add('voted-secret'));
         } else {
             // Affichage classique (Vert pour OUI, Rouge pour NON)
             tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
