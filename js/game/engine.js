@@ -227,11 +227,6 @@ export function applyDecret(cardId, type, isForced = false) {
         }
     }
 
-    // On nettoie les censures du tour uniquement si c'est une législation normale (hors décret forcé au milieu d'un vote)
-    if (!isForced) {
-        players.forEach(p => { p.isCensored = false; p.censoredBy = ""; });
-    }
-
     render();
     syncTerminals();
 
@@ -374,12 +369,23 @@ export function showGov(g, s) {
     document.getElementById('vote-summary').style.color = "#f1c40f"; // Jaune pour le scrutin
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
     
-    // FILTRAGE DES ENVOIS 
+    // FILTRAGE ET ENVOI DES INTERFACES DE VOTE
     players.filter(p => p.isAlive).forEach(p => {
         if (p.isCensored) {
+            // Le joueur subit la censure pour CE vote
             p.conn.send({ type: 'CENSORED_ALERT', by: p.censoredBy });
         } else {
+            // Le joueur peut voter normalement
             p.conn.send({ type: 'VOTE_START', g: g, s: s });
         }
-    })
+    });
+
+    // NETTOYAGE POST-VOTE : Maintenant que les paquets réseau sont partis, 
+    // on libère les variables pour que le joueur puisse être de nouveau la cible d'une censure 
+    // ou retrouver ses droits au prochain tour.
+    players.forEach(p => { 
+        p.isCensored = false; 
+        p.censoredBy = ""; 
+    });
+    
 }
