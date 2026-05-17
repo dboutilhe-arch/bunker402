@@ -139,27 +139,36 @@ export function nextTurn() {
  * Calcul du résultat du vote
  */
 export function resolveVote() {
+    // ✨ NETTOYAGE DES CENSURES : Le vote est fini, on réinitialise les statuts pour le prochain tour
+    players.forEach(p => { 
+        p.isCensored = false; 
+        p.censoredBy = ""; 
+    });
+
+    // 1. Gestion de l'affichage des couleurs (reprise de ton code d'origine)
     state.votes.list.forEach(v => {
         const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
         tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
     });
 
-    if(state.votes.oui > state.votes.non) {
+    // 2. Calcul du résultat
+    if (state.votes.oui > state.votes.non) {
         state.currentPhase = "LÉGISLATION_G";
-        
         state.currentLegislativeCards = [drawCard(), drawCard(), drawCard()].filter(Boolean);
         state.oxy = 3;
 
         players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
-        if(state.crise >= 3 && players[state.curSIdx].role === 'A') {
+        if (state.crise >= 3 && players[state.curSIdx].role === 'A') {
             return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
         }
         setTimeout(() => {
             players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
         }, 100);
+
     } else {
+        // REJET CLASSIQUE
         state.oxy--;
-        if(state.oxy <= 0) {
+        if (state.oxy <= 0) {
             applyForced();
         } else { 
             state.curG = (state.curG + 1) % players.length; 
@@ -352,7 +361,7 @@ export function globalReset() {
 export function showGov(g, s) {
     state.currentPhase = "VOTE"; 
     state.currentProposedS = s;  
-    const sTags = document.querySelectorAll(`[id="tag-${s.toLowerCase()}"]`);
+    const sTags = document.querySelectorAll(`[id=\"tag-${s.toLowerCase()}\"]`);
     sTags.forEach(tag => { 
         tag.style.borderColor = "#3498db"; 
         tag.style.borderWidth = "2px"; 
@@ -366,26 +375,17 @@ export function showGov(g, s) {
 
     const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
     document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : 0 / ${eligibleCount}`;
-    document.getElementById('vote-summary').style.color = "#f1c40f"; // Jaune pour le scrutin
+    document.getElementById('vote-summary').style.color = "#f1c40f"; 
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
     
-    // FILTRAGE ET ENVOI DES INTERFACES DE VOTE
+    // On envoie les bonnes interfaces (Vote ou Alerte de censure)
     players.filter(p => p.isAlive).forEach(p => {
         if (p.isCensored) {
-            // Le joueur subit la censure pour CE vote
             p.conn.send({ type: 'CENSORED_ALERT', by: p.censoredBy });
         } else {
-            // Le joueur peut voter normalement
             p.conn.send({ type: 'VOTE_START', g: g, s: s });
         }
     });
 
-    // NETTOYAGE POST-VOTE : Maintenant que les paquets réseau sont partis, 
-    // on libère les variables pour que le joueur puisse être de nouveau la cible d'une censure 
-    // ou retrouver ses droits au prochain tour.
-    players.forEach(p => { 
-        p.isCensored = false; 
-        p.censoredBy = ""; 
-    });
-    
+    // ✨ LE NETTOYAGE A ÉTÉ RETIRÉ D'ICI POUR RESTER ACTIF DURANT TOUT LE VOTE
 }
