@@ -28,8 +28,8 @@ const DECREETS_DB_LOCAL = {
     'secret_etat': { name: "Secret d’État", type: "C", symbol: "♾️", desc: "Tous les pouvoirs de type 'Regarder la pioche' ou 'Regarder la défausse' sont annulés." },
     'conseil_restreint': { name: "Conseil Restreint", type: "F", symbol: "🗳️", desc: "Les votes du Gardien et de la Sentinelle comptent double." },
     'greve_zele': { name: "Grève du Zèle", type: "F", symbol: "🗳️", desc: "Les votes NON comptent double." },
-    'appel_nominal': { name: "Appel Nominal", type: "F", symbol: "🗳️", desc: "Les joueurs votent l'un après l'autre dans le sens horaire." },
-    'piston': { name: "Piston", type: "F", symbol: "🗳️", desc: "Le Gardien choisit une caractéristique sociale dont le vote compte double." }
+    'chambre_noire': { name: "Chambre Noire", type: "F", symbol: "🗳️", desc: "Le choix individuel des votes (Oui/Non) reste anonyme sur la console centrale." },
+    'insurrection_populaire': { name: "Insurrection Populaire", type: "F", symbol: "🗳️", desc: "Les votes du personnel ayant le métier de Civil comptent double." }
 };
 
 // --- INITIALISATION AU CHARGEMENT ---
