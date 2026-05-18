@@ -105,53 +105,49 @@ function handleData(data) {
         case 'SYNC_STATE':
             serverState = data.state;
             updateMiniBoard(data.state);
-            // On vérifie si NOUS sommes morts dans l'état reçu
-            const me = data.state.votes.list ? null : null; // Juste pour la structure
-            // On cherche notre propre état dans la liste des joueurs (non présente dans state, on utilise une autre logique)
-            // Mais plus simple : si l'interface affiche déjà "MORT", on ne traite pas la synchro de boutons
+            
             if (document.getElementById('main-ui').innerText.includes("VOUS ÊTES MORT")) return;
       
-            // Si on reçoit une synchro et qu'on n'est pas en train de choisir un pouvoir forcé
-            // on redonne l'état normal au bouton de métier
             const btn = document.getElementById('btn-power');
             if (btn) {
-                // Le bouton n'est utilisable que si :
-                // 1. Le joueur ne l'a pas déjà utilisé (hasUsedPower)
-                // 2. Le serveur ne dit pas qu'un pouvoir de case est actif (currentPowerActive)
                 if (!hasUsedPower && !data.state.currentPowerActive) {
                     btn.disabled = false;
                     btn.style.opacity = "1";
                     btn.style.pointerEvents = "auto";
                 }
-                // ✨ 2. MISE À JOUR DYNAMIQUE DU BOUTON PASSIF DU FOSSOYEUR
-                // On vérifie si l'en-tête du métier contient "Fossoyeur" et si le serveur a envoyé le compteur de morts
+                
                 const isFossoyeur = document.getElementById('metier-display').innerText.includes("Fossoyeur");
                 if (isFossoyeur && data.state.deadCount !== undefined) {
                     const bonus = data.state.deadCount;
                     btn.innerText = `NÉCROLOGIE : +${bonus} VOIX (${bonus} CADAVRE${bonus > 1 ? 'S' : ''})`;
                 }
             }
-            if (myMetier === 'Archiviste') {
-            const jobZone = document.getElementById('job-ui');
-            jobZone.innerHTML = ""; // On nettoie
+
+            // ✨ CORRECTION ARCHIVISTE : On vérifie le conteneur HTML pour savoir si on est Archiviste
+            const isArchiviste = document.getElementById('metier-display').innerText.includes("Archiviste");
+            if (isArchiviste) {
+                const jobZone = document.getElementById('job-ui');
+                jobZone.innerHTML = ""; 
         
-            const btnPower = document.createElement('button');
-            btnPower.className = "btn-job";
-            btnPower.innerText = "📜 ARCHIVER LE PROCHAIN VOTE";
-            
-            // Si le pouvoir a déjà été utilisé ou si on est déjà en phase de législation, on le grise
-            if (hasUsedPower || serverState.currentPhase.startsWith("LÉGISLATION")) {
-                btnPower.disabled = true;
-                btnPower.style.opacity = "0.3";
+                const btnPower = document.createElement('button');
+                btnPower.id = "btn-power"; // On lui donne l'ID standard pour qu'il soit aussi ciblé par les grisailles forcées
+                btnPower.className = "btn-power";
+                btnPower.innerText = "📜 ARCHIVER LE PROCHAIN VOTE";
+                
+                // Si déjà utilisé, ou si le Conseil est déjà en train de choisir les cartes, on bloque
+                if (hasUsedPower || data.state.currentPhase.startsWith("LÉGISLATION")) {
+                    btnPower.disabled = true;
+                    btnPower.style.opacity = "0.3";
+                    btnPower.style.pointerEvents = "none";
+                }
+        
+                btnPower.onclick = () => {
+                    if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
+                    conn.send({ type: 'USE_ARCHIVISTE_POWER' });
+                };
+        
+                jobZone.appendChild(btnPower);
             }
-        
-            btnPower.onclick = () => {
-                if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
-                conn.send({ type: 'USE_ARCHIVISTE_POWER' });
-            };
-        
-            jobZone.appendChild(btnPower);
-        }
             break;
 
         case 'YOUR_TURN':
@@ -399,6 +395,19 @@ function setupIdentity(data) {
         
         jobUi.appendChild(btn);
    }
+   if (data.metier === 'Archiviste') {
+        const btn = document.createElement('button');
+        btn.id = "btn-power";
+        btn.className = "btn-power";
+        btn.innerText = "📜 ARCHIVER LE PROCHAIN VOTE";
+        if (hasUsedPower) jobUi.style.opacity = "0.3";
+        
+        btn.onclick = () => {
+            if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
+            conn.send({ type: 'USE_ARCHIVISTE_POWER' });
+        };
+        jobUi.appendChild(btn);
+    }
 }
 
 
