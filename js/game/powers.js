@@ -214,6 +214,16 @@ export function executeDecreetPower(cardId) {
                     title: 'CENSURE GOUVERNEMENTALE (DÉCRET)' 
                 });
             }
+            On met tous les AUTRES joueurs en attente avec l'écran violet
+            players.forEach(p => {
+                if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
+                    p.conn.send({ 
+                        type: 'WAIT_POWER', 
+                        gardienName: gardien.name, 
+                        title: 'CENSURE GOUVERNEMENTALE' 
+                    });
+                }
+            });
             return true;    
 
         default:
