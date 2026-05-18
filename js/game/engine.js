@@ -304,7 +304,15 @@ export function applyDecret(cardId, type, isForced = false) {
 
     // --- LOGIQUE DE TRANSITION DE TOUR ---
     if (!state.currentPowerActive && !decreetBloquant) {
-        state.curG = (state.curG + 1) % players.length;
+        // COUP D'ÉTAT : Si un retour à l'ordre normal est planifié
+        if (state.nextNormalGardien !== null) {
+            state.curG = state.nextNormalGardien;
+            state.nextNormalGardien = null; // Parenthèse fermée !
+            Logger.add("🔊 SYSTÈME : Fin du régime extraordinaire. Retour à l'ordre de passage standard.");
+        } else {
+            // Passage normal au joueur suivant
+            state.curG = (state.curG + 1) % players.length;
+        }
         setTimeout(() => { 
             state.isProcessingAction = false; 
             nextTurn(); 
