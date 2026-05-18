@@ -226,6 +226,7 @@ export function executeDecreetPower(cardId) {
                     });
                 }
             });
+            return true;
 
         case 'test_sanguin':
             state.currentPowerActive = true; // On bloque la transition automatique de tour
