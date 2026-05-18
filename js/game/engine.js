@@ -165,8 +165,13 @@ export function resolveVote() {
         state.oxy = getOxygenMaxLimit(); // On fixe le niveau d'oxygène selon les fuites actives
 
         players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
+        
         if (state.crise >= 3 && players[state.curSIdx].role === 'A') {
-            return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
+            if (state.rebellionActive) { // Si Rébellion est active, on bloque la victoire immédiate !
+                Logger.add(`🛡️ RÉBELLION : L'Alpha (${players[state.curSIdx].name}) est élu Sentinelle, mais le décret Rébellion bloque sa victoire par élection !`);
+            } else {
+                return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
+            }
         }
         setTimeout(() => {
             players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
@@ -220,6 +225,13 @@ export function applyDecret(cardId, type, isForced = false) {
         state.survie++;
         state.slotsSurvieCards.push(cardId);
         // On n'exécute le pouvoir QUE si le décret n'est pas forcé
+
+        // On active l'effet du décret Rébellion
+        if (cardId === 'rebellion') {
+            state.rebellionActive = true;
+            Logger.add("✊ SYSTÈME : Le décret RÉBELLION est promulgué. L'Alpha ne peut plus gagner par élection.");
+        }
+        
         if (!isForced) {
             decreetBloquant = executeDecreetPower(cardId);
         }
@@ -234,6 +246,12 @@ export function applyDecret(cardId, type, isForced = false) {
             decreetBloquant = executeDecreetPower(cardId);
             // 2. Pouvoir de la case jauge
             checkCasePower(state.crise);
+        }
+
+        // L'effet s'estompe, mais la carte reste sur le plateau pour le score bleu !
+        if (state.rebellionActive) {
+            state.rebellionActive = false;
+            Logger.add("💥 SYSTÈME : Une Directive de Crise a été promulguée. L'effet du décret RÉBELLION est désormais obsolète (mais le point de Survie reste acquis).");
         }
         
     } else if (type === 'F') {
