@@ -42,6 +42,10 @@ export function handlePlayerData(conn, data) {
             handleCensure(conn, data);
             break;
 
+        case 'ACTION_CONFIRMED':
+            handleActionConfirmed();
+            break;
+
         case 'SYNC_REQUEST':
             handleSyncRequest(conn);
             break;
@@ -280,5 +284,18 @@ export function handlePlayerDisconnect(closedConn) {
         Logger.add(`SIGNAL PERDU : ${player.name} déconnecté.`);
         const tags = document.querySelectorAll(`[id="tag-${player.name.toLowerCase()}"]`);
         tags.forEach(tag => tag.style.opacity = "0.5");
+    }
+}
+
+function handleActionConfirmed() {
+    // Le joueur a cliqué sur OK, si un pouvoir de décret/case était actif, on libère le jeu
+    if (state.currentPowerActive) {
+        state.currentPowerActive = false;
+        syncTerminals();
+        setTimeout(() => {
+            state.curG = (state.curG + 1) % players.length;
+            state.isProcessingAction = false;
+            nextTurn();
+        }, 500); 
     }
 }
