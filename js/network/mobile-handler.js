@@ -163,6 +163,20 @@ function handleData(data) {
             `;
             break;
 
+        case 'WAIT_POWER':
+            ui.innerHTML = `
+                <div style="margin-top: 40px; border: 1px dashed #ff00ff; padding: 20px; border-radius: 10px; background: rgba(255, 0, 255, 0.02);">
+                    <h2 style="color: #ff00ff; text-transform: uppercase; letter-spacing: 1px;">PROTOCOLE INTERACTIF</h2>
+                    <p style="color: #e0e0e0; font-size: 0.9em;">Le Gardien <b>${data.gardienName}</b> applique le décret :</p>
+                    <p style="color: #ff00ff; font-weight: bold; font-size: 1.1em; text-transform: uppercase;">[ ${data.title} ]</p>
+                    
+                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #ff00ff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.2s linear infinite; box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);"></div>
+                    
+                    <p style="font-size: 0.75em; color: #555; letter-spacing: 1px;">[SÉCURISATION DES TERMINAUX DISTANTS EN COURS]</p>
+                </div>
+            `;
+            break;
+
         case 'GARDIEN_PICK':
             showLegislativeUI("GARDIEN", data.cards);
             break;
