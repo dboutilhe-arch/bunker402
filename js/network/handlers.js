@@ -202,15 +202,22 @@ function handleDiscard(data) {
 }
 
 function handleFinalChoice(data) {
-    const cardId = data.card; // La carte choisie
+    const cardId = data.card; 
     const cardData = DECREETS_DATABASE[cardId];
     if (!cardData) return;
-    const discardedBySentinelle = state.currentLegislativeCards.find(id => id !== cardId);
-    if (discardedBySentinelle) {
-        state.discard.push(discardedBySentinelle);
+    
+    const discardedByCouncil = state.currentLegislativeCards.find(id => id !== cardId);
+    if (discardedByCouncil) {
+        state.discard.push(discardedByCouncil);
     }
-    const typeLabel = cardData.type === 'S' ? "SURVIE" : (cardData.type === 'C' ? "CRISE" : "SUFFRAGE");
-    Logger.add(`LÉGISLATION : La Sentinelle a promulgué le décret : ${cardData.name.toUpperCase()}`);
+    
+    // On ajuste le log si c'était le Gardien sous 49.3
+    if (state.currentPhase === "LÉGISLATION_493") {
+        Logger.add(`🔨 49.3 RÉSOLU : Le Gardien a choisi seul de promulguer : ${cardData.name.toUpperCase()}`);
+    } else {
+        Logger.add(`LÉGISLATION : La Sentinelle a promulgué le décret : ${cardData.name.toUpperCase()}`);
+    }
+    
     state.isProcessingAction = true;
     applyDecret(cardId, cardData.type);
 }
