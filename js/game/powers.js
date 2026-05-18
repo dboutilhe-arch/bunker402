@@ -190,6 +190,37 @@ export function checkCasePower(caseNumber) {
     }
 }
 
+
+export function purgeCriseCard(requester, cardId) {
+    const idx = state.slotsCriseCards.indexOf(cardId);
+    if (idx === -1) return;
+
+    // 1. On retire physiquement la carte de la jauge et on baisse le score
+    state.slotsCriseCards.splice(idx, 1);
+    state.crise--;
+    
+    // 2. On envoie la carte purgée dans la défausse
+    state.discard.push(cardId);
+    
+    Logger.add(`🧹 PURGE : ${requester.name} a purgé le décret '${cardId.toUpperCase()}' du plateau.`);
+    Logger.add(`SYSTÈME : La jauge de Crise recule et passe à ${state.crise}/6.`);
+
+    // 3. FIN DES EFFETS PERMANENTS : Si on a purgé une fuite d'air rouge, l'atmosphère se détend immédiatement
+    // (L'oxygène max se recalculera tout seul au prochain reset ou rendu)
+    
+    // 4. On envoie le récapitulatif standard au Gardien pour qu'il ait son bouton OK
+    requester.conn.send({
+        type: 'CENSURE_RESULT', // On réutilise le template visuel violet "TERMINAL VERROUILLÉ / OK"
+        target: cardId,         // On détourne la variable target pour afficher le nom de la carte
+        isForced: state.currentPowerActive
+    });
+
+    // On rafraîchit l'écran PC central
+    const { render, syncTerminals } = await import('../ui/renderer.js');
+    render();
+    syncTerminals();
+}
+
 /**
  * Exécute l'effet immédiat (symbole ⚡) d'un décret promulgué
  * @param {string} cardId - L'identifiant unique du décret (ex: 'sabotage', 'censure')
