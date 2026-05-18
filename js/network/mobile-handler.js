@@ -146,7 +146,7 @@ function handleData(data) {
                 <div style="margin-top: 40px;">
                     <h2 style="color: #f1c40f; text-transform: uppercase;">FORMATION DU CONSEIL</h2>
                     <p style="color: #e0e0e0;">Le Gardien <b>${data.gardienName}</b> choisit sa Sentinelle...</p>
-                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite;"></div>
+                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #f1c40f; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite;"></div>
                     <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[ANALYSE DES ACCÈS RÉSEAU EN COURS]</p>
                 </div>
             `;
@@ -165,13 +165,11 @@ function handleData(data) {
 
         case 'WAIT_POWER':
             ui.innerHTML = `
-                <div style="margin-top: 40px; border: 1px dashed #ff00ff; padding: 20px; border-radius: 10px; background: rgba(255, 0, 255, 0.02);">
+                <div style="margin-top: 40px; ">
                     <h2 style="color: #ff00ff; text-transform: uppercase; letter-spacing: 1px;">PROTOCOLE INTERACTIF</h2>
                     <p style="color: #e0e0e0; font-size: 0.9em;">Le Gardien <b>${data.gardienName}</b> applique le décret :</p>
                     <p style="color: #ff00ff; font-weight: bold; font-size: 1.1em; text-transform: uppercase;">[ ${data.title} ]</p>
-                    
                     <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #ff00ff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.2s linear infinite; box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);"></div>
-                    
                     <p style="font-size: 0.75em; color: #555; letter-spacing: 1px;">[SÉCURISATION DES TERMINAUX DISTANTS EN COURS]</p>
                 </div>
             `;
