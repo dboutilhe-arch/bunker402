@@ -50,6 +50,10 @@ export function handlePlayerData(conn, data) {
             handleCoupEtat(conn, data);
             break;
 
+        case 'REQUEST_VIGILE_BAN':
+            handleVigileBan(conn, data);
+            break;
+
         case 'ACTION_CONFIRMED':
             handleActionConfirmed();
             break;
@@ -358,4 +362,30 @@ function handleCoupEtat(conn, data) {
     });
 
     syncTerminals();
+}
+
+function handleVigileBan(conn, data) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive || requester.metier !== 'Vigile' || requester.jobPowerUsed) return;
+
+    // Consommation du pouvoir unique
+    requester.jobPowerUsed = true;
+    state.vigileBannedPlayer = data.targetName;
+
+    Logger.add(`🛡️ VIGILE : ${requester.name} a bloqué les accès de ${data.targetName}. Impossible de le nommer Sentinelle ce tour-ci !`);
+
+    // On renvoie une confirmation OK au Vigile
+    requester.conn.send({
+        type: 'CENSURE_RESULT', // On recycle le template violet OK
+        target: data.targetName,
+        isForced: false
+    });
+
+    syncTerminals();
+    
+    // On force le rafraîchissement de l'écran du Gardien en cours pour mettre sa liste à jour immédiatement !
+    const currentGardien = players[state.curG];
+    if (currentGardien && currentGardien.conn.open) {
+        restorePlayerAction(currentGardien);
+    }
 }
