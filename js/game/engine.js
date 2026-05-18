@@ -304,17 +304,20 @@ export function applyDecret(cardId, type, isForced = false) {
  */
 export function applyForced() {
     let cardId = drawCard(); 
+
+    // On passe et défausse si c'est une carte de Suffrage
     while(cardId && DECREETS_DATABASE[cardId].type === 'F') {
         state.discard.push(cardId);
         cardId = drawCard();
     }
+
+    state.oxy = getOxygenMaxLimit(); // Lors du reset d'urgence, on applique aussi le plafond des fuites
     
     if(cardId) {
         Logger.add(`URGENCE : Déploiement forcé du décret : ${DECREETS_DATABASE[cardId].name.toUpperCase()} (Pouvoirs désactivés)`);
         // --- ANCRE DE SÉCURITÉ : On passe true pour signaler le mode forcé ---
         applyDecret(cardId, DECREETS_DATABASE[cardId].type, true); 
     }
-    state.oxy = getOxygenMaxLimit(); // Lors du reset d'urgence, on applique aussi le plafond des fuites
 }
 
 /**

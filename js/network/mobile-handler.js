@@ -490,58 +490,83 @@ function openTargetSelector(actionType, title, isForced = false) {
         
     const ui = document.getElementById('main-ui');
     ui.innerHTML = `<h3>${title}</h3><p>Sélectionnez une cible :</p>`;
-        
-    // On utilise les noms vivants du serveur, sinon la liste complète par défaut
-    const listToUse = (serverState && serverState.aliveNames) ? serverState.aliveNames : allPlayers;
-        
-    // Vérification de sécurité
-    if (listToUse.length === 0) {
-        ui.innerHTML += "<p>Aucune cible éligible détectée.</p>";
-    }
 
-    // Le bouton ANNULER (Placé au-dessus ou en dessous selon tes préférences)
-   if (!isForced) {
+    // 1. Bouton ANNULER global (si l'action n'est pas imposée par le jeu)
+    if (!isForced) {
         const btnCancel = document.createElement('button');
         btnCancel.className = "btn-cancel";
         btnCancel.innerText = "ANNULER";
         btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
         ui.appendChild(btnCancel);
-
-        // Élément invisible pour forcer le retour à la ligne après l'Annuler
+        
         const breakLine = document.createElement('div');
         breakLine.style.width = "100%";
         ui.appendChild(breakLine);
     }
-     
-    // Génération des boutons de cibles
-    listToUse.forEach(name => {
-        if (name.toLowerCase() !== myName.toLowerCase()) {
-                
-            // Si c'est une demande de Censure, on cache les cibles déjà censurées
-            if (actionType === 'REQUEST_CENSURE' && serverState.censoredNames && serverState.censoredNames.includes(name)) {
-                return; 
-            }
-            
-            // ✨ SÉCURITÉ JOURNALISTE : S'il s'agit d'une censure, on n'affiche PAS le Journaliste dans la liste
-            if (actionType === 'REQUEST_CENSURE' && serverState.journalisteNames && serverState.journalisteNames.includes(name)) {
-                return; 
-            }
+
+    // ─── CAS SPÉCIAL : PURGE DES SYSTÈMES ──────────────────────────────────
+    if (actionType === 'REQUEST_PURGE') {
+        const crisesActives = serverState?.slotsCriseCards || [];
         
-            const btn = document.createElement('button');
-            btn.className = "btn-target";
-            btn.innerText = name.toUpperCase();
-            btn.onclick = () => {
-                if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
-                if (!isForced) {
-                    hasUsedPower = true;
-                    document.getElementById('job-ui').style.opacity = "0.3";
-                }
-                conn.send({ type: actionType, targetName: name, isForced: isForced });
-                ui.innerHTML = "Traitement...";
-            };
-            ui.appendChild(btn);
+        if (crisesActives.length === 0) {
+            ui.innerHTML += "<p style='color:#888;'>Aucun décret de crise actif sur le plateau.</p>";
+            createTargetButton("CONFIRMER (PLATEAU VIDE)", () => {
+                conn.send({ type: 'ACTION_CONFIRMED' });
+            }, "#555");
+            return;
         }
+
+        crisesActives.forEach(cardId => {
+            const cardData = DECREETS_DB_LOCAL[cardId] || { name: cardId };
+            createTargetButton(cardData.name.toUpperCase(), () => {
+                if (!confirm(`Purger définitivement le décret : ${cardData.name} ?`)) return;
+                sendPowerAction(actionType, { cardId: cardId }, isForced);
+            }, "#e74c3c");
+        });
+        return;
+    }
+        
+    // ─── CAS NORMAL : SÉLECTION D'UN JOUEUR ─────────────────────────────────
+    const listToUse = serverState?.aliveNames || allPlayers;
+    if (listToUse.length === 0) ui.innerHTML += "<p>Aucune cible éligible détectée.</p>";
+
+    listToUse.forEach(name => {
+        if (name.toLowerCase() === myName.toLowerCase()) return;
+        
+        // Filtres spécifiques à la Censure
+        if (actionType === 'REQUEST_CENSURE') {
+            if (serverState?.censoredNames?.includes(name)) return;
+            if (serverState?.journalisteNames?.includes(name)) return;
+        }
+        
+        createTargetButton(name.toUpperCase(), () => {
+            if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
+            sendPowerAction(actionType, { targetName: name }, isForced);
+        });
     });
+}
+
+// ─── FONCTIONS UTILITAIRES DE SIMPLIFICATION ──────────────────────────────
+
+// Centralise l'envoi et le verrouillage visuel du bouton métier
+function sendPowerAction(actionType, extraData, isForced) {
+    if (!isForced) {
+        hasUsedPower = true;
+        const jobUi = document.getElementById('job-ui');
+        if (jobUi) jobUi.style.opacity = "0.3";
+    }
+    conn.send({ type: actionType, isForced: isForced, ...extraData });
+    document.getElementById('main-ui').innerHTML = "Traitement du protocole...";
+}
+
+// Factorise la création des boutons de cibles
+function createTargetButton(text, onClickCtx, borderColor = "") {
+    const btn = document.createElement('button');
+    btn.className = "btn-target";
+    btn.innerText = text;
+    if (borderColor) btn.style.borderColor = borderColor;
+    btn.onclick = onClickCtx;
+    document.getElementById('main-ui').appendChild(btn);
 }
 
 function showBloodResult(data) {

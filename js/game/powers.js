@@ -2,7 +2,7 @@ import { state, players } from '../core/state.js';
 import { nextTurn, resolveVote } from './engine.js';
 import { Logger } from '../ui/logger.js';
 import { POWER_MAP } from '../core/constants.js';
-import { syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals, updateCensureUI } from '../ui/renderer.js';
+import { render, syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals, updateCensureUI } from '../ui/renderer.js';
 
 /**
  * Analyse biologique d'un joueur (Pouvoir du Docteur ou Case de Crise)
@@ -190,6 +190,36 @@ export function checkCasePower(caseNumber) {
     }
 }
 
+
+export function purgeCriseCard(requester, cardId) {
+    const idx = state.slotsCriseCards.indexOf(cardId);
+    if (idx === -1) return;
+
+    // 1. On retire physiquement la carte de la jauge et on baisse le score
+    state.slotsCriseCards.splice(idx, 1);
+    state.crise--;
+    
+    // 2. On envoie la carte purgée dans la défausse
+    state.discard.push(cardId);
+    
+    Logger.add(`🧹 PURGE : ${requester.name} a purgé le décret '${cardId.toUpperCase()}' du plateau.`);
+    Logger.add(`SYSTÈME : La jauge de Crise recule et passe à ${state.crise}/6.`);
+
+    // 3. FIN DES EFFETS PERMANENTS : Si on a purgé une fuite d'air rouge, l'atmosphère se détend immédiatement
+    // (L'oxygène max se recalculera tout seul au prochain reset ou rendu)
+    
+    // 4. On envoie le récapitulatif standard au Gardien pour qu'il ait son bouton OK
+    requester.conn.send({
+        type: 'CENSURE_RESULT', // On réutilise le template visuel violet "TERMINAL VERROUILLÉ / OK"
+        target: cardId,         // On détourne la variable target pour afficher le nom de la carte
+        isForced: state.currentPowerActive
+    });
+
+    // On rafraîchit l'écran PC central
+    render();
+    syncTerminals();
+}
+
 /**
  * Exécute l'effet immédiat (symbole ⚡) d'un décret promulgué
  * @param {string} cardId - L'identifiant unique du décret (ex: 'sabotage', 'censure')
@@ -251,6 +281,50 @@ export function executeDecreetPower(cardId) {
                 }
             });
             return true;
+
+        case 'purge':
+            state.currentPowerActive = true;
+            Logger.add(`🧹 DÉCRET PURGE DES SYSTÈMES : Protocole activé. Le Gardien (${gardien.name}) va nettoyer une directive de crise.`);
+            
+            if (gardien && gardien.conn && gardien.conn.open) {
+                gardien.conn.send({
+                    type: 'FORCE_POWER_SELECT',
+                    action: 'REQUEST_PURGE', // Nouveau type d'action
+                    title: 'PURGE DES SYSTÈMES (DÉCRET)'
+                });
+            }
+            
+            players.forEach(p => {
+                if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
+                    p.conn.send({
+                        type: 'WAIT_POWER',
+                        gardienName: gardien.name,
+                        title: 'PURGE DES SYSTÈMES'
+                    });
+                }
+            });
+            return true;
+
+        case 'court_circuit':
+            Logger.add(`⚡ DÉCRET COURT-CIRCUIT : Dysfonctionnement électrique imminent !`);
+            
+            // 1. On vérifie s'il y a un suffrage actif sur le plateau
+            if (state.slotsSuffrageCard) {
+                const ancientCardId = state.slotsSuffrageCard;
+                
+                // On envoie le suffrage détruit dans la défausse
+                state.discard.push(ancientCardId);
+                Logger.add(`♻️ SYSTÈME : La carte de Suffrage active '${cardId.toUpperCase()}' a été court-circuitée et envoyée à la défausse.`);
+                
+                // On nettoie les variables du State
+                state.slotsSuffrageCard = null;
+                state.suffrage = "Aucun";
+            } else {
+                // 2. Si aucun suffrage n'est en place, les générateurs d'oxygène prennent le choc
+                state.oxy--;
+                Logger.add(`📉 ATMOSPHÈRE : Aucune carte de Suffrage active. Le court-circuit endommage les épurateurs : l'Oxygène diminue de 1 (Reste : ${state.oxy}).`);
+            }
+            return false;
             
         default:
             // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
