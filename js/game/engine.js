@@ -217,8 +217,8 @@ export function resolveVote() {
 // Handler pour la défausse du Gardien
 export function handleDiscardFromNet(cardId, remainingCards) {
     // On met la carte jetée par le Gardien dans la défausse générale
-    state.discard.push(data.discardedCardId); 
-    state.currentLegislativeCards = data.remaining; // Contient les 2 cartes restantes
+    state.discard.push(cardId); 
+    state.currentLegislativeCards = remainingCards; // Contient les 2 cartes restantes
 
     // INTERCEPTION 49.3 ACTIVÉ
     if (state.loi493Active) {
