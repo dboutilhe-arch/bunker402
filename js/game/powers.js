@@ -251,6 +251,29 @@ export function executeDecreetPower(cardId) {
                 }
             });
             return true;
+
+        case 'purge':
+            state.currentPowerActive = true;
+            Logger.add(`🧹 DÉCRET PURGE DES SYSTÈMES : Protocole activé. Le Gardien (${gardien.name}) va nettoyer une directive de crise.`);
+            
+            if (gardien && gardien.conn && gardien.conn.open) {
+                gardien.conn.send({
+                    type: 'FORCE_POWER_SELECT',
+                    action: 'REQUEST_PURGE', // Nouveau type d'action
+                    title: 'PURGE DES SYSTÈMES (DÉCRET)'
+                });
+            }
+            
+            players.forEach(p => {
+                if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
+                    p.conn.send({
+                        type: 'WAIT_POWER',
+                        gardienName: gardien.name,
+                        title: 'PURGE DES SYSTÈMES'
+                    });
+                }
+            });
+            return true;
             
         default:
             // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
