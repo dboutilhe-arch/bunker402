@@ -141,11 +141,19 @@ function handleData(data) {
                     btnPower.style.pointerEvents = "none";
                 }
         
-                btnPower.onclick = () => {
+                btn.onclick = () => {
                     if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
+                    
+                    // On fige le bouton visuellement et techniquement dès le clic
+                    btn.disabled = true;
+                    btn.style.opacity = "0.3";
+                    btn.style.pointerEvents = "none";
+                    btn.innerText = "📜 PROTOCOLE ENCLENCHÉ...";
+                    
+                    hasUsedPower = true; // On passe le flag local à true
+                    
                     conn.send({ type: 'USE_ARCHIVISTE_POWER' });
                 };
-        
                 jobZone.appendChild(btnPower);
             }
             break;
@@ -404,6 +412,15 @@ function setupIdentity(data) {
         
         btn.onclick = () => {
             if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
+            
+            // On fige le bouton visuellement et techniquement dès le clic
+            btn.disabled = true;
+            btn.style.opacity = "0.3";
+            btn.style.pointerEvents = "none";
+            btn.innerText = "📜 PROTOCOLE ENCLENCHÉ...";
+            
+            hasUsedPower = true; // On passe le flag local à true
+            
             conn.send({ type: 'USE_ARCHIVISTE_POWER' });
         };
         jobUi.appendChild(btn);
