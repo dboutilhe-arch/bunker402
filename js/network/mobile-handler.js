@@ -245,6 +245,10 @@ function handleData(data) {
             };
             break;
 
+      case 'PURGE_RESULT':
+            showPurgeResult(data);
+            break;
+
       case 'COUP_ETAT_RESULT':
             showCoupEtatResult(data);
             break;
@@ -808,4 +812,21 @@ function showSentinelle493View(cards) {
     });
 
     ui.appendChild(cardContainer);
+}
+
+function showPurgeResult(data) {
+    const ui = document.getElementById('main-ui');
+    const cardName = DECREETS_DB_LOCAL[data.cardId]?.name || data.cardId;
+    
+    ui.innerHTML = `
+        <div style="border: 2px solid #2ecc71; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: #2ecc71; margin-top: 0; letter-spacing: 1px;">⚙️ PURGE DU PLATEAU</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de nettoyage de la mémoire centrale a été exécuté.</p>
+            <p style="color: #f1c40f; margin: 10px 0;">Directive supprimée : <b style="text-transform: uppercase;">${cardName}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #2ecc71; color: #000; border-color: #000;">OK</button>
+        </div>`;
+
+    document.getElementById('btn-ok').onclick = () => {
+        conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+    };
 }
