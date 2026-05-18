@@ -21,17 +21,6 @@ export function testPlayerBlood(requester, targetName) {
         target: targetName,
         result: bloodResult
     });
-
-    // Gestion de la fin de l'action de case
-    if (state.currentPowerActive) {
-        state.currentPowerActive = false;
-        syncTerminals();
-        setTimeout(() => {
-            state.curG = (state.curG + 1) % players.length;
-            state.isProcessingAction = false;
-            nextTurn();
-        }, 100); 
-    }
 }
 
 /**
@@ -74,36 +63,42 @@ export function executePlayer(requester, targetName) {
 
     updatePlayerStatusUI(target, revealResult);
 
-    // --- Nettoyage des visuels si le mort était au conseil ---
+    // 1. On récupère l'index du joueur éliminé
     const targetIdx = players.findIndex(p => p.name === targetName);
+    
+    // 2. SÉCURITÉ CONSEIL FOUDROYÉ : Si le mort était le Gardien ou la Sentinelle
     if (targetIdx === state.curG || targetIdx === state.curSIdx) {
-        clearCouncilVisuals(); // Enlève l'étoile et la bordure jaune/bleue
+        clearCouncilVisuals(); // On nettoie les étoiles et bordures
+        Logger.add("🚨 SYSTÈME : Membre du conseil exécuté ! Dissolution immédiate et passage au tour suivant.");
+        
+        // On libère le serveur immédiatement sans attendre de confirmation
+        state.currentPowerActive = false; 
+        state.isProcessingAction = false;
+        
+        // On prévient quand même le tueur (s'il est en vie) avec un refresh pour nettoyer son écran
+        if (requester && requester.isAlive && requester.conn) {
+            requester.conn.send({ type: 'REFRESH_INTERFACE' });
+        }
+
+        setTimeout(() => {
+            state.curG = (state.curG + 1) % players.length;
+            nextTurn();
+        }, 2000);
+        return; // ⚠️ ON S'ARRÊTE ICI : Pas de rapport d'exécution à valider, le tour change !
     }
 
+    // 3. SÉCURITÉ CONDITION DE VICTOIRE (Si c'était l'Alpha hors conseil)
     if (target.role === 'A') {
         return triggerWin("SURVIVANTS", "L'Alpha a été éliminé.");
     }
 
-    // Gestion du tour suivant si membre du conseil tué
-    if (targetIdx === state.curG || targetIdx === state.curSIdx) {
-        Logger.add("SYSTÈME : Membre du conseil éliminé. Passage au tour suivant.");
-        state.currentPowerActive = false;
-        setTimeout(() => {
-            state.curG = (state.curG + 1) % players.length;
-            nextTurn();
-        }, 100);
-        return;
-    }
-
-    if (state.currentPowerActive) {
-        state.currentPowerActive = false;
-        syncTerminals(); 
-        setTimeout(() => {
-            state.curG = (state.curG + 1) % players.length;
-            state.isProcessingAction = false;
-            nextTurn();
-        }, 100); 
-    }
+    // 4. CAS NORMAL (La cible n'était pas au conseil) : On envoie le rapport interactif
+    requester.conn.send({
+        type: 'EXECUTION_RESULT',
+        target: targetName,
+        result: revealResult,
+        isForced: state.currentPowerActive
+    });
 }
 
 /**
@@ -154,22 +149,12 @@ export function applyCensure(requester, targetName) {
     updateCensureUI(target);
     syncTerminals();
 
-    if (state.currentPowerActive) {
-        state.currentPowerActive = false;
-        setTimeout(() => {
-            state.curG = (state.curG + 1) % players.length;
-            state.isProcessingAction = false;
-            nextTurn();
-        }, 100);
-    } else {
-        // Si c'est l'Intendant qui a joué de lui-même
-        // On lui demande de rafraîchir son interface pour récupérer son vote en cours
-        setTimeout(() => {
-            if (requester.conn && requester.conn.open) {
-                requester.conn.send({ type: 'REFRESH_INTERFACE' });
-            }
-        }, 100);
-    }
+    // On envoie le rapport de censure au Gardien
+    requester.conn.send({
+        type: 'CENSURE_RESULT',
+        target: targetName,
+        isForced: state.currentPowerActive
+    });
 }
 
 /**
