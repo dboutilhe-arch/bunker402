@@ -223,6 +223,18 @@ export function executeDecreetPower(cardId) {
             Logger.add("🚨 SABOTAGE : Les systèmes de ventilation ont été ciblés. L'oxygène baisse de 1 !");
             return false; // Effet instantané, ne bloque pas le flux du tour
 
+        case 'censure':
+            state.currentPowerActive = true; // Met le serveur en attente de l'action réseau
+            Logger.add(`🚫 DÉCRET DE CENSURE : Protocole activé. En attente de la cible du Gardien (${gardien.name}).`);
+            if (gardien && gardien.conn && gardien.conn.open) {
+                gardien.conn.send({ 
+                    type: 'FORCE_POWER_SELECT', 
+                    action: 'REQUEST_CENSURE', 
+                    title: 'CENSURE GOUVERNEMENTALE (DÉCRET)' 
+                });
+            }
+            return true;    
+
         default:
             // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
             return false;
