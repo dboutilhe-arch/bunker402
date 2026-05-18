@@ -205,8 +205,10 @@ export function executeDecreetPower(cardId) {
             return false; // Effet instantané, ne bloque pas le flux du tour
 
         case 'censure':
-            state.currentPowerActive = true; // Met le serveur en attente de l'action réseau
+            state.currentPowerActive = true; 
             Logger.add(`🚫 DÉCRET DE CENSURE : Protocole activé. En attente de la cible du Gardien (${gardien.name}).`);
+            
+            // 1. On force le Gardien actuel à choisir sa cible
             if (gardien && gardien.conn && gardien.conn.open) {
                 gardien.conn.send({ 
                     type: 'FORCE_POWER_SELECT', 
@@ -214,7 +216,8 @@ export function executeDecreetPower(cardId) {
                     title: 'CENSURE GOUVERNEMENTALE (DÉCRET)' 
                 });
             }
-            On met tous les AUTRES joueurs en attente avec l'écran violet
+
+            // On met tous les AUTRES joueurs en attente avec l'écran violet
             players.forEach(p => {
                 if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
                     p.conn.send({ 
@@ -224,6 +227,7 @@ export function executeDecreetPower(cardId) {
                     });
                 }
             });
+
             return true;    
 
         default:
