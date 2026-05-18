@@ -19,7 +19,8 @@ export function testPlayerBlood(requester, targetName) {
     requester.conn.send({
         type: 'BLOOD_TEST_RESULT',
         target: targetName,
-        result: bloodResult
+        result: bloodResult,
+        isForced: state.currentPowerActive
     });
 }
 
