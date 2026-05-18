@@ -304,6 +304,27 @@ export function executeDecreetPower(cardId) {
                 }
             });
             return true;
+
+        case 'court_circuit':
+            Logger.add(`⚡ DÉCRET COURT-CIRCUIT : Dysfonctionnement électrique imminent !`);
+            
+            // 1. On vérifie s'il y a un suffrage actif sur le plateau
+            if (state.slotsSuffrageCard) {
+                const ancientCardId = state.slotsSuffrageCard;
+                
+                // On envoie le suffrage détruit dans la défausse
+                state.discard.push(ancientCardId);
+                Logger.add(`♻️ SYSTÈME : La carte de Suffrage active '${cardId.toUpperCase()}' a été court-circuitée et envoyée à la défausse.`);
+                
+                // On nettoie les variables du State
+                state.slotsSuffrageCard = null;
+                state.suffrage = "Aucun";
+            } else {
+                // 2. Si aucun suffrage n'est en place, les générateurs d'oxygène prennent le choc
+                state.oxy--;
+                Logger.add(`📉 ATMOSPHÈRE : Aucune carte de Suffrage active. Le court-circuit endommage les épurateurs : l'Oxygène diminue de 1 (Reste : ${state.oxy}).`);
+            }
+            return false;
             
         default:
             // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
