@@ -166,12 +166,9 @@ export function resolveVote() {
 
         players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
         
-        if (state.crise >= 3 && players[state.curSIdx].role === 'A') {
-            if (state.rebellionActive) { // Si Rébellion est active, on bloque la victoire immédiate !
-                Logger.add(`🛡️ RÉBELLION : L'Alpha (${players[state.curSIdx].name}) est élu Sentinelle, mais le décret Rébellion bloque sa victoire par élection !`);
-            } else {
-                return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
-            }
+        // Si l'Alpha est Sentinelle, qu'il y a 3 décrets Crise ET que la Rébellion n'est PAS active -> Victoire.
+        if (state.crise >= 3 && players[state.curSIdx].role === 'A' && !state.rebellionActive) {
+            return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
         }
         setTimeout(() => {
             players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
