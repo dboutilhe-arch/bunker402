@@ -1,4 +1,4 @@
-// js/network/handlers.js 
+// js/network/handlers.js  
 import { DECREETS_DATABASE } from '../core/constants.js';
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
