@@ -42,6 +42,10 @@ export function handlePlayerData(conn, data) {
             handleCensure(conn, data);
             break;
 
+        case 'REQUEST_PURGE':
+            handlePurgeDecret(conn, data);
+            break;
+
         case 'ACTION_CONFIRMED':
             handleActionConfirmed();
             break;
@@ -298,4 +302,13 @@ function handleActionConfirmed() {
             nextTurn();
         }, 500); 
     }
+}
+
+function handlePurgeDecret(conn, data) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive) return;
+
+    // On importe et exécute la logique de purge (qu'on va coder à l'étape 2)
+    const { purgeCriseCard } = await import('../game/powers.js');
+    purgeCriseCard(requester, data.cardId);
 }
