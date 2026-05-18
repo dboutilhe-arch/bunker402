@@ -46,6 +46,10 @@ export function handlePlayerData(conn, data) {
             handlePurgeDecret(conn, data);
             break;
 
+        case 'REQUEST_COUP_ETAT':
+            handleCoupEtat(conn, data);
+            break;
+
         case 'ACTION_CONFIRMED':
             handleActionConfirmed();
             break;
@@ -317,5 +321,30 @@ function handleArchivistePower(conn) {
     conn.send({ type: 'POWER_ACTIVATED_CONFIRM', message: "Protocole d'archive activé pour le vote en cours." });
     
     // On synchronise pour griser son bouton sur son téléphone
+    syncTerminals();
+}
+
+function handleCoupEtat(conn, data) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive) return;
+
+    // 1. On trouve l'index de la cible dans le tableau des joueurs
+    const targetIdx = players.findIndex(p => p.name === data.targetName);
+    if (targetIdx === -1 || !players[targetIdx].isAlive) return;
+
+    Logger.add(`🔥 COUP D'ÉTAT : ${requester.name} a désigné ${data.targetName} comme prochain Gardien !`);
+
+    // 2. LA MAGIE : On décale l'index curG juste AVANT la cible.
+    // Comme la transition normale va faire "state.curG = (state.curG + 1) % length",
+    // en mettant (targetIdx - 1), le prochain tour tombera EXACTEMENT sur la cible !
+    state.curG = (targetIdx - 1 + players.length) % players.length;
+
+    // 3. On renvoie le panneau OK violet de confirmation au Gardien
+    requester.conn.send({
+        type: 'CENSURE_RESULT', // On réutilise le template à bouton "OK"
+        target: data.targetName,
+        isForced: state.currentPowerActive
+    });
+
     syncTerminals();
 }
