@@ -173,6 +173,23 @@ function handleData(data) {
 
         case 'BLOOD_TEST_RESULT':
             showBloodResult(data);
+            document.getElementById('btn-ok').onclick = () => {
+                conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+            };
+            break;
+
+      case 'EXECUTION_RESULT':
+            showExecutionResult(data);
+            document.getElementById('btn-ok').onclick = () => {
+                conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+            };
+            break;
+
+        case 'CENSURE_RESULT':
+            showCensureResult(data);
+            document.getElementById('btn-ok').onclick = () => {
+                conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+            };
             break;
       
       case 'YOU_ARE_DEAD':
@@ -531,6 +548,31 @@ function showBloodResult(data) {
         </div>`;
         
     document.getElementById('btn-ok').onclick = () => conn.send({ type: 'SYNC_REQUEST' });
+}
+
+function showExecutionResult(data) {
+    const ui = document.getElementById('main-ui');
+    const color = data.result === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+    
+    ui.innerHTML = `
+        <div style="border: 2px solid #e74c3c; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: #e74c3c; margin-top: 0; letter-spacing: 1px;">RAPPORT D'ÉLIMINATION</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Sujet exécuté : <b>${data.target.toUpperCase()}</b></p>
+            <p style="color: #e0e0e0; margin: 10px 0;">Registre biologique : <b style="color: ${color}; font-size: 1.1em;">${data.result}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #e74c3c; color: #000; border-color: #000;">OK</button>
+        </div>`;
+}
+
+function showCensureResult(data) {
+    const ui = document.getElementById('main-ui');
+    
+    ui.innerHTML = `
+        <div style="border: 2px solid #ff00ff; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: #ff00ff; margin-top: 0; letter-spacing: 1px;">TERMINAL VERROUILLÉ</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de restriction a été appliqué avec succès.</p>
+            <p style="color: #f1c40f; margin: 10px 0;">Cible : <b>${data.target.toUpperCase()}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #ff00ff; color: #000; border-color: #000;">OK</button>
+        </div>`;
 }
 
 function showEndGame(data) {
