@@ -365,7 +365,7 @@ export function applyDecret(cardId, type, isForced = false) {
         }
         setTimeout(() => { 
             state.isProcessingAction = false; 
-            (); 
+            nextTurn(); 
         }, 1000);
     } else {
         state.isProcessingAction = true;
