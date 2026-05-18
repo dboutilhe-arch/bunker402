@@ -26,6 +26,7 @@ export let state = {
     lastSentinelle: null,
     lastGardien: null,
     censoredPlayer: null,
+    vigileBannedPlayer: null, // Pouvoir du Vigile
     curG: 0, 
     curSIdx: -1,
     nextNormalGardien: null, //Stockage du prochain Gardien pour le coup d'état
@@ -71,6 +72,7 @@ export function resetGameState() {
     state.archivistePowerActive = false;
     state.nextNormalGardien = null;
     state.loi493Active = false;
+    state.vigileBannedPlayer = null;
     
     players.forEach(p => {
         p.jobPowerUsed = false;  
