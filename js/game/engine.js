@@ -162,7 +162,7 @@ export function resolveVote() {
     if (state.votes.oui > state.votes.non) {
         state.currentPhase = "LÉGISLATION_G";
         state.currentLegislativeCards = [drawCard(), drawCard(), drawCard()].filter(Boolean);
-        state.oxy = 3;
+        state.oxy = getOxygenMaxLimit(); // On fixe le niveau d'oxygène selon les fuites actives
 
         players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
         if (state.crise >= 3 && players[state.curSIdx].role === 'A') {
@@ -248,6 +248,13 @@ export function applyDecret(cardId, type, isForced = false) {
         state.suffrage = card.name;
     }
 
+    // Si on vient de poser une fuite d'air, on bride l'oxygène actuel s'il dépasse le nouveau max
+    const maxOxy = getOxygenMaxLimit();
+    if (state.oxy > maxOxy) {
+        state.oxy = maxOxy;
+        Logger.add(`💨 ATMOSPHÈRE : Le niveau d'oxygène s'ajuste au nouveau plafond critique (${state.oxy}/3).`);
+    }
+
     render();
     syncTerminals();
 
@@ -292,7 +299,7 @@ export function applyForced() {
         // --- ANCRE DE SÉCURITÉ : On passe true pour signaler le mode forcé ---
         applyDecret(cardId, DECREETS_DATABASE[cardId].type, true); 
     }
-    state.oxy = 3; 
+    state.oxy = getOxygenMaxLimit(); // Lors du reset d'urgence, on applique aussi le plafond des fuites
 }
 
 /**
@@ -398,6 +405,16 @@ export function showGov(g, s) {
             p.conn.send({ type: 'VOTE_START', g: g, s: s });
         }
     });
+}
 
-    // ✨ LE NETTOYAGE A ÉTÉ RETIRÉ D'ICI POUR RESTER ACTIF DURANT TOUT LE VOTE
+/**
+ * Calcule le niveau d'oxygène par défaut en fonction des fuites d'air actives
+ * 0 fuite : Niveau 3 | 1 fuite : Niveau 2 | 2 fuites : Niveau 1
+ */
+export function getOxygenMaxLimit() {
+    let fuiteCount = 0;
+    if (state.slotsSurvieCards.includes('fuite_air_s')) fuiteCount++;
+    if (state.slotsCriseCards.includes('fuite_air_c')) fuiteCount++;
+    
+    return Math.max(1, 3 - fuiteCount);
 }
