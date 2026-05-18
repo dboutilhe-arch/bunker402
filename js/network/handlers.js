@@ -368,6 +368,12 @@ function handleVigileBan(conn, data) {
     const requester = players.find(p => p.conn === conn);
     if (!requester || !requester.isAlive || requester.metier !== 'Vigile' || requester.jobPowerUsed) return;
 
+    // SÉCURITÉ SERVEUR : On refuse l'action si on n'est pas en phase de désignation
+    if (state.currentPhase !== "DÉSIGNATION") {
+        requester.conn.send({ type: 'SYNC_REQUEST' }); // Force le mobile à se resynchroniser pour se griser
+        return;
+    }
+
     // Consommation du pouvoir unique
     requester.jobPowerUsed = true;
     state.vigileBannedPlayer = data.targetName;
