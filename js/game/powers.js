@@ -325,6 +325,30 @@ export function executeDecreetPower(cardId) {
                 Logger.add(`📉 ATMOSPHÈRE : Aucune carte de Suffrage active. Le court-circuit endommage les épurateurs : l'Oxygène diminue de 1 (Reste : ${state.oxy}).`);
             }
             return false;
+
+        case 'coup_etat':
+            state.currentPowerActive = true; 
+            Logger.add(`🚨 DÉCRET COUP D'ÉTAT : Instabilité politique ! Le Gardien (${gardien.name}) va nommer son successeur.`);
+            
+            // 1. On force le Gardien à choisir un joueur (hors lui-même, géré par le mobile)
+            if (gardien && gardien.conn && gardien.conn.open) {
+                gardien.conn.send({ 
+                    type: 'FORCE_POWER_SELECT', 
+                    action: 'REQUEST_COUP_ETAT', 
+                    title: 'COUP D\'ÉTAT (DÉCRET)' 
+                });
+            }
+            // 2. On met les autres en attente
+            players.forEach(p => {
+                if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
+                    p.conn.send({ 
+                        type: 'WAIT_POWER', 
+                        gardienName: gardien.name, 
+                        title: 'COUP D\'ÉTAT INTERNE' 
+                    });
+                }
+            });
+            return true;
             
         default:
             // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
