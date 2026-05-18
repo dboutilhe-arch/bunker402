@@ -203,33 +203,7 @@ export function executeDecreetPower(cardId) {
             state.oxy--;
             Logger.add("🚨 SABOTAGE : Les systèmes de ventilation ont été ciblés. L'oxygène baisse de 1 !");
             return false; // Effet instantané, ne bloque pas le flux du tour
-
-        case 'censure':
-            state.currentPowerActive = true; 
-            Logger.add(`🚫 DÉCRET DE CENSURE : Protocole activé. En attente de la cible du Gardien (${gardien.name}).`);
             
-            // 1. On force le Gardien actuel à choisir sa cible
-            if (gardien && gardien.conn && gardien.conn.open) {
-                gardien.conn.send({ 
-                    type: 'FORCE_POWER_SELECT', 
-                    action: 'REQUEST_CENSURE', 
-                    title: 'CENSURE GOUVERNEMENTALE (DÉCRET)' 
-                });
-            }
-
-            // On met tous les AUTRES joueurs en attente avec l'écran violet
-            players.forEach(p => {
-                if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
-                    p.conn.send({ 
-                        type: 'WAIT_POWER', 
-                        gardienName: gardien.name, 
-                        title: 'CENSURE GOUVERNEMENTALE' 
-                    });
-                }
-            });
-
-            return true;    
-
         default:
             // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
             return false;
