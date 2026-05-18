@@ -265,6 +265,18 @@ function handleData(data) {
             setTimeout(() => { document.body.style.backgroundColor = "#000"; }, 500);
             break;
 
+        case 'POWER_ACTIVATED_CONFIRM':
+            hasUsedPower = true;
+            const archivistBtn = document.getElementById('btn-power');
+            if (archivistBtn) {
+                archivistBtn.disabled = true;
+                archivistBtn.style.opacity = "0.3";
+                archivistBtn.style.pointerEvents = "none";
+                archivistBtn.innerText = "📜 PROTOCOLE ENCLENCHÉ";
+            }
+            // Petit retour visuel rapide en haut de l'UI si tu veux
+            break;
+
         case 'CLEAN_UI':
             ui.innerHTML = `
                 <div style="margin-top: 40px;">
