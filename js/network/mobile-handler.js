@@ -141,7 +141,7 @@ function handleData(data) {
                     btnPower.style.pointerEvents = "none";
                 }
         
-                btn.onclick = () => {
+                btnPower.onclick = () => {
                     if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
                     
                     // On fige le bouton visuellement et techniquement dès le clic
