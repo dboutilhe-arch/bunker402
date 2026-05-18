@@ -217,6 +217,8 @@ export function checkCasePower(caseNumber) {
  * @returns {boolean} - true si le décret demande une action interactive (sélection de cible), false sinon
  */
 export function executeDecreetPower(cardId) {
+    const gardien = players[state.curG];
+    
     switch (cardId) {
         case 'sabotage':
             state.oxy--;
