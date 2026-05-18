@@ -87,7 +87,7 @@ export const DECREETS_DATABASE = {
  */
 export const INITIAL_DECK_LIST = [
     // 10 Bleues
-    'test_sanguin', 'test_sanguin', 'fuite_air_s', 'rebellion'
+    'test_sanguin', 'test_sanguin', 'fuite_air_s', 'rebellion',
     //'reorganisation', 'commission', 'purge', 'presse', 'transparence', 'contre_pouvoir',
     // 15 Rouges
     'censure', 'censure', 'censure', 'sabotage', 'fuite_air_c',
