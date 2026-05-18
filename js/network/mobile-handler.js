@@ -228,6 +228,10 @@ function handleData(data) {
                 conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
             };
             break;
+
+      case 'COUP_ETAT_RESULT':
+            showCoupEtatResult(data);
+            break;
       
       case 'YOU_ARE_DEAD':
             const uiDead = document.getElementById('main-ui');
@@ -669,6 +673,22 @@ function showCensureResult(data) {
             <p style="color: #f1c40f; margin: 10px 0;">Cible : <b>${data.target.toUpperCase()}</b></p>
             <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #ff00ff; color: #000; border-color: #000;">OK</button>
         </div>`;
+}
+
+function showCoupEtatResult(data) {
+    const ui = document.getElementById('main-ui');
+    
+    ui.innerHTML = `
+        <div style="border: 2px solid #ff5722; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: #ff5722; margin-top: 0; letter-spacing: 1px;">📢 ORDRE EXTRAORDINAIRE</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de transition forcée a été injecté.</p>
+            <p style="color: #f1c40f; margin: 10px 0;">Prochain Gardien temporaire : <b>${data.target.toUpperCase()}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #ff5722; color: #000; border-color: #000;">OK</button>
+        </div>`;
+        
+    document.getElementById('btn-ok').onclick = () => {
+        conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+    };
 }
 
 function showEndGame(data) {
