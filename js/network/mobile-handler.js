@@ -132,6 +132,7 @@ function handleData(data) {
                 }
                 }
                 
+                // Conserve ton bloc Fossoyeur juste ici si tu l'as toujours
                 const isFossoyeur = document.getElementById('metier-display').innerText.includes("Fossoyeur");
                 if (isFossoyeur && data.state.deadCount !== undefined) {
                     const bonus = data.state.deadCount;
@@ -139,7 +140,7 @@ function handleData(data) {
                 }
             }
 
-            // ✨ CORRECTION ARCHIVISTE : On vérifie le conteneur HTML pour savoir si on est Archiviste
+            // ARCHIVISTE : On vérifie le conteneur HTML pour savoir si on est Archiviste
             const isArchiviste = document.getElementById('metier-display').innerText.includes("Archiviste");
             if (isArchiviste) {
                 const jobZone = document.getElementById('job-ui');
@@ -243,6 +244,10 @@ function handleData(data) {
             document.getElementById('btn-ok').onclick = () => {
                 conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
             };
+            break;
+
+      case 'PURGE_RESULT':
+            showPurgeResult(data);
             break;
 
       case 'COUP_ETAT_RESULT':
@@ -465,6 +470,15 @@ function setupIdentity(data) {
             
             conn.send({ type: 'USE_ARCHIVISTE_POWER' });
         };
+        jobUi.appendChild(btn);
+    }
+    if (data.metier === 'Vigile') {
+        const btn = document.createElement('button');
+        btn.id = "btn-power";
+        btn.className = "btn-power";
+        btn.innerText = "🛑 SÉCURISER UN INDIVIDU (BAN SENTINELLE)";
+        if (hasUsedPower) jobUi.style.opacity = "0.3";
+        btn.onclick = () => openTargetSelector('REQUEST_VIGILE_BAN', 'CONTRÔLE DES ACCÈS');
         jobUi.appendChild(btn);
     }
 }
@@ -699,6 +713,10 @@ function showCensureResult(data) {
             <p style="color: #f1c40f; margin: 10px 0;">Cible : <b>${data.target.toUpperCase()}</b></p>
             <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #ff00ff; color: #000; border-color: #000;">OK</button>
         </div>`;
+
+    document.getElementById('btn-ok').onclick = () => {
+        conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+    };
 }
 
 function showCoupEtatResult(data) {
@@ -795,4 +813,21 @@ function showSentinelle493View(cards) {
     });
 
     ui.appendChild(cardContainer);
+}
+
+function showPurgeResult(data) {
+    const ui = document.getElementById('main-ui');
+    const cardName = DECREETS_DB_LOCAL[data.cardId]?.name || data.cardId;
+    
+    ui.innerHTML = `
+        <div style="border: 2px solid #2ecc71; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: #2ecc71; margin-top: 0; letter-spacing: 1px;">⚙️ PURGE DU PLATEAU</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de nettoyage de la mémoire centrale a été exécuté.</p>
+            <p style="color: #f1c40f; margin: 10px 0;">Directive supprimée : <b style="text-transform: uppercase;">${cardName}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #2ecc71; color: #000; border-color: #000;">OK</button>
+        </div>`;
+
+    document.getElementById('btn-ok').onclick = () => {
+        conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+    };
 }

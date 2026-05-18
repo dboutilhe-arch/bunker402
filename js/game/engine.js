@@ -127,6 +127,7 @@ export function nextTurn() {
         if (name === activeG.name) return false;
         if (name === state.lastSentinelle) return false;
         if (players.length > 5 && name === state.lastGardien) return false;
+        if (state.vigileBannedPlayer && name.toLowerCase() === state.vigileBannedPlayer.toLowerCase()) return false;
         return true;
     });
     
@@ -145,6 +146,9 @@ export function resolveVote() {
         p.censoredBy = ""; 
     });
 
+    // FIX VIGILE : Le ban expire dès que le vote est résolu
+    state.vigileBannedPlayer = null;
+    
     // 1. Gestion de l'affichage des couleurs (Prend en compte la Chambre Noire)
     state.votes.list.forEach(v => {
         const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
@@ -205,7 +209,6 @@ export function resolveVote() {
                 // Passage normal au joueur suivant
                 state.curG = (state.curG + 1) % players.length; 
             }
-            
             setTimeout(nextTurn, 1500); 
         }
         clearCouncilVisuals();
@@ -432,6 +435,7 @@ export function restorePlayerAction(player) {
                         if (name === players[state.curG].name) return false;
                         if (name === state.lastSentinelle) return false;
                         if (players.length > 5 && name === state.lastGardien) return false;
+                        if (state.vigileBannedPlayer && name.toLowerCase() === state.vigileBannedPlayer.toLowerCase()) return false;
                         return true;
                     });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
@@ -484,6 +488,8 @@ export function showGov(g, s) {
     document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : 0 / ${eligibleCount}`;
     document.getElementById('vote-summary').style.color = "#f1c40f"; 
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
+
+    syncTerminals();
     
     // On envoie les bonnes interfaces (Vote ou Alerte de censure)
     players.filter(p => p.isAlive).forEach(p => {

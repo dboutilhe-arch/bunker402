@@ -36,25 +36,75 @@ export function executePlayer(requester, targetName) {
     // --- Synchronisation immédiate de la liste des vivants ---
     syncTerminals();
 
-    // --- CORRECTION VOTE BLOQUÉ ---
+    // ✨ FIX CRITIQUE : Nettoyage du vote si la cible est abattue EN PLEIN SCRUTIN
     if (state.currentPhase === "VOTE") {
-        const aliveCount = players.filter(p => p.isAlive).length;
-        if (state.votes.total >= aliveCount) {
-            Logger.add("SYSTÈME : L'exécution a clos le scrutin.");
+        const voteIdx = state.votes.list.findIndex(v => v.name.toLowerCase() === targetName.toLowerCase());
+        if (voteIdx !== -1) {
+            const oldVote = state.votes.list[voteIdx];
+            
+            // On retire l'influence de son vote (prend en compte Shérif, Fossoyeur, Suffrages...)
+            // Vu que le poids dynamique est complexe, on recalcule ou on déduit. 
+            // Pour faire simple et ultra-fiable, on va laisser handleVote gérer le poids global 
+            // mais ici on nettoie directement les variables selon ce qu'il avait choisi :
+            if (oldVote.choice === 'OUI') {
+                // Si c'est un Shérif ou un passif complexe, on recalcule proprement la jauge globale
+                // Pour éviter les approximations, on va simplement reconstruire les scores de zéro :
+            }
+            
+            Logger.add(`SYSTÈME : Le sujet ${targetName} a été éliminé. Son vote est révoqué.`);
+        }
+
+        // --- RECALCUL PROPRE ET SÉCURISÉ DES VOTES TRANSMIS ---
+        // On recalcule les scores de zéro sans le mort pour éviter tout décalage de variables
+        state.votes.oui = 0;
+        state.votes.non = 0;
+        state.votes.total = 0;
+        
+        // On filtre la liste pour éjecter le mort s'il y était encore
+        state.votes.list = state.votes.list.filter(v => v.name.toLowerCase() !== targetName.toLowerCase());
+        
+        // On simule une ré-application des votes restants pour reconstruire state.votes.oui / non / total
+        state.votes.list.forEach(v => {
+            const pVoter = players.find(p => p.name.toLowerCase() === v.name.toLowerCase());
+            if (pVoter && pVoter.isAlive) {
+                let weight = 1;
+                if (pVoter.metier === 'Shérif') weight = 2;
+                if (pVoter.metier === 'Fossoyeur') weight += players.filter(p => !p.isAlive).length;
+                
+                if (state.slotsSuffrageCard === 'conseil_restreint' && (pVoter.name === players[state.curG].name || v.name === state.currentProposedS)) weight = 2;
+                if (state.slotsSuffrageCard === 'greve_zele' && v.choice === 'NON') weight = 2;
+                if (state.slotsSuffrageCard === 'insurrection_populaire' && pVoter.metier === 'Civil') weight = 2;
+
+                state.votes[v.choice.toLowerCase()] += weight;
+                state.votes.total += weight;
+            }
+        });
+
+        const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
+        const totalJoueursAyantVote = state.votes.list.length;
+
+        // Mise à jour de l'affichage PC central immédiatement
+        const summary = document.getElementById('vote-summary');
+        if (summary) {
+            summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${totalJoueursAyantVote} / ${eligibleCount}`;
+        }
+
+        if (totalJoueursAyantVote === eligibleCount) {
+            Logger.add("SYSTÈME : La mort du dernier votant attendu clôture le scrutin.");
             resolveVote();
+            return; // On coupe court pour éviter le double appel en bas
         }
     }
 
+    // --- LE RESTE DE TON CODE EXECUTEPLAYER RESTE IDENTIQUE ---
     const isInfected = ['A', 'I', 'IM'].includes(target.role);
     const revealResult = isInfected ? "INFECTÉ" : "SAIN";
 
     Logger.add(`🚨 EXÉCUTION : ${requester.name} a éliminé ${targetName}.`);
     Logger.add(`SYSTÈME : Le sujet ${targetName} était ${revealResult}.`);
-
-    // On envoie le signal de mort au joueur éliminé
+    
     target.conn.send({ type: 'YOU_ARE_DEAD', reveal: revealResult });
 
-    // On demande de rafraîchir l'interface à TOUT LE MONDE... SAUF au tueur !
     players.forEach(p => {
         if (p.conn && p.conn.open && p.name.toLowerCase() !== requester.name.toLowerCase()) {
             p.conn.send({ type: 'REFRESH_INTERFACE' }); 
@@ -63,28 +113,21 @@ export function executePlayer(requester, targetName) {
 
     updatePlayerStatusUI(target, revealResult);
 
-    // ─── PRIORITÉ 1 : CONDITION DE VICTOIRE (SI C'EST L'ALPHA) ──────────────────
-    // On le vérifie AVANT toute chose, même si l'Alpha était au Conseil !
     if (target.role === 'A') {
         return triggerWin("SURVIVANTS", "L'Alpha a été éliminé du complexe.");
     }
 
-    // ─── PRIORITÉ 2 : ENVOI DU RÉCAPITULATIF AU TUEUR (MILITAIRE OU GARDIEN) ────
-    // On l'envoie TOUJOURS pour que le Militaire ou le Gardien voit les rôles s'afficher
     requester.conn.send({
         type: 'EXECUTION_RESULT',
         target: targetName,
         result: revealResult,
-        isForced: state.currentPowerActive // Permet au mobile de savoir si c'est un décret bloquant
+        isForced: state.currentPowerActive
     });
 
-    // ─── PRIORITÉ 3 : SÉCURITÉ CONSEIL FOUDROYÉ ─────────────────────────────────
-    // Si la cible était au conseil, on dissout immédiatement et on court-circuite le clic sur "OK"
     const targetIdx = players.findIndex(p => p.name === targetName);
     if (targetIdx === state.curG || targetIdx === state.curSIdx) {
         clearCouncilVisuals();
         Logger.add("🚨 SYSTÈME : Membre du conseil exécuté ! Dissolution et transition forcée.");
-        
         state.currentPowerActive = false; 
         state.isProcessingAction = false;
 
@@ -208,10 +251,10 @@ export function purgeCriseCard(requester, cardId) {
     // 3. FIN DES EFFETS PERMANENTS : Si on a purgé une fuite d'air rouge, l'atmosphère se détend immédiatement
     // (L'oxygène max se recalculera tout seul au prochain reset ou rendu)
     
-    // 4. On envoie le récapitulatif standard au Gardien pour qu'il ait son bouton OK
+    // 4. On envoie le récapitulatif dédié à la purge au Gardien
     requester.conn.send({
-        type: 'CENSURE_RESULT', // On réutilise le template visuel violet "TERMINAL VERROUILLÉ / OK"
-        target: cardId,         // On détourne la variable target pour afficher le nom de la carte
+        type: 'PURGE_RESULT',
+        cardId: cardId,       // On passe explicitement l'ID de la carte
         isForced: state.currentPowerActive
     });
 
