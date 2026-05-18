@@ -289,12 +289,15 @@ export function handlePlayerDisconnect(closedConn) {
 }
 
 function handleActionConfirmed() {
-    // Le joueur a cliqué sur OK, si un pouvoir de décret/case était actif, on libère le jeu
     if (state.currentPowerActive) {
         state.currentPowerActive = false;
         syncTerminals();
         setTimeout(() => {
-            state.curG = (state.curG + 1) % players.length;
+            // Si un ordre extraordinaire est en cours, on ne décale pas l'index.
+            // La variable state.curG a déjà été fixée sur la cible dans handleCoupEtat.
+            if (state.nextNormalGardien === null) {
+                state.curG = (state.curG + 1) % players.length;
+            }
             state.isProcessingAction = false;
             nextTurn();
         }, 500); 
