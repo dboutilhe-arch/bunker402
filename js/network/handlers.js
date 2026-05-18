@@ -1,4 +1,4 @@
-// js/network/handlers.js 
+// js/network/handlers.js  
 import { DECREETS_DATABASE } from '../core/constants.js';
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
@@ -289,12 +289,15 @@ export function handlePlayerDisconnect(closedConn) {
 }
 
 function handleActionConfirmed() {
-    // Le joueur a cliqué sur OK, si un pouvoir de décret/case était actif, on libère le jeu
     if (state.currentPowerActive) {
         state.currentPowerActive = false;
         syncTerminals();
         setTimeout(() => {
-            state.curG = (state.curG + 1) % players.length;
+            // Si un ordre extraordinaire est en cours, on ne décale pas l'index.
+            // La variable state.curG a déjà été fixée sur la cible dans handleCoupEtat.
+            if (state.nextNormalGardien === null) {
+                state.curG = (state.curG + 1) % players.length;
+            }
             state.isProcessingAction = false;
             nextTurn();
         }, 500); 
@@ -328,20 +331,21 @@ function handleCoupEtat(conn, data) {
     const requester = players.find(p => p.conn === conn);
     if (!requester || !requester.isAlive) return;
 
-    // 1. On trouve l'index de la cible dans le tableau des joueurs
     const targetIdx = players.findIndex(p => p.name === data.targetName);
     if (targetIdx === -1 || !players[targetIdx].isAlive) return;
 
     Logger.add(`🔥 COUP D'ÉTAT : ${requester.name} a désigné ${data.targetName} comme prochain Gardien !`);
 
-    // 2. LA MAGIE : On décale l'index curG juste AVANT la cible.
-    // Comme la transition normale va faire "state.curG = (state.curG + 1) % length",
-    // en mettant (targetIdx - 1), le prochain tour tombera EXACTEMENT sur la cible !
-    state.curG = (targetIdx - 1 + players.length) % players.length;
+    // ✨ 1. ON SAUVEGARDE L'AVENIR : Le prochain normal, c'est le successeur de Luc (requester)
+    const currentGardienIdx = players.findIndex(p => p.name === requester.name);
+    state.nextNormalGardien = (currentGardienIdx + 1) % players.length;
 
-    // 3. On renvoie le panneau OK violet de confirmation au Gardien
+    // ✨ 2. ON PROGRESSE DIRECTEMENT VERS LA CIBLE
+    state.curG = targetIdx;
+
+    // ✨ 3. RÉCAP VISUEL PROPRE : Type dédié envoyé au mobile
     requester.conn.send({
-        type: 'CENSURE_RESULT', // On réutilise le template à bouton "OK"
+        type: 'COUP_ETAT_RESULT',
         target: data.targetName,
         isForced: state.currentPowerActive
     });

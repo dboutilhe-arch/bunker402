@@ -195,7 +195,17 @@ export function resolveVote() {
         if (state.oxy <= 0) {
             applyForced();
         } else { 
-            state.curG = (state.curG + 1) % players.length; 
+            // COUP D'ETAT : Si le Gardien extraordinaire voit son gouvernement rejeté, 
+            // le régime d'urgence prend fin et on retourne à la ligne temporelle normale.
+            if (state.nextNormalGardien !== null) {
+                state.curG = state.nextNormalGardien;
+                state.nextNormalGardien = null; // Parenthèse fermée
+                Logger.add("🔊 SYSTÈME : Vote rejeté. Fin du régime extraordinaire, retour à la programmation standard.");
+            } else {
+                // Passage normal au joueur suivant
+                state.curG = (state.curG + 1) % players.length; 
+            }
+            
             setTimeout(nextTurn, 1500); 
         }
         clearCouncilVisuals();
@@ -304,7 +314,15 @@ export function applyDecret(cardId, type, isForced = false) {
 
     // --- LOGIQUE DE TRANSITION DE TOUR ---
     if (!state.currentPowerActive && !decreetBloquant) {
-        state.curG = (state.curG + 1) % players.length;
+        // COUP D'ÉTAT : Si un retour à l'ordre normal est planifié
+        if (state.nextNormalGardien !== null) {
+            state.curG = state.nextNormalGardien;
+            state.nextNormalGardien = null; // Parenthèse fermée !
+            Logger.add("🔊 SYSTÈME : Fin du régime extraordinaire. Retour à l'ordre de passage standard.");
+        } else {
+            // Passage normal au joueur suivant
+            state.curG = (state.curG + 1) % players.length;
+        }
         setTimeout(() => { 
             state.isProcessingAction = false; 
             nextTurn(); 
