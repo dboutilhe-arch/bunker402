@@ -317,6 +317,5 @@ function handleArchivistePower(conn) {
     conn.send({ type: 'POWER_ACTIVATED_CONFIRM', message: "Protocole d'archive activé pour le vote en cours." });
     
     // On synchronise pour griser son bouton sur son téléphone
-    const { syncTerminals } = await import('../ui/renderer.js');
     syncTerminals();
 }
