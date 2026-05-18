@@ -207,18 +207,28 @@ function handleFinalChoice(data) {
     applyDecret(cardId, cardData.type);
 }
 
+function handleCensure(conn, data) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive) return;
+
+    if (state.currentPowerActive || data.isForced) {
+        applyCensure(requester, data.targetName);
+    } else {
+        // Mode normal : Pouvoir de métier de l'Intendant
+        if (!requester.jobPowerUsed) {
+            requester.jobPowerUsed = true;
+            applyCensure(requester, data.targetName);
+        }
+    }
+}
+
 function handleBloodTest(conn, data) {
     const requester = players.find(p => p.conn === conn);
     if (!requester) return;
 
-    // Si c'est un pouvoir forcé par une case, on vérifie casePowerUsed
-    if (data.isForced) {
-        if (!requester.casePowerUsed) {
-            requester.casePowerUsed = true;
-            testPlayerBlood(requester, data.targetName);
-        }
+    if (state.currentPowerActive || data.isForced) {
+        testPlayerBlood(requester, data.targetName);
     } else {
-        // Sinon, c'est le pouvoir de métier
         if (!requester.jobPowerUsed) {
             requester.jobPowerUsed = true;
             testPlayerBlood(requester, data.targetName);
@@ -230,33 +240,12 @@ function handleExecution(conn, data) {
     const requester = players.find(p => p.conn === conn);
     if (!requester || !requester.isAlive) return;
 
-    if (data.isForced) {
-        if (!requester.casePowerUsed) {
-            requester.casePowerUsed = true;
-            executePlayer(requester, data.targetName);
-        }
+    if (state.currentPowerActive || data.isForced) {
+        executePlayer(requester, data.targetName);
     } else {
         if (!requester.jobPowerUsed) {
             requester.jobPowerUsed = true;
             executePlayer(requester, data.targetName);
-        }
-    }
-}
-
-function handleCensure(conn, data) {
-    const requester = players.find(p => p.conn === conn);
-    
-    if (!requester || !requester.isAlive) return;
-
-    if (data.isForced) {
-        if (!requester.casePowerUsed) {
-            requester.casePowerUsed = true;
-            applyCensure(requester, data.targetName);
-        }
-    } else {
-        if (!requester.jobPowerUsed) {
-            requester.jobPowerUsed = true;
-            applyCensure(requester, data.targetName);
         }
     }
 }
