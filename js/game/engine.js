@@ -127,6 +127,7 @@ export function nextTurn() {
         if (name === activeG.name) return false;
         if (name === state.lastSentinelle) return false;
         if (players.length > 5 && name === state.lastGardien) return false;
+        if (state.vigileBannedPlayer && name.toLowerCase() === state.vigileBannedPlayer.toLowerCase()) return false;
         return true;
     });
     
@@ -145,6 +146,9 @@ export function resolveVote() {
         p.censoredBy = ""; 
     });
 
+    // FIX VIGILE : Le ban expire dès que le vote est résolu
+    state.vigileBannedPlayer = null;
+    
     // 1. Gestion de l'affichage des couleurs (Prend en compte la Chambre Noire)
     state.votes.list.forEach(v => {
         const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
@@ -206,7 +210,7 @@ export function resolveVote() {
                 state.curG = (state.curG + 1) % players.length; 
             }
             
-            setTimeout(nextTurn, 1500); 
+            setTimeout(, 1500); 
         }
         clearCouncilVisuals();
     }
@@ -362,7 +366,7 @@ export function applyDecret(cardId, type, isForced = false) {
         }
         setTimeout(() => { 
             state.isProcessingAction = false; 
-            nextTurn(); 
+            (); 
         }, 1000);
     } else {
         state.isProcessingAction = true;
@@ -432,6 +436,7 @@ export function restorePlayerAction(player) {
                         if (name === players[state.curG].name) return false;
                         if (name === state.lastSentinelle) return false;
                         if (players.length > 5 && name === state.lastGardien) return false;
+                        if (state.vigileBannedPlayer && name.toLowerCase() === state.vigileBannedPlayer.toLowerCase()) return false;
                         return true;
                     });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
