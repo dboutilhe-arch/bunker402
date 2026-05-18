@@ -24,8 +24,8 @@ export const ROLE_COMPOSITIONS = {
 // Répartition des pouvoirs de case en fonction du nombre de joueur
 export const POWER_MAP = {
     // TEST
-    //default: { 1: null, 2: null, 3: null, 4: null, 5: null }
-    default: { 1: 'TEST', 2: 'CENSURE', 3: 'CENSURE', 4: 'CENSURE', 5: 'CENSURE' }
+    default: { 1: null, 2: null, 3: null, 4: null, 5: null }
+    //default: { 1: 'TEST', 2: 'CENSURE', 3: 'CENSURE', 4: 'CENSURE', 5: 'CENSURE' }
 
     // 5 joueurs
     //5:  { 3: null, 4: 'TEST', 5: 'EXEC' },
