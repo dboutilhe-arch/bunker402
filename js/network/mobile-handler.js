@@ -130,7 +130,6 @@ function handleData(data) {
                     btn.style.opacity = "1";
                     btn.style.pointerEvents = "auto";
                 }
-                }
                 
                 // Conserve ton bloc Fossoyeur juste ici si tu l'as toujours
                 const isFossoyeur = document.getElementById('metier-display').innerText.includes("Fossoyeur");
