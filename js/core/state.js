@@ -20,7 +20,8 @@ export let state = {
     slotsCriseCards: [],
     slotsSuffrageCard: null,
     rebellionActive: false, // Suivi du décret Rébellion
-
+    loi493Active: false,
+    
     // Historique et pointeurs du Conseil
     lastSentinelle: null,
     lastGardien: null,
@@ -69,6 +70,7 @@ export function resetGameState() {
     state.rebellionActive = false;
     state.archivistePowerActive = false;
     state.nextNormalGardien = null;
+    state.loi493Active = false;
     
     players.forEach(p => {
         p.jobPowerUsed = false;  

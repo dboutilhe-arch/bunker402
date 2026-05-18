@@ -305,6 +305,16 @@ function handleData(data) {
         case 'RESET_TO_LOBBY':
             resetAffichageJ();
             break;
+
+        case 'GARDIEN_493_PICK':
+            // Le Gardien choisit la carte à PROMULGUER (comme une Sentinelle normale)
+            showLegislativeUI("GARDIEN (49.3 - CHOIX FINAL)", data.cards);
+            break;
+
+        case 'SENTINELLE_493_VIEW':
+            // La Sentinelle regarde fixement le choix du Gardien
+            showSentinelle493View(data.cards);
+            break;
     }
 }
 
@@ -736,4 +746,37 @@ function resetAffichageJ() {
             <p style="font-size: 0.8em; color: #888;">En attente du lancement par le Gardien Principal...</p>
         </div>
     `;
+}
+
+function showSentinelle493View(cards) {
+    const ui = document.getElementById('main-ui');
+    ui.innerHTML = `<h3>👁️ VISUEL TERMINAL (49.3)</h3>`;
+    ui.innerHTML += `<p style="font-size:0.85em; color:#ff3333; font-weight:bold;">[LECTURE SEULE] LE GARDIEN SÉLECTIONNE LE DÉCRET FINAL...</p>`;
+
+    const cardContainer = document.createElement('div');
+    cardContainer.className = "legislative-container";
+
+    cards.forEach(cardId => {
+        const data = DECREETS_DB_LOCAL[cardId];
+        if (!data) return;
+
+        const cardElement = document.createElement('div');
+        cardElement.className = `decree-card card-type-${data.type}`;
+        cardElement.style.opacity = "0.85"; // Un peu plus terne pour montrer que c'est inclyquable
+        cardElement.style.cursor = "not-allowed"; // Curseur bloqué
+        
+        let typeText = data.type === 'S' ? "SURVIE" : (data.type === 'C' ? "CRISE" : "SUFFRAGE");
+
+        cardElement.innerHTML = `
+            <div class="card-header card-header-${data.type}">
+                <span>${typeText}</span>
+                <span>${data.symbol}</span>
+            </div>
+            <div class="card-title">${data.name}</div>
+            <div class="card-desc">${data.desc}</div>
+        `;
+        cardContainer.appendChild(cardElement);
+    });
+
+    ui.appendChild(cardContainer);
 }
