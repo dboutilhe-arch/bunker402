@@ -110,12 +110,28 @@ function handleData(data) {
       
             const btn = document.getElementById('btn-power');
             if (btn) {
-                if (!hasUsedPower && !data.state.currentPowerActive) {
+                const isVigile = document.getElementById('metier-display').innerText.includes("Vigile");
+
+                // CONDITION SPÉCIFIQUE VIGILE : Actif UNIQUEMENT en phase de DÉSIGNATION
+                if (isVigile) {
+                    if (!hasUsedPower && data.state.currentPhase === "DÉSIGNATION") {
+                        btn.disabled = false;
+                        btn.style.opacity = "1";
+                        btn.style.pointerEvents = "auto";
+                    } else {
+                        btn.disabled = true;
+                        btn.style.opacity = "0.3";
+                        btn.style.pointerEvents = "none";
+                    }
+                } 
+                // Gestion normale pour les autres métiers actifs (Docteur, Intendant, Militaire)
+                else if (!hasUsedPower && !data.state.currentPowerActive) {
                     btn.disabled = false;
                     btn.style.opacity = "1";
                     btn.style.pointerEvents = "auto";
                 }
                 
+                // Conserve ton bloc Fossoyeur juste ici si tu l'as toujours
                 const isFossoyeur = document.getElementById('metier-display').innerText.includes("Fossoyeur");
                 if (isFossoyeur && data.state.deadCount !== undefined) {
                     const bonus = data.state.deadCount;
@@ -123,7 +139,7 @@ function handleData(data) {
                 }
             }
 
-            // ✨ CORRECTION ARCHIVISTE : On vérifie le conteneur HTML pour savoir si on est Archiviste
+            // ARCHIVISTE : On vérifie le conteneur HTML pour savoir si on est Archiviste
             const isArchiviste = document.getElementById('metier-display').innerText.includes("Archiviste");
             if (isArchiviste) {
                 const jobZone = document.getElementById('job-ui');
