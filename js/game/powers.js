@@ -251,10 +251,10 @@ export function purgeCriseCard(requester, cardId) {
     // 3. FIN DES EFFETS PERMANENTS : Si on a purgé une fuite d'air rouge, l'atmosphère se détend immédiatement
     // (L'oxygène max se recalculera tout seul au prochain reset ou rendu)
     
-    // 4. On envoie le récapitulatif standard au Gardien pour qu'il ait son bouton OK
+    // 4. On envoie le récapitulatif dédié à la purge au Gardien
     requester.conn.send({
-        type: 'CENSURE_RESULT', // On réutilise le template visuel violet "TERMINAL VERROUILLÉ / OK"
-        target: cardId,         // On détourne la variable target pour afficher le nom de la carte
+        type: 'PURGE_RESULT',
+        cardId: cardId,       // On passe explicitement l'ID de la carte
         isForced: state.currentPowerActive
     });
 
