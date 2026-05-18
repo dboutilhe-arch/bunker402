@@ -36,7 +36,10 @@ export let state = {
     currentPhase: "DÉSIGNATION", 
     currentProposedS: null,      
     currentLegislativeCards: [], // Contient les 3 (ou 2) cartes en main du Conseil
-    currentPowerActive: false
+    currentPowerActive: false,
+
+    // Variable de métier
+    archivistePowerActive: false
 };
 
 /**
@@ -63,6 +66,7 @@ export function resetGameState() {
     state.currentLegislativeCards = [];
     state.currentPowerActive = false;
     state.rebellionActive = false;
+    state.archivistePowerActive = false;
     
     players.forEach(p => {
         p.jobPowerUsed = false;  
