@@ -314,7 +314,7 @@ export function executeDecreetPower(cardId) {
                 
                 // On envoie le suffrage détruit dans la défausse
                 state.discard.push(ancientCardId);
-                Logger.add(`♻️ SYSTÈME : La carte de Suffrage active '${cardId.toUpperCase()}' a été court-circuitée et envoyée à la défausse.`);
+                Logger.add(`♻️ SYSTÈME : La carte de Suffrage active '${ancientCardId.toUpperCase()}' a été court-circuitée et envoyée à la défausse.`);
                 
                 // On nettoie les variables du State
                 state.slotsSuffrageCard = null;
