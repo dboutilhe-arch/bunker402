@@ -488,6 +488,8 @@ export function showGov(g, s) {
     document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : 0 / ${eligibleCount}`;
     document.getElementById('vote-summary').style.color = "#f1c40f"; 
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g} & ${s}`);
+
+    syncTerminals();
     
     // On envoie les bonnes interfaces (Vote ou Alerte de censure)
     players.filter(p => p.isAlive).forEach(p => {
