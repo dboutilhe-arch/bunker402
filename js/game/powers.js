@@ -349,6 +349,11 @@ export function executeDecreetPower(cardId) {
                 }
             });
             return true;
+
+        case 'loi_493':
+            state.loi493Active = true;
+            Logger.add(`🔨 DECRET 49.3 : Protocole d'inversion enclenché. Au prochain conseil, le Gardien choisira lui-même le décret final !`);
+            return false;
             
         default:
             // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
