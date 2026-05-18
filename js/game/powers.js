@@ -2,7 +2,7 @@ import { state, players } from '../core/state.js';
 import { nextTurn, resolveVote } from './engine.js';
 import { Logger } from '../ui/logger.js';
 import { POWER_MAP } from '../core/constants.js';
-import { syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals, updateCensureUI } from '../ui/renderer.js';
+import { render, syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals, updateCensureUI } from '../ui/renderer.js';
 
 /**
  * Analyse biologique d'un joueur (Pouvoir du Docteur ou Case de Crise)
@@ -216,7 +216,6 @@ export function purgeCriseCard(requester, cardId) {
     });
 
     // On rafraîchit l'écran PC central
-    const { render, syncTerminals } = await import('../ui/renderer.js');
     render();
     syncTerminals();
 }
