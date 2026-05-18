@@ -54,9 +54,9 @@ export function executePlayer(requester, targetName) {
     // On envoie le signal de mort au joueur éliminé
     target.conn.send({ type: 'YOU_ARE_DEAD', reveal: revealResult });
 
-    // On prévient tout le monde de rafraîchir ses listes de cibles
+    // On demande de rafraîchir l'interface à TOUT LE MONDE... SAUF au tueur !
     players.forEach(p => {
-        if (p.conn && p.conn.open) {
+        if (p.conn && p.conn.open && p.name.toLowerCase() !== requester.name.toLowerCase()) {
             p.conn.send({ type: 'REFRESH_INTERFACE' }); 
         }
     });
