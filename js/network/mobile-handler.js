@@ -131,6 +131,27 @@ function handleData(data) {
                     btn.innerText = `NÉCROLOGIE : +${bonus} VOIX (${bonus} CADAVRE${bonus > 1 ? 'S' : ''})`;
                 }
             }
+            if (myMetier === 'Archiviste') {
+            const jobZone = document.getElementById('job-ui');
+            jobZone.innerHTML = ""; // On nettoie
+        
+            const btnPower = document.createElement('button');
+            btnPower.className = "btn-job";
+            btnPower.innerText = "📜 ARCHIVER LE PROCHAIN VOTE";
+            
+            // Si le pouvoir a déjà été utilisé ou si on est déjà en phase de législation, on le grise
+            if (hasUsedPower || serverState.currentPhase.startsWith("LÉGISLATION")) {
+                btnPower.disabled = true;
+                btnPower.style.opacity = "0.3";
+            }
+        
+            btnPower.onclick = () => {
+                if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
+                conn.send({ type: 'USE_ARCHIVISTE_POWER' });
+            };
+        
+            jobZone.appendChild(btnPower);
+        }
             break;
 
         case 'YOUR_TURN':
