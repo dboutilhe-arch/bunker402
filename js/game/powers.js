@@ -30,7 +30,7 @@ export function testPlayerBlood(requester, targetName) {
             state.curG = (state.curG + 1) % players.length;
             state.isProcessingAction = false;
             nextTurn();
-        }, 2000); 
+        }, 100); 
     }
 }
 
@@ -91,7 +91,7 @@ export function executePlayer(requester, targetName) {
         setTimeout(() => {
             state.curG = (state.curG + 1) % players.length;
             nextTurn();
-        }, 2000);
+        }, 100);
         return;
     }
 
@@ -102,7 +102,7 @@ export function executePlayer(requester, targetName) {
             state.curG = (state.curG + 1) % players.length;
             state.isProcessingAction = false;
             nextTurn();
-        }, 2000); 
+        }, 100); 
     }
 }
 
