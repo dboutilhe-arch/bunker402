@@ -53,6 +53,10 @@ export function handlePlayerData(conn, data) {
         case 'SYNC_REQUEST':
             handleSyncRequest(conn);
             break;
+            
+        case 'USE_ARCHIVISTE_POWER':
+            handleArchivistePower(conn);
+            break;
     }
 }
 
@@ -297,4 +301,22 @@ function handlePurgeDecret(conn, data) {
     const requester = players.find(p => p.conn === conn);
     if (!requester || !requester.isAlive) return;
     purgeCriseCard(requester, data.cardId);
+}
+
+function handleArchivistePower(conn) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive || requester.metier !== 'Archiviste' || requester.jobPowerUsed) return;
+
+    // On verrouille le pouvoir pour le restant de la partie
+    requester.jobPowerUsed = true;
+    state.archivistePowerActive = true;
+
+    Logger.add(`📜 SYSTÈME : L'Archiviste (${requester.name}) active ses protocoles de recherche pour ce vote.`);
+
+    // On confirme au joueur que son pouvoir est enclenché
+    conn.send({ type: 'POWER_ACTIVATED_CONFIRM', message: "Protocole d'archive activé pour le vote en cours." });
+    
+    // On synchronise pour griser son bouton sur son téléphone
+    const { syncTerminals } = await import('../ui/renderer.js');
+    syncTerminals();
 }
