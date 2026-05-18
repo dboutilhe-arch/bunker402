@@ -708,6 +708,10 @@ function showCensureResult(data) {
             <p style="color: #f1c40f; margin: 10px 0;">Cible : <b>${data.target.toUpperCase()}</b></p>
             <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #ff00ff; color: #000; border-color: #000;">OK</button>
         </div>`;
+
+    document.getElementById('btn-ok').onclick = () => {
+        conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+    };
 }
 
 function showCoupEtatResult(data) {
