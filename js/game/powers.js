@@ -19,19 +19,9 @@ export function testPlayerBlood(requester, targetName) {
     requester.conn.send({
         type: 'BLOOD_TEST_RESULT',
         target: targetName,
-        result: bloodResult
+        result: bloodResult,
+        isForced: state.currentPowerActive
     });
-
-    // Gestion de la fin de l'action de case
-    if (state.currentPowerActive) {
-        state.currentPowerActive = false;
-        syncTerminals();
-        setTimeout(() => {
-            state.curG = (state.curG + 1) % players.length;
-            state.isProcessingAction = false;
-            nextTurn();
-        }, 2000); 
-    }
 }
 
 /**
@@ -61,48 +51,47 @@ export function executePlayer(requester, targetName) {
     Logger.add(`🚨 EXÉCUTION : ${requester.name} a éliminé ${targetName}.`);
     Logger.add(`SYSTÈME : Le sujet ${targetName} était ${revealResult}.`);
 
-    // On envoie le signal de mort
+    // On envoie le signal de mort au joueur éliminé
     target.conn.send({ type: 'YOU_ARE_DEAD', reveal: revealResult });
 
-    // --- LISTES DE CIBLES & INTERFACES ---
-    // On prévient tout le monde de rafraîchir ses listes
+    // On demande de rafraîchir l'interface à TOUT LE MONDE... SAUF au tueur !
     players.forEach(p => {
-        if (p.conn && p.conn.open) {
+        if (p.conn && p.conn.open && p.name.toLowerCase() !== requester.name.toLowerCase()) {
             p.conn.send({ type: 'REFRESH_INTERFACE' }); 
         }
     });
 
     updatePlayerStatusUI(target, revealResult);
 
-    // --- Nettoyage des visuels si le mort était au conseil ---
+    // ─── PRIORITÉ 1 : CONDITION DE VICTOIRE (SI C'EST L'ALPHA) ──────────────────
+    // On le vérifie AVANT toute chose, même si l'Alpha était au Conseil !
+    if (target.role === 'A') {
+        return triggerWin("SURVIVANTS", "L'Alpha a été éliminé du complexe.");
+    }
+
+    // ─── PRIORITÉ 2 : ENVOI DU RÉCAPITULATIF AU TUEUR (MILITAIRE OU GARDIEN) ────
+    // On l'envoie TOUJOURS pour que le Militaire ou le Gardien voit les rôles s'afficher
+    requester.conn.send({
+        type: 'EXECUTION_RESULT',
+        target: targetName,
+        result: revealResult,
+        isForced: state.currentPowerActive // Permet au mobile de savoir si c'est un décret bloquant
+    });
+
+    // ─── PRIORITÉ 3 : SÉCURITÉ CONSEIL FOUDROYÉ ─────────────────────────────────
+    // Si la cible était au conseil, on dissout immédiatement et on court-circuite le clic sur "OK"
     const targetIdx = players.findIndex(p => p.name === targetName);
     if (targetIdx === state.curG || targetIdx === state.curSIdx) {
-        clearCouncilVisuals(); // Enlève l'étoile et la bordure jaune/bleue
-    }
+        clearCouncilVisuals();
+        Logger.add("🚨 SYSTÈME : Membre du conseil exécuté ! Dissolution et transition forcée.");
+        
+        state.currentPowerActive = false; 
+        state.isProcessingAction = false;
 
-    if (target.role === 'A') {
-        return triggerWin("SURVIVANTS", "L'Alpha a été éliminé.");
-    }
-
-    // Gestion du tour suivant si membre du conseil tué
-    if (targetIdx === state.curG || targetIdx === state.curSIdx) {
-        Logger.add("SYSTÈME : Membre du conseil éliminé. Passage au tour suivant.");
-        state.currentPowerActive = false;
         setTimeout(() => {
             state.curG = (state.curG + 1) % players.length;
             nextTurn();
         }, 2000);
-        return;
-    }
-
-    if (state.currentPowerActive) {
-        state.currentPowerActive = false;
-        syncTerminals(); 
-        setTimeout(() => {
-            state.curG = (state.curG + 1) % players.length;
-            state.isProcessingAction = false;
-            nextTurn();
-        }, 2000); 
     }
 }
 
@@ -154,22 +143,12 @@ export function applyCensure(requester, targetName) {
     updateCensureUI(target);
     syncTerminals();
 
-    if (state.currentPowerActive) {
-        state.currentPowerActive = false;
-        setTimeout(() => {
-            state.curG = (state.curG + 1) % players.length;
-            state.isProcessingAction = false;
-            nextTurn();
-        }, 2000);
-    } else {
-        // Si c'est l'Intendant qui a joué de lui-même
-        // On lui demande de rafraîchir son interface pour récupérer son vote en cours
-        setTimeout(() => {
-            if (requester.conn && requester.conn.open) {
-                requester.conn.send({ type: 'REFRESH_INTERFACE' });
-            }
-        }, 100);
-    }
+    // On envoie le rapport de censure au Gardien
+    requester.conn.send({
+        type: 'CENSURE_RESULT',
+        target: targetName,
+        isForced: state.currentPowerActive
+    });
 }
 
 /**
@@ -217,6 +196,8 @@ export function checkCasePower(caseNumber) {
  * @returns {boolean} - true si le décret demande une action interactive (sélection de cible), false sinon
  */
 export function executeDecreetPower(cardId) {
+    const gardien = players[state.curG];
+    
     switch (cardId) {
         case 'sabotage':
             state.oxy--;

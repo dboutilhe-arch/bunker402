@@ -146,7 +146,7 @@ function handleData(data) {
                 <div style="margin-top: 40px;">
                     <h2 style="color: #f1c40f; text-transform: uppercase;">FORMATION DU CONSEIL</h2>
                     <p style="color: #e0e0e0;">Le Gardien <b>${data.gardienName}</b> choisit sa Sentinelle...</p>
-                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite;"></div>
+                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #f1c40f; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite;"></div>
                     <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[ANALYSE DES ACCÈS RÉSEAU EN COURS]</p>
                 </div>
             `;
@@ -163,6 +163,18 @@ function handleData(data) {
             `;
             break;
 
+        case 'WAIT_POWER':
+            ui.innerHTML = `
+                <div style="margin-top: 40px; ">
+                    <h2 style="color: #ff00ff; text-transform: uppercase; letter-spacing: 1px;">PROTOCOLE INTERACTIF</h2>
+                    <p style="color: #e0e0e0; font-size: 0.9em;">Le Gardien <b>${data.gardienName}</b> applique le décret :</p>
+                    <p style="color: #ff00ff; font-weight: bold; font-size: 1.1em; text-transform: uppercase;">[ ${data.title} ]</p>
+                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #ff00ff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.2s linear infinite; box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);"></div>
+                    <p style="font-size: 0.75em; color: #555; letter-spacing: 1px;">[SÉCURISATION DES TERMINAUX DISTANTS EN COURS]</p>
+                </div>
+            `;
+            break;
+
         case 'GARDIEN_PICK':
             showLegislativeUI("GARDIEN", data.cards);
             break;
@@ -173,6 +185,23 @@ function handleData(data) {
 
         case 'BLOOD_TEST_RESULT':
             showBloodResult(data);
+            document.getElementById('btn-ok').onclick = () => {
+                conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+            };
+            break;
+
+      case 'EXECUTION_RESULT':
+            showExecutionResult(data);
+            document.getElementById('btn-ok').onclick = () => {
+                conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+            };
+            break;
+
+        case 'CENSURE_RESULT':
+            showCensureResult(data);
+            document.getElementById('btn-ok').onclick = () => {
+                conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+            };
             break;
       
       case 'YOU_ARE_DEAD':
@@ -531,6 +560,31 @@ function showBloodResult(data) {
         </div>`;
         
     document.getElementById('btn-ok').onclick = () => conn.send({ type: 'SYNC_REQUEST' });
+}
+
+function showExecutionResult(data) {
+    const ui = document.getElementById('main-ui');
+    const color = data.result === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+    
+    ui.innerHTML = `
+        <div style="border: 2px solid #e74c3c; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: #e74c3c; margin-top: 0; letter-spacing: 1px;">RAPPORT D'ÉLIMINATION</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Sujet exécuté : <b>${data.target.toUpperCase()}</b></p>
+            <p style="color: #e0e0e0; margin: 10px 0;">Registre biologique : <b style="color: ${color}; font-size: 1.1em;">${data.result}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #e74c3c; color: #000; border-color: #000;">OK</button>
+        </div>`;
+}
+
+function showCensureResult(data) {
+    const ui = document.getElementById('main-ui');
+    
+    ui.innerHTML = `
+        <div style="border: 2px solid #ff00ff; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: #ff00ff; margin-top: 0; letter-spacing: 1px;">TERMINAL VERROUILLÉ</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de restriction a été appliqué avec succès.</p>
+            <p style="color: #f1c40f; margin: 10px 0;">Cible : <b>${data.target.toUpperCase()}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #ff00ff; color: #000; border-color: #000;">OK</button>
+        </div>`;
 }
 
 function showEndGame(data) {
