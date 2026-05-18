@@ -209,8 +209,7 @@ export function resolveVote() {
                 // Passage normal au joueur suivant
                 state.curG = (state.curG + 1) % players.length; 
             }
-            
-            setTimeout(, 1500); 
+            setTimeout(nextTurn, 1500); 
         }
         clearCouncilVisuals();
     }
