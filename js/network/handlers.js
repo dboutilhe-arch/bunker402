@@ -4,7 +4,7 @@ import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors } from '../ui/renderer.js';
 import { showGov, resolveVote, applyDecret, restorePlayerAction, handleDiscardFromNet, nextTurn } from '../game/engine.js';
-import { testPlayerBlood, executePlayer, applyCensure, purgeCriseCard } from '../game/powers.js';
+import { testPlayerBlood, executePlayer, applyCensure, purgeCriseCard, swapPlayerBlood } from '../game/powers.js';
 
 export function handlePlayerData(conn, data) {
     if (state.gameOver) return;
@@ -44,6 +44,10 @@ export function handlePlayerData(conn, data) {
 
         case 'REQUEST_PURGE':
             handlePurgeDecret(conn, data);
+            break;
+
+        case 'REQUEST_REORGANISATION':
+            handleReorganisation(conn, data);
             break;
 
         case 'REQUEST_COUP_ETAT':
@@ -128,8 +132,6 @@ function handleSentinelle(data) {
     state.curSIdx = players.findIndex(p => p.name === data.sentinelleName);
     showGov(data.gardienName, data.sentinelleName);
 }
-
-// js/network/handlers.js
 
 function handleVote(data) {
     // 1. SÉCURITÉ : On récupère le joueur qui vote
@@ -270,6 +272,14 @@ function handleExecution(conn, data) {
     }
 }
 
+// ✨ FIX : Nettoyage de la syntaxe cassée
+function handleReorganisation(conn, data) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive) return;
+    
+    swapPlayerBlood(requester, data.targetAName, data.targetBName);
+}
+
 function handleSyncRequest(conn) {
     const p = players.find(pl => pl.conn === conn);
     if (p) {
@@ -332,7 +342,7 @@ function handleArchivistePower(conn) {
 
     Logger.add(`📜 SYSTÈME : L'Archiviste (${requester.name}) active ses protocoles de recherche pour ce vote.`);
 
-    // On confirme au joueur que son pouvoir est enclenché
+    // On confirme au joueur que son pouvoir is enclenché
     conn.send({ type: 'POWER_ACTIVATED_CONFIRM', message: "Protocole d'archive activé pour le vote en cours." });
     
     // On synchronise pour griser son bouton sur son téléphone

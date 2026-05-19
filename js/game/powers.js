@@ -96,8 +96,7 @@ export function executePlayer(requester, targetName) {
     }
 
     // --- LE RESTE DE TON CODE EXECUTEPLAYER RESTE IDENTIQUE ---
-    const isInfected = ['A', 'I', 'IM'].includes(target.role);
-    const revealResult = isInfected ? "INFECTÉ" : "SAIN";
+    const revealResult = target.blood; // Prend la valeur "INFECTÉ" ou "SAIN" (et survit au swap)
 
     Logger.add(`🚨 EXÉCUTION : ${requester.name} a éliminé ${targetName}.`);
     Logger.add(`SYSTÈME : Le sujet ${targetName} était ${revealResult}.`);
@@ -263,6 +262,52 @@ export function purgeCriseCard(requester, cardId) {
 }
 
 /**
+ * Permute le statut du sang de deux joueurs (Décret Réorganisation)
+ */
+/**
+ * Permute le statut du sang de deux joueurs et les notifie individuellement
+ */
+export function swapPlayerBlood(requester, targetA_Name, targetB_Name) {
+    const pA = players.find(p => p.name === targetA_Name);
+    const pB = players.find(p => p.name === targetB_Name);
+
+    if (!pA || !pB) return;
+
+    // 1. Permutation des registres sanguins dans le State
+    const tempBlood = pA.blood;
+    pA.blood = pB.blood;
+    pB.blood = tempBlood;
+
+    Logger.add(`🔄 REORGANISATION : ${requester.name} a interverti les dossiers de ${targetA_Name} et ${targetB_Name} !`);
+
+    // 2. Notification exclusive au Joueur A
+    if (pA.conn && pA.conn.open) {
+        pA.conn.send({
+            type: 'BLOOD_SWAPPED_ALERT',
+            withPlayer: pB.name,
+            newBlood: pA.blood
+        });
+    }
+
+    // 3. Notification exclusive au Joueur B
+    if (pB.conn && pB.conn.open) {
+        pB.conn.send({
+            type: 'BLOOD_SWAPPED_ALERT',
+            withPlayer: pA.name,
+            newBlood: pB.blood
+        });
+    }
+
+    // 4. Rapport de fin d'action envoyé au Gardien
+    requester.conn.send({
+        type: 'REORGANISATION_RESULT',
+        targetA: targetA_Name,
+        targetB: targetB_Name,
+        isForced: state.currentPowerActive
+    });
+}
+
+/**
  * Exécute l'effet immédiat (symbole ⚡) d'un décret promulgué
  * @param {string} cardId - L'identifiant unique du décret (ex: 'sabotage', 'censure')
  * @returns {boolean} - true si le décret demande une action interactive (sélection de cible), false sinon
@@ -406,6 +451,29 @@ export function executeDecreetPower(cardId) {
             // (Si ton moteur réinitialise state.currentProposedS, cette ligne garantit qu'on garde la bonne)
             state.nextForcedS = state.currentProposedS; 
             return false;
+
+        case 'reorganisation':
+            state.currentPowerActive = true; 
+            Logger.add(`🔄 DÉCRET RÉORGANISATION : Protocole activé. En attente du choix du Gardien (${gardien.name}).`);
+            
+            if (gardien && gardien.conn && gardien.conn.open) {
+                gardien.conn.send({ 
+                    type: 'FORCE_POWER_SELECT', 
+                    action: 'REQUEST_REORGANISATION', 
+                    title: 'RÉORGANISATION BIOLOGIQUE (DÉCRET)' 
+                });
+            }
+            // Écran d'attente violet pour les autres
+            players.forEach(p => {
+                if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
+                    p.conn.send({ 
+                        type: 'WAIT_POWER', 
+                        gardienName: gardien.name, 
+                        title: 'RÉORGANISATION DES SYSTÈMES' 
+                    });
+                }
+            });
+            return true;
             
         default:
             // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
