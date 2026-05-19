@@ -153,6 +153,33 @@
             text-transform: uppercase;
         }
 
+        /* --- AJUSTEMENTS DES COULEURS DE TEXTE LORS DU VOTE --- */
+
+        /* Quand l'étiquette est verte (OUI), le texte passe en noir pour un contraste maximal */
+        .voted-oui .p-weight span {
+            color: #000000 !important;
+            font-weight: bold !important;
+        }
+        /* Le métier de l'étiquette passe aussi en noir discret pour l'harmonie */
+        .voted-oui .p-job {
+            color: rgba(0, 0, 0, 0.7) !important;
+        }
+        
+        /* Quand l'étiquette est rouge (NON), le texte passe en blanc brillant pour trancher */
+        .voted-non .p-weight span {
+            color: #ffffff !important;
+            font-weight: bold !important;
+        }
+        .voted-non .p-job {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+        
+        /* En Chambre Noire (VOTE SECRET), on lui donne un rose/violet électrique assorti à l'aura */
+        .voted-secret .p-weight span {
+            color: #ff00ff !important;
+            text-shadow: 0 0 5px rgba(255, 0, 255, 0.8) !important;
+        }
+
         #vote-summary {
             white-space: pre-line; /* Permet de respecter les \n dans le texte */
             line-height: 1.4;      /* Un peu d'air entre les deux lignes */
