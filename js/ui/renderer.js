@@ -156,6 +156,37 @@ export function render() {
             <div class="slot ${cardIdF ? 'filled-f' : ''}" style="margin: 0;"></div>
             ${nameLabelF}
         </div>`;
+
+    // ✨ METTRE À JOUR LE POIDS DES VOTES SOUS LES ÉTIQUETTES DE L'ÉCRAN CENTRAL
+    players.forEach(p => {
+        // On cible uniquement les étiquettes de la zone de jeu active pour éviter de casser le lobby
+        const activeList = document.getElementById('active-player-list');
+        if (!activeList) return;
+        
+        const tag = activeList.querySelector(`[id="tag-${p.name.toLowerCase()}"]`);
+        if (tag) {
+            // On cherche ou on crée une div dédiée au poids pour éviter d'écraser le nom/métier
+            let weightDiv = tag.querySelector('.p-weight');
+            if (!weightDiv) {
+                weightDiv = document.createElement('div');
+                weightDiv.className = 'p-weight';
+                weightDiv.style.fontSize = '0.65em';
+                weightDiv.style.marginTop = '4px';
+                tag.appendChild(weightDiv);
+            }
+
+            // Affichage conditionnel selon le statut du personnel
+            if (!p.isAlive) {
+                weightDiv.innerHTML = `<span style="color: #555;">[ÉLIMINÉ]</span>`;
+            } else if (p.isCensored) {
+                weightDiv.innerHTML = `<span style="color: #e74c3c; font-weight: bold;">VOIX : 0 (MUET)</span>`;
+            } else {
+                const currentWeight = calculatePlayerVoteWeight(p);
+                const color = currentWeight > 1 ? '#f1c40f' : '#2ecc71'; // Jaune si boosté, Vert si normal
+                weightDiv.innerHTML = `<span style="color: ${color}; font-weight: ${currentWeight > 1 ? 'bold' : 'normal'};">VOIX : ${currentWeight}</span>`;
+            }
+        }
+    });
 }
 
 /**
@@ -306,4 +337,42 @@ export function updateCensureUI(player) {
             jobDiv.innerHTML += ` <span class="censure-tag" style="color:#e74c3c; font-weight:bold;">🤐</span>`;
         }
     });
+}
+
+/**
+ * Calcule le poids de vote dynamique d'un joueur selon ses passifs et le suffrage actif
+ */
+function calculatePlayerVoteWeight(player) {
+    if (!player.isAlive || player.isCensored) return 0;
+
+    let weight = 1;
+
+    // Passif Shérif : Compte double de base
+    if (player.metier === 'Shérif') {
+        weight = 2;
+    }
+
+    // Passif Fossoyeur : +1 voix par joueur mort
+    if (player.metier === 'Fossoyeur') {
+        const deadCount = players.filter(p => !p.isAlive).length;
+        weight += deadCount;
+    }
+    
+    // CAS A : Conseil Restreint (Gardien & Sentinelle comptent double)
+    if (state.slotsSuffrageCard === 'conseil_restreint') {
+        const isGardien = (player.name === players[state.curG]?.name);
+        const isSentinelle = (state.curSIdx !== -1 && player.name === players[state.curSIdx]?.name);
+        if (isGardien || isSentinelle) {
+            weight = 2;
+        }
+    } 
+    // CAS C : Insurrection Populaire (Les Civils comptent double)
+    else if (state.slotsSuffrageCard === 'insurrection_populaire' && player.metier === 'Civil') {
+        weight = 2;
+    }
+
+    // Note : Le cas "Grève du Zèle" n'est pas inclus ici car il ne double le poids 
+    // que SI le joueur vote "NON" (spécifique au choix fait lors du scrutin).
+
+    return weight;
 }
