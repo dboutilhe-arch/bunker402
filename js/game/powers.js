@@ -120,13 +120,33 @@ export function executePlayer(requester, targetName) {
         isForced: state.currentPowerActive
     });
 
+    // --- DETECTION DU DECES D'UN MEMBRE DU CONSEIL ---
     const targetIdx = players.findIndex(p => p.name === targetName);
     if (targetIdx === state.curG || targetIdx === state.curSIdx) {
+        
+        // Sauvegarde des décrets en cours de législation
+        if (state.currentPhase.startsWith("LÉGISLATION") && state.currentLegislativeCards && state.currentLegislativeCards.length > 0) {
+            const cartesPerduesCount = state.currentLegislativeCards.length;
+            
+            // On pousse toutes les cartes qui étaient dans les mains du mort vers la défausse
+            state.currentLegislativeCards.forEach(cardId => {
+                if (cardId) state.discard.push(cardId);
+            });
+            
+            Logger.add(`♻️ SÉCURITÉ SYSTÈME : ${cartesPerduesCount} décret(s) en cours d'examen ont été renvoyé(s) à la défausse.`);
+            
+            // On vide proprement la main législative du State
+            state.currentLegislativeCards = [];
+        }
+
+        // Dissolution immédiate et nettoyage visuel du conseil
         clearCouncilVisuals();
         Logger.add("🚨 SYSTÈME : Membre du conseil exécuté ! Dissolution et transition forcée.");
+        
         state.currentPowerActive = false; 
         state.isProcessingAction = false;
 
+        // Transition vers le joueur suivant après un court délai pour laisser lire le log
         setTimeout(() => {
             state.curG = (state.curG + 1) % players.length;
             nextTurn();
