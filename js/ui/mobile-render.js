@@ -163,16 +163,19 @@ export function showVoteUI(data) {
     const btnOui = document.createElement('button');
     btnOui.className = "btn"; btnOui.style.background = "#2ecc71"; btnOui.style.color = "#000"; btnOui.style.borderColor = "#000"; btnOui.innerText = "ACCEPTER";
     btnOui.onclick = () => {
-        document.getElementById('main-ui').innerHTML = "Vote OUI transmis...";
+        showCleanUI('OUI');
         mobileState.conn.send({ type: 'VOTE_DONE', choice: 'OUI', playerName: mobileState.myName });
     };
-    
+
     const btnNon = document.createElement('button');
     btnNon.className = "btn"; btnNon.style.background = "#e74c3c"; btnNon.style.color = "#000"; btnNon.style.borderColor = "#000"; btnNon.innerText = "REFUSER";
     btnNon.onclick = () => {
-        document.getElementById('main-ui').innerHTML = "Vote NON transmis...";
+        showCleanUI('NON'); // ✨ Et ici
         mobileState.conn.send({ type: 'VOTE_DONE', choice: 'NON', playerName: mobileState.myName });
     };
+
+    ui.appendChild(btnOui);
+    ui.appendChild(btnNon);
 
     ui.appendChild(btnOui);
     ui.appendChild(btnNon);
@@ -508,5 +511,73 @@ export function resetAffichageJ() {
             <p>Connexion maintenue avec le Bunker.</p>
             <div class="loader" style="margin: 20px auto; border: 4px solid #333; border-top: 4px solid #2ecc71; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;"></div>
             <p style="font-size: 0.8em; color: #888;">En attente du lancement par le Gardien Principal...</p>
+        </div>`;
+}
+
+export function showWaitSentinelleUI(gardienName) {
+    document.getElementById('main-ui').innerHTML = `
+        <div style="margin-top: 40px;">
+            <h2 style="color: #f1c40f; text-transform: uppercase;">FORMATION DU CONSEIL</h2>
+            <p style="color: #e0e0e0;">Le Gardien <b>${gardienName}</b> choisit sa Sentinelle...</p>
+            <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #f1c40f; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite;"></div>
+            <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[ANALYSE DES ACCÈS RÉSEAU EN COURS]</p>
+        </div>`;
+}
+
+export function showWaitLegislationUI(step) {
+    document.getElementById('main-ui').innerHTML = `
+        <div style="margin-top: 40px;">
+            <h2 style="color: #3498db; text-transform: uppercase;">SESSION LÉGISLATIVE</h2>
+            <p style="color: #e0e0e0;">Le Conseil applique les protocoles secrets (Aiguillage : <b>${step}</b>)...</p>
+            <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #3498db; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.5s linear infinite;"></div>
+            <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[CHIFFREMENT DES DÉCRETS DE SÉCURITÉ]</p>
+        </div>`;
+}
+
+export function showWaitPowerUI(gardienName, title) {
+    document.getElementById('main-ui').innerHTML = `
+        <div style="margin-top: 40px; ">
+            <h2 style="color: #ff00ff; text-transform: uppercase; letter-spacing: 1px;">PROTOCOLE INTERACTIF</h2>
+            <p style="color: #e0e0e0; font-size: 0.9em;">Le Gardien <b>${gardienName}</b> applique le décret :</p>
+            <p style="color: #ff00ff; font-weight: bold; font-size: 1.1em; text-transform: uppercase;">[ ${title} ]</p>
+            <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #ff00ff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.2s linear infinite; box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);"></div>
+            <p style="font-size: 0.75em; color: #555; letter-spacing: 1px;">[SÉCURISATION DES TERMINAUX DISTANTS EN COURS]</p>
+        </div>`;
+}
+
+export function showDeadUI(reveal) {
+    const colReveal = reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+    document.getElementById('main-ui').innerHTML = `
+        <h1 style="color: #e74c3c;">VOUS ÊTES MORT</h1>
+        <p>Analyse post-mortem : <b style="color: ${colReveal}">${reveal}</b></p>
+        <p style="opacity: 0.6;">Vous ne pouvez plus voter ni participer.</p>
+    `;
+    document.getElementById('job-ui').innerHTML = "";
+}
+
+export function showCensoredAlertUI(byPlayer) {
+    document.getElementById('main-ui').innerHTML = `
+        <div style="border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; background: rgba(231, 76, 60, 0.1);">
+            <h2 style="color: #e74c3c;">🤐 CENSURE ACTIVÉE</h2>
+            <p>Le joueur <b>${byPlayer}</b> a suspendu vos droits de vote pour ce scrutin.</p>
+            <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">Attendez la fin du tour...</p>
+        </div>`;
+}
+
+export function showCleanUI(choix) {
+    const colorChoix = choix === 'OUI' ? '#2ecc71' : '#e74c3c';
+    
+    document.getElementById('main-ui').innerHTML = `
+        <div style="margin-top: 40px;">
+            <h2 style="color: #2ecc71; text-transform: uppercase;">TRANSMISSION REÇUE</h2>
+            <p style="color: #e0e0e0; margin-bottom: 15px;">Votre vote a été enregistré par la console centrale.</p>
+            
+            <div style="display: inline-block; padding: 6px 20px; border: 1px solid ${colorChoix}; border-radius: 5px; background: rgba(0,0,0,0.3); margin-bottom: 20px;">
+                <span style="color: #888; font-size: 0.85em; letter-spacing: 1px;">STATUT :</span> 
+                <b style="color: ${colorChoix}; letter-spacing: 1px; font-size: 1.1em;">${choix}</b>
+            </div>
+
+            <div class="loader" style="margin: 10px auto 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite;"></div>
+            <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[SYNCHRONISATION TERMINAL EN ATTENTE DU SCRUTIN]</p>
         </div>`;
 }

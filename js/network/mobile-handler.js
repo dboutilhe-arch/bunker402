@@ -5,7 +5,9 @@ import {
     showLegislativeUI, openTargetSelector, showBloodResult, 
     showExecutionResult, showCensureResult, showCoupEtatResult, 
     showEndGame, resetAffichageJ, showSentinelle493View, 
-    showPurgeResult, showReorganisationResult, showBloodSwappedAlert 
+    showPurgeResult, showReorganisationResult, showBloodSwappedAlert,
+    showWaitSentinelleUI, showWaitLegislationUI, showWaitPowerUI, // <-- Ajoutés
+    showDeadUI, showCensoredAlertUI, showCleanUI                 // <-- Ajoutés
 } from '../ui/mobile-render.js';
 
 // Conteneur d'état dynamique partagé par référence entre les modules
@@ -68,8 +70,7 @@ function connect(isReconnect = false) {
 
 // --- GESTIONNAIRE DE MESSAGES (DATA HANDLER) ---
 function handleData(data) {
-    const ui = document.getElementById('main-ui');
-
+    // Sécurité affichage écrans de transition
     if (data.type === 'CONNECTED' || data.type === 'INIT') {
         document.getElementById('setup').classList.add('hidden');
         document.getElementById('game').classList.remove('hidden');
@@ -95,34 +96,15 @@ function handleData(data) {
             break;
 
         case 'WAIT_SENTINELLE':
-            ui.innerHTML = `
-                <div style="margin-top: 40px;">
-                    <h2 style="color: #f1c40f; text-transform: uppercase;">FORMATION DU CONSEIL</h2>
-                    <p style="color: #e0e0e0;">Le Gardien <b>${data.gardienName}</b> choisit sa Sentinelle...</p>
-                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #f1c40f; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite;"></div>
-                    <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[ANALYSE DES ACCÈS RÉSEAU EN COURS]</p>
-                </div>`;
+            showWaitSentinelleUI(data.gardienName);
             break;
 
         case 'WAIT_LEGISLATION':
-            ui.innerHTML = `
-                <div style="margin-top: 40px;">
-                    <h2 style="color: #3498db; text-transform: uppercase;">SESSION LÉGISLATIVE</h2>
-                    <p style="color: #e0e0e0;">Le Conseil applique les protocoles secrets (Aiguillage : <b>${data.step}</b>)...</p>
-                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #3498db; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.5s linear infinite;"></div>
-                    <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[CHIFFREMENT DES DÉCRETS DE SÉCURITÉ]</p>
-                </div>`;
+            showWaitLegislationUI(data.step);
             break;
 
         case 'WAIT_POWER':
-            ui.innerHTML = `
-                <div style="margin-top: 40px; ">
-                    <h2 style="color: #ff00ff; text-transform: uppercase; letter-spacing: 1px;">PROTOCOLE INTERACTIF</h2>
-                    <p style="color: #e0e0e0; font-size: 0.9em;">Le Gardien <b>${data.gardienName}</b> applique le décret :</p>
-                    <p style="color: #ff00ff; font-weight: bold; font-size: 1.1em; text-transform: uppercase;">[ ${data.title} ]</p>
-                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #ff00ff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.2s linear infinite; box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);"></div>
-                    <p style="font-size: 0.75em; color: #555; letter-spacing: 1px;">[SÉCURISATION DES TERMINAUX DISTANTS EN COURS]</p>
-                </div>`;
+            showWaitPowerUI(data.gardienName, data.title);
             break;
 
         case 'GARDIEN_PICK':
@@ -154,22 +136,11 @@ function handleData(data) {
             break;
         
         case 'YOU_ARE_DEAD':
-            const colReveal = data.reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
-            document.getElementById('main-ui').innerHTML = `
-                <h1 style="color: #e74c3c;">VOUS ÊTES MORT</h1>
-                <p>Analyse post-mortem : <b style="color: ${colReveal}">${data.reveal}</b></p>
-                <p style="opacity: 0.6;">Vous ne pouvez plus voter ni participer.</p>
-            `;
-            document.getElementById('job-ui').innerHTML = "";
+            showDeadUI(data.reveal);
             break;
         
         case 'CENSORED_ALERT':
-            ui.innerHTML = `
-                <div style="border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; background: rgba(231, 76, 60, 0.1);">
-                    <h2 style="color: #e74c3c;">🤐 CENSURE ACTIVÉE</h2>
-                    <p>Le joueur <b>${data.by}</b> a suspendu vos droits de vote pour ce scrutin.</p>
-                    <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">Attendez la fin du tour...</p>
-                </div>`;
+            showCensoredAlertUI(data.by);
             break;
 
         case 'FORCE_POWER_SELECT':
@@ -192,13 +163,7 @@ function handleData(data) {
             break;
 
         case 'CLEAN_UI':
-            ui.innerHTML = `
-                <div style="margin-top: 40px;">
-                    <h2 style="color: #2ecc71; text-transform: uppercase;">TRANSMISSION REÇUE</h2>
-                    <p style="color: #e0e0e0;">Votre vote a été enregistré par la console centrale.</p>
-                    <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite;"></div>
-                    <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[SYNCHRONISATION TERMINAL EN ATTENTE DU SCRUTIN]</p>
-                </div>`;
+            showCleanUI();
             break;
         
         case 'REFRESH_INTERFACE':
