@@ -160,17 +160,13 @@ export function showVoteUI(data) {
 
     ui.innerHTML += `<p>Approuvez-vous ce Conseil ?<br><b>${data.g} & ${data.s}</b></p>`;
     
-    const btnOui = document.createElement('button');
-    btnOui.className = "btn"; btnOui.style.background = "#2ecc71"; btnOui.style.color = "#000"; btnOui.style.borderColor = "#000"; btnOui.innerText = "ACCEPTER";
     btnOui.onclick = () => {
-        showCleanUI();
+        showCleanUI('OUI'); // ✨ On passe le choix ici
         mobileState.conn.send({ type: 'VOTE_DONE', choice: 'OUI', playerName: mobileState.myName });
     };
     
-    const btnNon = document.createElement('button');
-    btnNon.className = "btn"; btnNon.style.background = "#e74c3c"; btnNon.style.color = "#000"; btnNon.style.borderColor = "#000"; btnNon.innerText = "REFUSER";
     btnNon.onclick = () => {
-        showCleanUI();
+        showCleanUI('NON'); // ✨ Et ici
         mobileState.conn.send({ type: 'VOTE_DONE', choice: 'NON', playerName: mobileState.myName });
     };
 
