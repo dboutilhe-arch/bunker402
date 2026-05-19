@@ -397,6 +397,16 @@ export function executeDecreetPower(cardId) {
             state.loi493Active = true;
             Logger.add(`🔨 DECRET 49.3 : Protocole d'inversion enclenché. Au prochain conseil, le Gardien choisira lui-même le décret final !`);
             return false;
+
+        case 'reelection':
+            Logger.add(`🗳️ DÉCRET RÉÉLECTION : Le protocole fige le Conseil actuel pour le prochain tour.`);
+            // on recule l'index de 1 en avance. Comme ça, après l'incrémentation, 
+            // on retombe exactement sur le même Gardien.
+            state.curG = (state.curG - 1 + players.length) % players.length;
+            // On conserve aussi la même Sentinelle pour le tour suivant
+            // (Si ton moteur réinitialise state.currentProposedS, cette ligne garantit qu'on garde la bonne)
+            state.nextForcedS = state.currentProposedS; 
+            return false;
             
         default:
             // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
