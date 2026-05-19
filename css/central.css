@@ -198,4 +198,18 @@
         .rev-A { border-left: 5px solid #9400d3 !important; }  /* Alpha : Violet */
         .rev-M { border-left: 5px solid #1b4d3e !important; }  /* Mycologue : Vert foncé */
         .rev-IM { border-left: 5px solid #d4af37 !important; } /* Immunisé : Jaune doré */
+
+        /* --- COMPTEURS PIOCHE ET DÉFAUSSE --- */
+        .deck-counters {
+            text-align: center;
+            font-size: 0.9em;
+            letter-spacing: 2px;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #888;
+            font-family: 'Courier New', monospace;
+        }
+        .deck-counters b {
+            font-size: 1.1em;
+        }
         
