@@ -1,98 +1,75 @@
 // js/network/mobile-handler.js
- 
-const peer = new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
-let conn, myName, currentHand = [], allPlayers = [];
-let hasUsedPower = false;
-let serverState = {};
-const DECREETS_DB_LOCAL = {
-    'test_sanguin': { name: "Test Sanguin", type: "S", symbol: "⚡", desc: "Le Gardien actuel vérifie secrètement la carte de Test Sanguin d'un joueur." },
-    'reorganisation': { name: "Réorganisation", type: "S", symbol: "⚡", desc: "Le Gardien force 2 joueurs à échanger leur carte Test Sanguin (y compris lui-même)." },
-    'commission': { name: "Commission", type: "S", symbol: "⚡", desc: "La Sentinelle regarde la défausse de la partie pour voir ce qui a été jeté." },
-    'purge': { name: "Purge des Systèmes", type: "S", symbol: "⚡", desc: "Le Gardien défausse la carte Décret de son choix sur le plateau des Directives de Crise." },
-    'presse': { name: "Liberté de la Presse", type: "S", symbol: "♾️", desc: "Le Gardien doit montrer la carte qu'il défausse avant de donner les 2 autres à la Sentinelle." },
-    'rebellion': { name: "Rébellion", type: "S", symbol: "♾️", desc: "L'Alpha ne peut pas gagner par élection. S'annule dès qu'un Décret de Crise est voté." },
-    'transparence': { name: "Transparence", type: "S", symbol: "♾️", desc: "La Sentinelle doit annoncer à haute voix les deux cartes reçues." },
-    'contre_pouvoir': { name: "Contre-Pouvoir", type: "S", symbol: "♾️", desc: "C’est la Sentinelle qui pioche les 3 cartes, en défausse une, et donne les 2 au Gardien." },
-    'fuite_air_s': { name: "Fuite d'Air", type: "S", symbol: "♾️", desc: "L'Oxygène est à -1 par défaut et est bridé au Niveau 2 au maximum." },
-    'censure': { name: "Censure", type: "C", symbol: "⚡", desc: "Le Gardien désigne un joueur qui ne pourra pas voter au prochain tour." },
-    'loi_493': { name: "49.3", type: "C", symbol: "⚡", desc: "Le prochain Gardien choisit le décret parmi les 2 restants après les avoir montrés." },
-    'reelection': { name: "Réélection", type: "C", symbol: "⚡", desc: "Le binôme Gardien/Sentinelle actuel reste en place pour un tour supplémentaire." },
-    'sabotage': { name: "Sabotage", type: "C", symbol: "⚡", desc: "Réduire le Niveau d'Oxygène de 1." },
-    'coup_etat': { name: "Coup d'État", type: "C", symbol: "⚡", desc: "Le Gardien choisit le prochain Gardien. Le prochain tour sera extraordinaire." },
-    'court_circuit': { name: "Court-Circuit", type: "C", symbol: "⚡", desc: "Défaussez la carte de Suffrage active. Si aucune active, réduire l'Oxygène de 1." },
-    'licenciement': { name: "Licenciement", type: "C", symbol: "⚡", desc: "Le Gardien cible un joueur qui ne pourra plus utiliser son pouvoir de carte Métier." },
-    'silence': { name: "Code de Silence", type: "C", symbol: "♾️", desc: "Le Gardien interdit un mot. Si un joueur le prononce, il perd son vote au tour suivant." },
-    'prophete': { name: "Prophète", type: "C", symbol: "♾️", desc: "Le Gardien devient Prophète. Il gère la pioche de 4 cartes mais ne vote plus." },
-    'talion': { name: "Loi du Talion", type: "C", symbol: "♾️", desc: "Si un vote échoue, le joueur qui devait être Gardien est privé de vote au tour suivant." },
-    'fuite_air_c': { name: "Fuite d'Air", type: "C", symbol: "♾️", desc: "L'Oxygène est à -1 par défaut et est bridé au Niveau 2." },
-    'secret_etat': { name: "Secret d’État", type: "C", symbol: "♾️", desc: "Tous les pouvoirs de type 'Regarder la pioche' ou 'Regarder la défausse' sont annulés." },
-    'conseil_restreint': { name: "Conseil Restreint", type: "F", symbol: "🗳️", desc: "Les votes du Gardien et de la Sentinelle comptent double." },
-    'greve_zele': { name: "Grève du Zèle", type: "F", symbol: "🗳️", desc: "Les votes NON comptent double." },
-    'chambre_noire': { name: "Chambre Noire", type: "F", symbol: "🗳️", desc: "Le choix individuel des votes (Oui/Non) reste anonyme sur la console centrale." },
-    'insurrection_populaire': { name: "Insurrection Populaire", type: "F", symbol: "🗳️", desc: "Les votes du personnel ayant le métier de Civil comptent double." }
+
+import { 
+    updateMiniBoard, setupIdentity, showGardienUI, showVoteUI, 
+    showLegislativeUI, openTargetSelector, showBloodResult, 
+    showExecutionResult, showCensureResult, showCoupEtatResult, 
+    showEndGame, resetAffichageJ, showSentinelle493View, 
+    showPurgeResult, showReorganisationResult, showBloodSwappedAlert 
+} from '../ui/mobile-render.js';
+
+// Conteneur d'état dynamique partagé par référence entre les modules
+export let mobileState = {
+    peer: new Peer({ config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} }),
+    conn: null,
+    myName: "",
+    currentHand: [],
+    allPlayers: [],
+    hasUsedPower: false,
+    serverState: {}
 };
 
 // --- INITIALISATION AU CHARGEMENT ---
-
 document.addEventListener('DOMContentLoaded', () => {
     const connectBtn = document.getElementById('connect-btn');
     if (connectBtn) {
         connectBtn.addEventListener('click', () => connect());
     }
-
-    // Reconnexion automatique
     if (sessionStorage.getItem('bunker_name')) {
         connect(true);
     }
 });
 
 // --- CONNEXION ET RÉSEAU ---
-
 function connect(isReconnect = false) {
     let nameInput = isReconnect ? sessionStorage.getItem('bunker_name') : document.getElementById('p-name').value.trim();
     let codeInput = isReconnect ? sessionStorage.getItem('bunker_code') : document.getElementById('r-code').value.trim();
 
     if (!nameInput || !codeInput) return;
 
-    // On force la majuscule à la source dès la saisie
     nameInput = nameInput.toUpperCase();
-
-    // --- SÉCURITÉ : Expression régulière pour n'autoriser que Lettres, chiffres, accents français, tirets et espaces
     const validPattern = /^[a-zA-Z0-9àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ\-_ ]+$/;
     
     if (!validPattern.test(nameInput)) {
-        alert("Pseudo invalide ! Uniquement des lettres (avec ou sans accent), chiffres, espaces, '-' ou '_'.");
+        alert("Pseudo invalide ! Uniquement des lettres, chiffres, espaces, '-' ou '_'.");
         return;
     }
-
     if (nameInput.length < 2) {
         alert("Le pseudo doit contenir au moins 2 caractères.");
         return;
     }
 
-    myName = nameInput;
-    conn = peer.connect(codeInput);
+    mobileState.myName = nameInput;
+    mobileState.conn = mobileState.peer.connect(codeInput);
 
-    conn.on('open', () => {
-        sessionStorage.setItem('bunker_name', myName);
+    mobileState.conn.on('open', () => {
+        sessionStorage.setItem('bunker_name', mobileState.myName);
         sessionStorage.setItem('bunker_code', codeInput);
         
-        conn.send({ type: 'JOIN', name: myName, reconnect: isReconnect });
+        mobileState.conn.send({ type: 'JOIN', name: mobileState.myName, reconnect: isReconnect });
         
         document.getElementById('setup').classList.add('hidden');
         document.getElementById('game').classList.remove('hidden');
-        document.getElementById('display-name').innerText = myName.toUpperCase();
+        document.getElementById('display-name').innerText = mobileState.myName.toUpperCase();
     });
 
-    conn.on('data', handleData);
+    mobileState.conn.on('data', handleData);
 }
 
 // --- GESTIONNAIRE DE MESSAGES (DATA HANDLER) ---
-
 function handleData(data) {
     const ui = document.getElementById('main-ui');
 
-    // Sécurité affichage
     if (data.type === 'CONNECTED' || data.type === 'INIT') {
         document.getElementById('setup').classList.add('hidden');
         document.getElementById('game').classList.remove('hidden');
@@ -100,8 +77,8 @@ function handleData(data) {
 
     switch (data.type) {
         case 'INIT':
-            allPlayers = data.all;
-            hasUsedPower = data.powerUsed || false;
+            mobileState.allPlayers = data.all;
+            mobileState.hasUsedPower = data.powerUsed || false;
             setupIdentity(data);
             break;
 
@@ -124,8 +101,7 @@ function handleData(data) {
                     <p style="color: #e0e0e0;">Le Gardien <b>${data.gardienName}</b> choisit sa Sentinelle...</p>
                     <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #f1c40f; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite;"></div>
                     <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[ANALYSE DES ACCÈS RÉSEAU EN COURS]</p>
-                </div>
-            `;
+                </div>`;
             break;
 
         case 'WAIT_LEGISLATION':
@@ -135,8 +111,7 @@ function handleData(data) {
                     <p style="color: #e0e0e0;">Le Conseil applique les protocoles secrets (Aiguillage : <b>${data.step}</b>)...</p>
                     <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #3498db; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.5s linear infinite;"></div>
                     <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[CHIFFREMENT DES DÉCRETS DE SÉCURITÉ]</p>
-                </div>
-            `;
+                </div>`;
             break;
 
         case 'WAIT_POWER':
@@ -147,8 +122,7 @@ function handleData(data) {
                     <p style="color: #ff00ff; font-weight: bold; font-size: 1.1em; text-transform: uppercase;">[ ${data.title} ]</p>
                     <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #ff00ff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.2s linear infinite; box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);"></div>
                     <p style="font-size: 0.75em; color: #555; letter-spacing: 1px;">[SÉCURISATION DES TERMINAUX DISTANTS EN COURS]</p>
-                </div>
-            `;
+                </div>`;
             break;
 
         case 'GARDIEN_PICK':
@@ -161,79 +135,60 @@ function handleData(data) {
 
         case 'BLOOD_TEST_RESULT':
             showBloodResult(data);
-            document.getElementById('btn-ok').onclick = () => {
-                conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
-            };
             break;
 
-      case 'EXECUTION_RESULT':
+        case 'EXECUTION_RESULT':
             showExecutionResult(data);
-            document.getElementById('btn-ok').onclick = () => {
-                conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
-            };
             break;
 
         case 'CENSURE_RESULT':
             showCensureResult(data);
-            document.getElementById('btn-ok').onclick = () => {
-                conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
-            };
             break;
 
-      case 'PURGE_RESULT':
+        case 'PURGE_RESULT':
             showPurgeResult(data);
             break;
 
-      case 'COUP_ETAT_RESULT':
+        case 'COUP_ETAT_RESULT':
             showCoupEtatResult(data);
             break;
-      
-      case 'YOU_ARE_DEAD':
-            const uiDead = document.getElementById('main-ui');
+        
+        case 'YOU_ARE_DEAD':
             const colReveal = data.reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
-            uiDead.innerHTML = `
+            document.getElementById('main-ui').innerHTML = `
                 <h1 style="color: #e74c3c;">VOUS ÊTES MORT</h1>
                 <p>Analyse post-mortem : <b style="color: ${colReveal}">${data.reveal}</b></p>
                 <p style="opacity: 0.6;">Vous ne pouvez plus voter ni participer.</p>
             `;
             document.getElementById('job-ui').innerHTML = "";
             break;
-      
-      case 'CENSORED_ALERT':
+        
+        case 'CENSORED_ALERT':
             ui.innerHTML = `
                 <div style="border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; background: rgba(231, 76, 60, 0.1);">
                     <h2 style="color: #e74c3c;">🤐 CENSURE ACTIVÉE</h2>
                     <p>Le joueur <b>${data.by}</b> a suspendu vos droits de vote pour ce scrutin.</p>
                     <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">Attendez la fin du tour...</p>
-                </div>
-            `;
+                </div>`;
             break;
 
         case 'FORCE_POWER_SELECT':
-            // 1. On grise le bouton de métier pour éviter le conflit
             const jobBtn = document.getElementById('btn-power');
             if (jobBtn) {
-                jobBtn.disabled = true;
-                jobBtn.style.opacity = "0.3";
-                jobBtn.style.pointerEvents = "none";
+                jobBtn.disabled = true; jobBtn.style.opacity = "0.3"; jobBtn.style.pointerEvents = "none";
             }
-            // 2. On ouvre le sélecteur forcé
             openTargetSelector(data.action, data.title, true);
-            // 3. Petit effet visuel d'alerte
             document.body.style.backgroundColor = "#1a0000";
             setTimeout(() => { document.body.style.backgroundColor = "#000"; }, 500);
             break;
 
         case 'POWER_ACTIVATED_CONFIRM':
-            hasUsedPower = true;
+            mobileState.hasUsedPower = true;
             const archivistBtn = document.getElementById('btn-power');
             if (archivistBtn) {
-                archivistBtn.disabled = true;
-                archivistBtn.style.opacity = "0.3";
-                archivistBtn.style.pointerEvents = "none";
+                archivistBtn.disabled = true; archivistBtn.style.opacity = "0.3"; archivistBtn.style.pointerEvents = "none";
                 archivistBtn.innerText = "📜 PROTOCOLE ENCLENCHÉ";
             }
-            // Petit retour visuel rapide en haut de l'UI si tu veux
             break;
 
         case 'CLEAN_UI':
@@ -243,14 +198,11 @@ function handleData(data) {
                     <p style="color: #e0e0e0;">Votre vote a été enregistré par la console centrale.</p>
                     <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite;"></div>
                     <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[SYNCHRONISATION TERMINAL EN ATTENTE DU SCRUTIN]</p>
-                </div>
-            `;
+                </div>`;
             break;
-      
+        
         case 'REFRESH_INTERFACE':
-            // Demande au serveur de renvoyer l'action en cours (restorePlayerAction)
-            // Cela va reconstruire la liste des cibles (sans le mort) ou l'interface de vote
-            conn.send({ type: 'SYNC_REQUEST' }); 
+            mobileState.conn.send({ type: 'SYNC_REQUEST' }); 
             break;
 
         case 'END_GAME':
@@ -262,12 +214,10 @@ function handleData(data) {
             break;
 
         case 'GARDIEN_493_PICK':
-            // Le Gardien choisit la carte à PROMULGUER (comme une Sentinelle normale)
             showLegislativeUI("GARDIEN (49.3 - CHOIX FINAL)", data.cards);
             break;
 
         case 'SENTINELLE_493_VIEW':
-            // La Sentinelle regarde fixement le choix du Gardien
             showSentinelle493View(data.cards);
             break;
 
@@ -275,743 +225,40 @@ function handleData(data) {
             showReorganisationResult(data);
             break;
 
-        // Alerte reçue par les deux cibles interverties de la Réorganisation
         case 'BLOOD_SWAPPED_ALERT':
             showBloodSwappedAlert(data);
             break;
     }
 }
 
-// --- LOGIQUE D'INTERFACE (UI) ---
-
-function setupIdentity(data) {
-    const rDisplay = document.getElementById('role-display');
-    const mDisplay = document.getElementById('metier-display');
-    const jobUi = document.getElementById('job-ui');
-    const memo = document.getElementById('memo-box');
-
-    memo.style.display = "block";
-    mDisplay.innerText = "MÉTIER : " + data.metier;
-
-    const roles = {
-        'S':  { label: "SURVIVANT", color: "#3498db", goal: "Rétablir les protocoles de survie.", win: "5 décrets BLEUS ou éliminer l'Alpha.", blood: "SAIN", bColor: "#2ecc71" },
-        'I':  { label: "INFECTÉ", color: "#e74c3c", goal: "Propager l'infection.", win: "6 décrets ROUGES ou Alpha élu Sentinelle avec 3 décrets ROUGES.", blood: "INFECTÉ", bColor: "#e74c3c" },
-        'A':  { label: "ALPHA", color: "#9400d3", goal: "Propager l'infection.", win: "6 décrets ROUGES ou être élu Sentinelle avec 3 décrets ROUGES.", blood: "INFECTÉ", bColor: "#e74c3c" },
-        'M':  { label: "MYCOLOGUE", color: "#1b4d3e", goal: "Propager l'infection (Infiltré).", win: "6 décrets ROUGES ou Alpha élu Sentinelle avec 3 décrets ROUGES.", blood: "SAIN", bColor: "#2ecc71" },
-        'IM': { label: "IMMUNISÉ", color: "#d4af37", goal: "Rétablir les protocoles (Résistant).", win: "5 décrets BLEUS ou éliminer l'Alpha.", blood: "INFECTÉ", bColor: "#e74c3c" }
-    };
-
-    const config = roles[data.role];
-    rDisplay.innerText = "RÔLE : " + config.label;
-    rDisplay.style.color = config.color;
-    rDisplay.parentElement.style.borderColor = config.color;
-    
-    document.getElementById('team-goal').innerText = "🎯 OBJECTIF : " + config.goal;
-    document.getElementById('win-cond').innerText = "Conditions : " + config.win;
-    document.getElementById('blood-status').innerHTML = `🩸 SANG : <span style="color: ${config.bColor}">${config.blood}</span>`;
-
-    if (data.alphaName && (data.role === 'I' || data.role === 'M')) {
-        document.getElementById('alpha-info').innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
-    } else {
-        document.getElementById('alpha-info').innerHTML = ""; // vide le champ pour les survivants/alphas/immunisés
-    }
-
-    // Bouton de métier
-    jobUi.innerHTML = "";
-    jobUi.style.opacity = "1"; //On s'assure que c'est visible par défaut
- 
-    if (data.metier === 'Docteur') {
-        const btn = document.createElement('button');
-        btn.id = "btn-power";
-        btn.className = "btn-power";
-        btn.innerText = "TEST SANGUIN";
-        if (hasUsedPower) jobUi.style.opacity = "0.3";
-        btn.onclick = () => openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE');
-        jobUi.appendChild(btn);
-    }
-    if (data.metier === 'Militaire') {
-       const btn = document.createElement('button');
-       btn.id = "btn-power";
-       btn.className = "btn-power";
-       btn.innerText = "EXÉCUTER UN INDIVIDU";
-       if (hasUsedPower) jobUi.style.opacity = "0.3";
-       btn.onclick = () => openTargetSelector('REQUEST_EXECUTION', 'PROTOCOLE D\'ÉLIMINATION');
-       jobUi.appendChild(btn);
-   }
-   if (data.metier === 'Intendant') {
-          const btn = document.createElement('button');
-          btn.id = "btn-power";
-          btn.className = "btn-power";
-          btn.innerText = "VERROUILLER UN TERMINAL (CENSURE)";
-          if (hasUsedPower) jobUi.style.opacity = "0.3";
-          btn.onclick = () => openTargetSelector('REQUEST_CENSURE', 'PROTOCOLE DE CENSURE');
-          jobUi.appendChild(btn);
-   }
-   if (data.metier === 'Shérif') {
-        const btn = document.createElement('button');
-        btn.id = "btn-power";
-        btn.className = "btn-power";
-        btn.innerText = "PASSIF: VOTE DOUBLE";
-        
-        // Bridation pour le rendre purement informatif
-        btn.disabled = true;
-        btn.style.opacity = "0.6";           /* Légèrement plus sombre pour le distinguer d'un bouton actif */
-        btn.style.background = "#4a004a";     /* Un violet/rose plus sombre et institutionnel */
-        btn.style.borderColor = "#ff00ff";    /* Garde la bordure rose flash */
-        btn.style.color = "#ff00ff";          /* Texte rose qui brille */
-        btn.style.pointerEvents = "none";     /* Sécurité anti-clic */
-        
-        jobUi.appendChild(btn);
-   }
-   if (data.metier === 'Journaliste') {
-        const btn = document.createElement('button');
-        btn.id = "btn-power";
-        btn.className = "btn-power";
-        btn.innerText = "PASSIF: IMMUNITÉ CENSURE";
-        
-        // Verrouillage visuel et technique
-        btn.disabled = true;
-        btn.style.opacity = "0.6";
-        btn.style.background = "#002b36";     /* Un bleu canard très sombre style archive */
-        btn.style.borderColor = "#00ffff";    /* Bordure cyan rétro-futuriste */
-        btn.style.color = "#00ffff";          /* Texte cyan lumineux */
-        btn.style.pointerEvents = "none";
-        
-        jobUi.appendChild(btn);
-   }
-   if (data.metier === 'Fossoyeur') {
-        const btn = document.createElement('button');
-        btn.id = "btn-power";
-        btn.className = "btn-power";
-        // Texte initial (sera écrasé par la synchronisation juste après)
-        btn.innerText = "NÉCROLOGIE : +0 VOIX (0 MORT)"; 
-        
-        btn.disabled = true;
-        btn.style.opacity = "0.7";
-        btn.style.background = "#1a1105";     /* Terre/Cendre très sombre */
-        btn.style.borderColor = "#964b00";    /* Bordure brun/rouille */
-        btn.style.color = "#d2b48c";          /* Texte couleur os / beige */
-        btn.style.pointerEvents = "none";
-        
-        jobUi.appendChild(btn);
-   }
-   if (data.metier === 'Archiviste') {
-        const btn = document.createElement('button');
-        btn.id = "btn-power";
-        btn.className = "btn-power";
-        btn.innerText = "📜 ARCHIVER LE PROCHAIN VOTE";
-        if (hasUsedPower) jobUi.style.opacity = "0.3";
-        
-        btn.onclick = () => {
-            if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
-            
-            // On fige le bouton visuellement et techniquement dès le clic
-            btn.disabled = true;
-            btn.style.opacity = "0.3";
-            btn.style.pointerEvents = "none";
-            btn.innerText = "📜 PROTOCOLE ENCLENCHÉ...";
-            
-            hasUsedPower = true; // On passe le flag local à true
-            
-            conn.send({ type: 'USE_ARCHIVISTE_POWER' });
-        };
-        jobUi.appendChild(btn);
-    }
-    if (data.metier === 'Vigile') {
-        const btn = document.createElement('button');
-        btn.id = "btn-power";
-        btn.className = "btn-power";
-        btn.innerText = "🛑 SÉCURISER UN INDIVIDU (BAN SENTINELLE)";
-        if (hasUsedPower) jobUi.style.opacity = "0.3";
-        btn.onclick = () => openTargetSelector('REQUEST_VIGILE_BAN', 'CONTRÔLE DES ACCÈS');
-        jobUi.appendChild(btn);
-    }
-}
-
-
-function updateMiniBoard(state) {
-    document.getElementById('oxy-mini').style.width = (state.oxy / 3 * 100) + "%";
-    document.getElementById('oxy-mini').style.background = state.oxy <= 1 ? "#e74c3c" : "#3498db";
-    document.getElementById('oxy-text-mini').innerText = `NIVEAU D'OXYGENE: ${state.oxy}/3`;
-    
-    document.getElementById('m-s').innerHTML = Array(5).fill(0).map((_, i) => `<div class="dot ${i < state.survie ? 'f-s' : ''}"></div>`).join('');
-    document.getElementById('m-c').innerHTML = Array(6).fill(0).map((_, i) => `<div class="dot ${i < state.crise ? 'f-c' : ''}"></div>`).join('');
-}
-
-function showGardienUI(eligible) {
-    const ui = document.getElementById('main-ui');
-    ui.innerHTML = `<h3>TOUR DU GARDIEN</h3><p>Désignez votre Sentinelle :</p>`;
-    
-    // Conteneur thématique
-    const container = document.createElement('div');
-    container.className = "theme-sentinelle";
-    
-    // Zone de contrôles (Valider / Annuler absent ici car obligatoire)
-    const controls = document.createElement('div');
-    controls.className = "action-controls";
-    
-    const btnValidate = document.createElement('button');
-    btnValidate.className = "btn-action validate";
-    btnValidate.innerText = "NOMMER LA SENTINELLE";
-    controls.appendChild(btnValidate);
-    container.appendChild(controls);
-
-    let selectedSentinelle = null;
-    const buttonsMap = {};
-
-    eligible.forEach(name => {
-        const btn = document.createElement('button');
-        btn.className = "btn-target";
-        btn.innerText = name.toUpperCase();
-        buttonsMap[name] = btn;
-
-        btn.onclick = () => {
-            // Un-select l'ancien bouton
-            if (selectedSentinelle && buttonsMap[selectedSentinelle]) {
-                buttonsMap[selectedSentinelle].classList.remove('selected');
-            }
-            
-            selectedSentinelle = name;
-            btn.classList.add('selected');
-            
-            // Activation du bouton de validation
-            btnValidate.classList.add('ready');
-        };
-        container.appendChild(btn);
-    });
-
-    btnValidate.onclick = () => {
-        if (!selectedSentinelle) return;
-        conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: myName, sentinelleName: selectedSentinelle });
-        ui.innerHTML = `<div style="margin-top:40px;">Transmission des codes d'accès...</div>`;
-    };
-
-    ui.appendChild(container);
-}
-
-function showVoteUI(data) {
-    const ui = document.getElementById('main-ui');
-    ui.innerHTML = `<h3>VOTE CONSEIL</h3>`;
-    if (myName === data.g) ui.innerHTML += `<p style="background: #f1c40f; color: black; padding: 5px;">⚠️ VOUS ÊTES LE GARDIEN</p>`;
-    else if (myName === data.s) ui.innerHTML += `<p style="background: #3498db; color: white; padding: 5px;">⚠️ VOUS ÊTES LA SENTINELLE</p>`;
-
-    ui.innerHTML += `<p>Approuvez-vous ce Conseil ?<br><b>${data.g} & ${data.s}</b></p>`;
-    
-    const btnOui = document.createElement('button');
-    btnOui.className = "btn"; 
-    btnOui.style.background = "#2ecc71"; 
-    btnOui.style.color = "#000";      
-    btnOui.style.borderColor = "#000"; 
-    btnOui.innerText = "ACCEPTER";
-    btnOui.onclick = () => sendVote('OUI');
-    
-    const btnNon = document.createElement('button');
-    btnNon.className = "btn"; 
-    btnNon.style.background = "#e74c3c"; 
-    btnNon.style.color = "#000";    
-    btnNon.style.borderColor = "#000";  
-    btnNon.innerText = "REFUSER";
-    btnNon.onclick = () => sendVote('NON');
-
-    ui.appendChild(btnOui);
-    ui.appendChild(btnNon);
-}
-
-function sendVote(v) {
-    document.getElementById('main-ui').innerHTML = "Vote " + v + " transmis...";
-    conn.send({ type: 'VOTE_DONE', choice: v, playerName: myName });
-}
-
-
-function showLegislativeUI(role, cards) {
-    const ui = document.getElementById('main-ui');
-    currentHand = cards;
-    
-    ui.innerHTML = `<h3>LÉGISLATION : ${role}</h3>`;
-    ui.innerHTML += `<p style="font-size:0.85em; color:#888;">${role === 'GARDIEN' ? 'SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER' : 'SÉLECTIONNEZ LE DÉCRET À PROMULGUER'}</p>`;
-    
-    // Contrôles de validation intégrés
-    const controls = document.createElement('div');
-    controls.className = "action-controls theme-power"; // Utilise le thème violet pour les décrets
-    
-    const btnValidate = document.createElement('button');
-    btnValidate.className = "btn-action validate";
-    btnValidate.innerText = role === 'GARDIEN' ? "DÉFAUSSER" : "PROMULGUER";
-    controls.appendChild(btnValidate);
-    ui.appendChild(controls);
-
-    const cardContainer = document.createElement('div');
-    cardContainer.className = "legislative-container";
-    
-    let selectedCardId = null;
-    let selectedCardIndex = null;
-    const cardsElements = [];
-    
-    cards.forEach((cardId, i) => {
-        const data = DECREETS_DB_LOCAL[cardId];
-        if (!data) return;
-
-        const cardElement = document.createElement('div');
-        cardElement.className = `decree-card card-type-${data.type}`;
-        cardsElements.push(cardElement);
-        
-        let typeText = data.type === 'S' ? "SURVIE" : (data.type === 'C' ? "CRISE" : "SUFFRAGE");
-
-        cardElement.innerHTML = `
-            <div class="card-header card-header-${data.type}">
-                <span>${typeText}</span>
-                <span>${data.symbol}</span>
-            </div>
-            <div class="card-title">${data.name}</div>
-            <div class="card-desc">${data.desc}</div>
-        `;
-        
-        cardElement.onclick = () => {
-            // Nettoyer la sélection précédente
-            cardsElements.forEach(el => el.style.boxShadow = "");
-            
-            selectedCardId = cardId;
-            selectedCardIndex = i;
-            
-            // Effet visuel de sélection de carte (Surbrillance blanche)
-            cardElement.style.boxShadow = "0 0 20px #ffffff, inset 0 0 10px #ffffff";
-            btnValidate.classList.add('ready');
-        };
-        
-        cardContainer.appendChild(cardElement);
-    });
-    
-    btnValidate.onclick = () => {
-        if (selectedCardId === null) return;
-        
-        if (role === 'GARDIEN') {
-            let remaining = [...currentHand]; 
-            remaining.splice(selectedCardIndex, 1);
-            conn.send({ type: 'DISCARD_DONE', discardedCardId: selectedCardId, remaining: remaining });
-        } else {
-            conn.send({ type: 'FINAL_CHOICE', card: selectedCardId });
-        }
-        ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
-    };
-    
-    ui.appendChild(cardContainer);
-}
-
-function openTargetSelector(actionType, title, isForced = false) {
-    if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
-        
-    const ui = document.getElementById('main-ui');
-    ui.innerHTML = `<h3>${title}</h3><p>Sélectionnez une ou plusieurs cibles :</p>`;
-
-    // Structure englobante thématique Pouvoir (Violet)
-    const container = document.createElement('div');
-    container.className = "theme-power";
-
-    // Barre d'actions intégrée
-    const controls = document.createElement('div');
-    controls.className = "action-controls";
-
-    if (!isForced) {
-        const btnCancel = document.createElement('button');
-        btnCancel.className = "btn-action cancel";
-        btnCancel.innerText = "ANNULER";
-        btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
-        controls.appendChild(btnCancel);
-    }
-
-    const btnValidate = document.createElement('button');
-    btnValidate.className = "btn-action validate";
-    btnValidate.innerText = "VALIDER L'ACTION";
-    controls.appendChild(btnValidate);
-    container.appendChild(controls);
-
-    let selectedTargets = [];
-    const isReorganisation = (actionType === 'REQUEST_REORGANISATION');
-    const targetLimit = isReorganisation ? 2 : 1;
-
-    // Mise à jour de l'intitulé du bouton de validation
-    const updateValidationButtonText = () => {
-        if (isReorganisation) {
-            btnValidate.innerText = `ÉCHANGE (${selectedTargets.length}/2)`;
-        } else {
-            btnValidate.innerText = "VALIDER L'ACTION";
-        }
-    };
-    updateValidationButtonText();
-
-    // ─── CAS PARTICULIER : PURGE DES SYSTÈMES ──────────────────────────────────
-    if (actionType === 'REQUEST_PURGE') {
-        const crisesActives = serverState?.slotsCriseCards || [];
-        
-        if (crisesActives.length === 0) {
-            ui.innerHTML += "<p style='color:#888;'>Aucun décret de crise actif sur le plateau.</p>";
-            btnValidate.innerText = "CONFIRMER (PLATEAU VIDE)";
-            btnValidate.classList.add('ready');
-            btnValidate.onclick = () => conn.send({ type: 'ACTION_CONFIRMED' });
-            ui.appendChild(container);
-            return;
-        }
-
-        let selectedPurgeCard = null;
-        const purgeButtons = {};
-
-        crisesActives.forEach(cardId => {
-            const cardData = DECREETS_DB_LOCAL[cardId] || { name: cardId };
-            const btn = document.createElement('button');
-            btn.className = "btn-target";
-            btn.innerText = cardData.name.toUpperCase();
-            purgeButtons[cardId] = btn;
-
-            btn.onclick = () => {
-                if (selectedPurgeCard && purgeButtons[selectedPurgeCard]) {
-                    purgeButtons[selectedPurgeCard].classList.remove('selected');
-                }
-                selectedPurgeCard = cardId;
-                btn.classList.add('selected');
-                btnValidate.classList.add('ready');
-            };
-            container.appendChild(btn);
-        });
-
-        btnValidate.onclick = () => {
-            if (!selectedPurgeCard) return;
-            sendPowerAction(actionType, { cardId: selectedPurgeCard }, isForced);
-        };
-        ui.appendChild(container);
-        return;
-    }
-
-    // ─── COMPORTEMENT STANDARD ET REORGANISATION (SÉLECTION JOUEURS) ───────────
-    const listToUse = serverState?.aliveNames || allPlayers;
-    const playerButtons = {};
-
-    listToUse.forEach(name => {
-        if (name.toLowerCase() === myName.toLowerCase()) return;
-        
-        if (actionType === 'REQUEST_CENSURE') {
-            if (serverState?.censoredNames?.includes(name)) return;
-            if (serverState?.journalisteNames?.includes(name)) return;
-        }
-        
-        const btn = document.createElement('button');
-        btn.className = "btn-target";
-        btn.innerText = name.toUpperCase();
-        playerButtons[name] = btn;
-
-        btn.onclick = () => {
-            const idx = selectedTargets.indexOf(name);
-
-            if (idx !== -1) {
-                // Désélection
-                selectedTargets.splice(idx, 1);
-                btn.classList.remove('selected');
-            } else {
-                // Sélection
-                if (selectedTargets.length >= targetLimit) {
-                    if (targetLimit === 1) {
-                        // Mode mono-cible : on intervertit automatiquement la cible
-                        const oldTarget = selectedTargets.pop();
-                        if (playerButtons[oldTarget]) playerButtons[oldTarget].classList.remove('selected');
-                    } else {
-                        return; // Mode multi-cible : bloqué au maximum
-                    }
-                }
-                selectedTargets.push(name);
-                btn.classList.add('selected');
-            }
-
-            // Gestion dynamique de l'état du bouton de validation
-            if (selectedTargets.length === targetLimit) {
-                btnValidate.classList.add('ready');
-            } else {
-                btnValidate.classList.remove('ready');
-            }
-            updateValidationButtonText();
-        };
-        container.appendChild(btn);
-    });
-
-    btnValidate.onclick = () => {
-        if (selectedTargets.length !== targetLimit) return;
-        
-        if (isReorganisation) {
-            sendPowerAction(actionType, { targetAName: selectedTargets[0], targetBName: selectedTargets[1] }, isForced);
-        } else {
-            sendPowerAction(actionType, { targetName: selectedTargets[0] }, isForced);
-        }
-    };
-
-    ui.appendChild(container);
-}
-
-// ─── FONCTIONS UTILITAIRES DE SIMPLIFICATION ──────────────────────────────
-
-// Centralise l'envoi et le verrouillage visuel du bouton métier
-function sendPowerAction(actionType, extraData, isForced) {
-    if (!isForced) {
-        hasUsedPower = true;
-        const jobUi = document.getElementById('job-ui');
-        if (jobUi) jobUi.style.opacity = "0.3";
-    }
-    conn.send({ type: actionType, isForced: isForced, ...extraData });
-    document.getElementById('main-ui').innerHTML = "Traitement du protocole...";
-}
-
-// Factorise la création des boutons de cibles
-function createTargetButton(text, onClickCtx, borderColor = "") {
-    const btn = document.createElement('button');
-    btn.className = "btn-target";
-    btn.innerText = text;
-    if (borderColor) btn.style.borderColor = borderColor;
-    btn.onclick = onClickCtx;
-    document.getElementById('main-ui').appendChild(btn);
-}
-
-function showBloodResult(data) {
-    // 1. On détermine la couleur du cadre de l'alerte (Vert si Sain, Rouge si Infecté)
-    const cardColor = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
-    
-    // 2. On détermine la couleur spécifique pour le texte du statut
-    const statusColor = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
-
-    document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid ${cardColor}; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: ${cardColor}; margin-top: 0; letter-spacing: 1px;">RÉSULTAT D'ANALYSE</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Sujet : <b>${data.target.toUpperCase()}</b></p>
-            <p style="color: #e0e0e0; margin: 10px 0;">Statut : <b style="color: ${statusColor}; font-size: 1.2em; letter-spacing: 1px;">${data.result}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%;">OK</button>
-        </div>`;
-        
-    document.getElementById('btn-ok').onclick = () => conn.send({ type: 'SYNC_REQUEST' });
-}
-
-function showExecutionResult(data) {
-    const ui = document.getElementById('main-ui');
-    const color = data.result === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
-    
-    ui.innerHTML = `
-        <div style="border: 2px solid #e74c3c; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #e74c3c; margin-top: 0; letter-spacing: 1px;">RAPPORT D'ÉLIMINATION</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Sujet exécuté : <b>${data.target.toUpperCase()}</b></p>
-            <p style="color: #e0e0e0; margin: 10px 0;">Registre biologique : <b style="color: ${color}; font-size: 1.1em;">${data.result}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #e74c3c; color: #000; border-color: #000;">OK</button>
-        </div>`;
-}
-
-function showCensureResult(data) {
-    const ui = document.getElementById('main-ui');
-    
-    ui.innerHTML = `
-        <div style="border: 2px solid #ff00ff; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #ff00ff; margin-top: 0; letter-spacing: 1px;">TERMINAL VERROUILLÉ</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de restriction a été appliqué avec succès.</p>
-            <p style="color: #f1c40f; margin: 10px 0;">Cible : <b>${data.target.toUpperCase()}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #ff00ff; color: #000; border-color: #000;">OK</button>
-        </div>`;
-
-    document.getElementById('btn-ok').onclick = () => {
-        conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
-    };
-}
-
-function showCoupEtatResult(data) {
-    const ui = document.getElementById('main-ui');
-    
-    ui.innerHTML = `
-        <div style="border: 2px solid #ff5722; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #ff5722; margin-top: 0; letter-spacing: 1px;">📢 ORDRE EXTRAORDINAIRE</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de transition forcée a été injecté.</p>
-            <p style="color: #f1c40f; margin: 10px 0;">Prochain Gardien temporaire : <b>${data.target.toUpperCase()}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #ff5722; color: #000; border-color: #000;">OK</button>
-        </div>`;
-        
-    document.getElementById('btn-ok').onclick = () => {
-        conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
-    };
-}
-
-function showEndGame(data) {
-    const isWin = data.personalResult === "MISSION RÉUSSIE";
-    const color = isWin ? "#2ecc71" : "#e74c3c";
-    document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid ${color}; padding: 20px; border-radius: 10px;">
-            <h1 style="color:${color}">${data.personalResult}</h1>
-            <p>Les <b>${data.team}</b> ont gagné.</p>
-            <p style="font-size:0.8em; font-style:italic;">"${data.reason}"</p>
-        </div>`;
-}
-
-function resetAffichageJ() {
-    // 1. On nettoie les données locales de la partie finie
-    hasUsedPower = false;
-    currentHand = [];
-    serverState = {};
-    
-    // 2. On bascule l'affichage sur un mode "Lobby / Attente"
-    const ui = document.getElementById('main-ui');
-    const gameZone = document.getElementById('game');
-    const memoBox = document.getElementById('memo-box');
-    const jobUi = document.getElementById('job-ui');
-
-    // On cache les éléments de la partie précédente
-    if (memoBox) memoBox.style.display = "none";
-    if (jobUi) {
-        jobUi.innerHTML = "";
-        jobUi.style.opacity = "1"; // On remet l'opacité à 100%
-    }
-    
-    // Nettoyage complet des champs persistants
-    const alphaInfo = document.getElementById('alpha-info');
-    if (alphaInfo) alphaInfo.innerHTML = ""; // Efface l'ancien Alpha définitivement
-    
-    const teamGoal = document.getElementById('team-goal');
-    if (teamGoal) teamGoal.innerHTML = "";
-    
-    const bloodStatus = document.getElementById('blood-status');
-    if (bloodStatus) bloodStatus.innerHTML = "";
-    
-    const winCond = document.getElementById('win-cond');
-    if (winCond) winCond.innerHTML = "";
-    
-    // On réinitialise l'en-tête (Rôle inconnu)
-    document.getElementById('role-display').innerText = "RÔLE : EN ATTENTE...";
-    document.getElementById('role-display').style.color = "#2ecc71";
-    document.getElementById('role-display').parentElement.style.borderColor = "#2ecc71";
-    document.getElementById('metier-display').innerText = "MÉTIER : ???";
-
-    // 3. On affiche le message central pour éviter l'écran noir
-    ui.innerHTML = `
-        <div style="margin-top: 50px;">
-            <h2 style="color: #f1c40f;">SYSTÈME RÉINITIALISÉ</h2>
-            <p>Connexion maintenue avec le Bunker.</p>
-            <div class="loader" style="margin: 20px auto; border: 4px solid #333; border-top: 4px solid #2ecc71; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;"></div>
-            <p style="font-size: 0.8em; color: #888;">En attente du lancement par le Gardien Principal...</p>
-        </div>
-    `;
-}
-
-function showSentinelle493View(cards) {
-    const ui = document.getElementById('main-ui');
-    ui.innerHTML = `<h3>👁️ VISUEL TERMINAL (49.3)</h3>`;
-    ui.innerHTML += `<p style="font-size:0.85em; color:#ff3333; font-weight:bold;">[LECTURE SEULE] LE GARDIEN SÉLECTIONNE LE DÉCRET FINAL...</p>`;
-
-    const cardContainer = document.createElement('div');
-    cardContainer.className = "legislative-container";
-
-    cards.forEach(cardId => {
-        const data = DECREETS_DB_LOCAL[cardId];
-        if (!data) return;
-
-        const cardElement = document.createElement('div');
-        cardElement.className = `decree-card card-type-${data.type}`;
-        cardElement.style.opacity = "0.85"; // Un peu plus terne pour montrer que c'est inclyquable
-        cardElement.style.cursor = "not-allowed"; // Curseur bloqué
-        
-        let typeText = data.type === 'S' ? "SURVIE" : (data.type === 'C' ? "CRISE" : "SUFFRAGE");
-
-        cardElement.innerHTML = `
-            <div class="card-header card-header-${data.type}">
-                <span>${typeText}</span>
-                <span>${data.symbol}</span>
-            </div>
-            <div class="card-title">${data.name}</div>
-            <div class="card-desc">${data.desc}</div>
-        `;
-        cardContainer.appendChild(cardElement);
-    });
-
-    ui.appendChild(cardContainer);
-}
-
-function showPurgeResult(data) {
-    const ui = document.getElementById('main-ui');
-    const cardName = DECREETS_DB_LOCAL[data.cardId]?.name || data.cardId;
-    
-    ui.innerHTML = `
-        <div style="border: 2px solid #2ecc71; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #2ecc71; margin-top: 0; letter-spacing: 1px;">⚙️ PURGE DU PLATEAU</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de nettoyage de la mémoire centrale a été exécuté.</p>
-            <p style="color: #f1c40f; margin: 10px 0;">Directive supprimée : <b style="text-transform: uppercase;">${cardName}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #2ecc71; color: #000; border-color: #000;">OK</button>
-        </div>`;
-
-    document.getElementById('btn-ok').onclick = () => {
-        conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
-    };
-}
-
-function showReorganisationResult(data) {
-    const ui = document.getElementById('main-ui');
-    
-    ui.innerHTML = `
-        <div style="border: 2px solid #3498db; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #3498db; margin-top: 0; letter-spacing: 1px;">🔄 RÉORGANISATION EFFECTUÉE</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Les bases de données biologiques ont été permutées.</p>
-            <p style="color: #f1c40f; margin: 10px 0;"><b>${data.targetA.toUpperCase()}</b> ⇄ <b>${data.targetB.toUpperCase()}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #3498db; color: #000; border-color: #000;">OK</button>
-        </div>`;
-
-    document.getElementById('btn-ok').onclick = () => {
-        conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
-    };
-}
-
-function showBloodSwappedAlert(data) {
-    const ui = document.getElementById('main-ui');
-    
-    // 1. On répercute immédiatement le changement visuel sur l'encadré persistant du Sang
-    const bColor = data.newBlood === "SAIN" ? "#2ecc71" : "#e74c3c";
-    document.getElementById('blood-status').innerHTML = `🩸 SANG : <span style="color: ${bColor}">${data.newBlood}</span>`;
-
-    // 2. On affiche l'alerte d'immersion au centre de l'écran
-    ui.innerHTML = `
-        <div style="border: 2px solid #3498db; padding: 20px; border-radius: 10px; background: rgba(52, 152, 219, 0.1);">
-            <h2 style="color: #3498db; letter-spacing: 1px;">⚠️ DOSSIER INTERVERTI</h2>
-            <p style="color: #e0e0e0;">Le Gardien a réorganisé les archives médicales.</p>
-            <p style="color: #fff;">Votre dossier biologique a été échangé avec celui de : <b style="color: #f1c40f;">${data.withPlayer.toUpperCase()}</b></p>
-            <p style="font-size: 0.9em; margin-top: 15px; color: #aaa;">Votre nouveau statut sanguin est : <b style="color: ${bColor}">${data.newBlood}</b></p>
-            <p style="font-size: 0.75em; color: #555; margin-top: 20px;">[SYNCHRONISATION DES TERMINAUX TERMINÉE]</p>
-        </div>
-    `;
-}
-
 // --- CENTRALISATION DE LA SYNCHRONISATION DE L'ÉTAT ---
 function handleSyncStateAction(stateData) {
-    // 1. Enregistrement global de l'état reçu
-    serverState = stateData;
-    
-    // 2. Mise à jour des jauges miniatures de l'interface (Oxygène, Plateaux)
+    mobileState.serverState = stateData;
     updateMiniBoard(stateData);
     
-    // 3. Sécurité : Si le joueur est mort, on bloque toute modification d'interface active
     const ui = document.getElementById('main-ui');
     if (ui && ui.innerText.includes("VOUS ÊTES MORT")) return;
 
-    // 4. Extraction sécurisée du métier textuel depuis le DOM
     const metierText = document.getElementById('metier-display')?.innerText || "";
     const isVigile = metierText.includes("Vigile");
     const isFossoyeur = metierText.includes("Fossoyeur");
     const isArchiviste = metierText.includes("Archiviste");
     const btn = document.getElementById('btn-power');
 
-    // 5. Gestion des comportements des boutons physiques (si présents)
     if (btn) {
         if (isVigile) {
-            // Le Vigile ne peut agir qu'en phase de Désignation
-            if (!hasUsedPower && stateData.currentPhase === "DÉSIGNATION") {
+            if (!mobileState.hasUsedPower && stateData.currentPhase === "DÉSIGNATION") {
                 btn.disabled = false; btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
             } else {
                 btn.disabled = true; btn.style.opacity = "0.3"; btn.style.pointerEvents = "none";
             }
         } 
         else if (isFossoyeur) {
-            // Le Fossoyeur met à jour son passif selon le nombre de cadavres en temps réel
             const deadCount = stateData.deadCount || 0;
             btn.innerText = `NÉCROLOGIE : +${deadCount} VOIX (${deadCount} CADAVRE${deadCount > 1 ? 'S' : ''})`;
         }
         else if (!isArchiviste) { 
-            // Métiers actifs standards (Docteur, Intendant, Militaire)
-            if (!hasUsedPower && !stateData.currentPowerActive) {
+            if (!mobileState.hasUsedPower && !stateData.currentPowerActive) {
                 btn.disabled = false; btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
             } else {
                 btn.disabled = true; btn.style.opacity = "0.3"; btn.style.pointerEvents = "none";
@@ -1019,19 +266,16 @@ function handleSyncStateAction(stateData) {
         }
     }
 
-    // 6. Gestion de l'Archiviste (Reconstruction dynamique de son bouton d'action unique)
     if (isArchiviste) {
         const jobZone = document.getElementById('job-ui');
         if (jobZone) {
             jobZone.innerHTML = ""; 
     
             const btnPower = document.createElement('button');
-            btnPower.id = "btn-power"; 
-            btnPower.className = "btn-power";
-            btnPower.innerText = hasUsedPower ? "📜 PROTOCOLE ENCLENCHÉ" : "📜 ARCHIVER LE PROCHAIN VOTE";
+            btnPower.id = "btn-power"; btnPower.className = "btn-power";
+            btnPower.innerText = mobileState.hasUsedPower ? "📜 PROTOCOLE ENCLENCHÉ" : "📜 ARCHIVER LE PROCHAIN VOTE";
             
-            // On fige si déjà consommé ou si le Conseil est déjà entré en phase de cartes
-            if (hasUsedPower || stateData.currentPhase.startsWith("LÉGISLATION")) {
+            if (mobileState.hasUsedPower || stateData.currentPhase.startsWith("LÉGISLATION")) {
                 btnPower.disabled = true; btnPower.style.opacity = "0.3"; btnPower.style.pointerEvents = "none";
             }
     
@@ -1039,10 +283,21 @@ function handleSyncStateAction(stateData) {
                 if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
                 btnPower.disabled = true; btnPower.style.opacity = "0.3"; btnPower.style.pointerEvents = "none";
                 btnPower.innerText = "📜 PROTOCOLE ENCLENCHÉ...";
-                hasUsedPower = true;
-                conn.send({ type: 'USE_ARCHIVISTE_POWER' });
+                mobileState.hasUsedPower = true;
+                mobileState.conn.send({ type: 'USE_ARCHIVISTE_POWER' });
             };
             jobZone.appendChild(btnPower);
         }
     }
+}
+
+// UTITLITAIRE D'ÉMISSION
+export function sendPowerAction(actionType, extraData, isForced) {
+    if (!isForced) {
+        mobileState.hasUsedPower = true;
+        const jobUi = document.getElementById('job-ui');
+        if (jobUi) jobUi.style.opacity = "0.3";
+    }
+    mobileState.conn.send({ type: actionType, isForced: isForced, ...extraData });
+    document.getElementById('main-ui').innerHTML = "Traitement du protocole...";
 }
