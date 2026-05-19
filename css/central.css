@@ -12,10 +12,31 @@
         }
         
         /* Jauge d'Oxygène */
-        #oxy-bar { height: 25px; background: #333; border-radius: 15px; border: 2px solid #555; overflow: hidden; width: 80%; margin: 10px auto; }
+        #oxy-bar { 
+            height: 25px; 
+            background: #333; 
+            border-radius: 15px; 
+            border: 2px solid #555; 
+            overflow: hidden; 
+            width: 80%; 
+            margin: 10px auto; 
+            position: relative; /* sert d'ancre pour le texte absolu */
+        }
         #oxy-level { height: 100%; background: #3498db; width: 100%; transition: 1s; }
         .critical { animation: blink 1s infinite; background: #e74c3c !important; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        #oxy-text-central { /* Le texte centralisé par-dessus la barre */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centrage absolu parfait */
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 0.85em;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; /* Ombre noire pour rester lisible sur le bleu ET sur le gris */
+            pointer-events: none; /* Évite que le texte bloque les clics perdus */
+        }
 
         /* Mise en page des Plateaux */
         .main-layout { 
