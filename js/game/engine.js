@@ -205,6 +205,15 @@ export function resolveVote() {
         }
     });
 
+    // 1.1. CALCUL DES PERSONNES PHYSIQUES AYANT VOTÉ OUI / NON
+    const countPhysiqueOui = state.votes.list.filter(v => v.choice === 'OUI').length;
+    const countPhysiqueNon = state.votes.list.filter(v => v.choice === 'NON').length;
+
+    // 1.2. ENVOI DU LOG DÉTAILLÉ AVEC COMPARAISON PHYSIQUE ET INFLUENCE
+    Logger.add(`🗳️ SCRUTIN CLOS — RÉSULTATS DU VOTE :`);
+    Logger.add(`   • INDIVIDUS : ${countPhysiqueOui} POUR vs ${countPhysiqueNon} CONTRE`);
+    Logger.add(`   • INFLUENCE : ${state.votes.oui} VOIX vs ${state.votes.non} VOIX`);
+
     // 2. Calcul du résultat
     if (state.votes.oui > state.votes.non) {
         state.currentPhase = "LÉGISLATION_G";
