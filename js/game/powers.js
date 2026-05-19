@@ -1,5 +1,6 @@
 import { state, players } from '../core/state.js';
 import { nextTurn, resolveVote } from './engine.js';
+import { applyDecret, applyForced } from './decrees.js';
 import { Logger } from '../ui/logger.js';
 import { POWER_MAP } from '../core/constants.js';
 import { render, syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals, updateCensureUI, calculatePlayerVoteWeight } from '../ui/renderer.js';
@@ -281,9 +282,6 @@ export function purgeCriseCard(requester, cardId) {
 
 /**
  * Permute le statut du sang de deux joueurs (Décret Réorganisation)
- */
-/**
- * Permute le statut du sang de deux joueurs et les notifie individuellement
  */
 export function swapPlayerBlood(requester, targetA_Name, targetB_Name) {
     const pA = players.find(p => p.name === targetA_Name);

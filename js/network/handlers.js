@@ -3,7 +3,8 @@ import { DECREETS_DATABASE } from '../core/constants.js';
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors, calculatePlayerVoteWeight } from '../ui/renderer.js';
-import { showGov, resolveVote, applyDecret, restorePlayerAction, handleDiscardFromNet, nextTurn } from '../game/engine.js';
+import { showGov, resolveVote, restorePlayerAction, nextTurn } from '../game/engine.js';
+import { handleDiscardFromNet, applyDecret } from '../game/decrees.js';
 import { testPlayerBlood, executePlayer, applyCensure, purgeCriseCard, swapPlayerBlood } from '../game/powers.js';
 
 export function handlePlayerData(conn, data) {
