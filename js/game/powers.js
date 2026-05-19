@@ -2,7 +2,7 @@ import { state, players } from '../core/state.js';
 import { nextTurn, resolveVote } from './engine.js';
 import { Logger } from '../ui/logger.js';
 import { POWER_MAP } from '../core/constants.js';
-import { render, syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals, updateCensureUI } from '../ui/renderer.js';
+import { render, syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals, updateCensureUI, calculatePlayerVoteWeight } from '../ui/renderer.js';
 
 /**
  * Analyse biologique d'un joueur (Pouvoir du Docteur ou Case de Crise)
@@ -53,26 +53,24 @@ export function executePlayer(requester, targetName) {
             Logger.add(`SYSTÈME : Le sujet ${targetName} a été éliminé. Son vote est révoqué.`);
         }
 
-        // --- RECALCUL PROPRE ET SÉCURISÉ DES VOTES TRANSMIS ---
-        // On recalcule les scores de zéro sans le mort pour éviter tout décalage de variables
+       // --- RECALCUL PROPRE ET SÉCURISÉ DES VOTES TRANSMIS ---
         state.votes.oui = 0;
         state.votes.non = 0;
         state.votes.total = 0;
         
-        // On filtre la liste pour éjecter le mort s'il y était encore
+        // On éjecte le mort de la liste des votes
         state.votes.list = state.votes.list.filter(v => v.name.toLowerCase() !== targetName.toLowerCase());
         
-        // On simule une ré-application des votes restants pour reconstruire state.votes.oui / non / total
+        // On applique le poids dynamique de ta fonction magique
         state.votes.list.forEach(v => {
             const pVoter = players.find(p => p.name.toLowerCase() === v.name.toLowerCase());
             if (pVoter && pVoter.isAlive) {
-                let weight = 1;
-                if (pVoter.metier === 'Shérif') weight = 2;
-                if (pVoter.metier === 'Fossoyeur') weight += players.filter(p => !p.isAlive).length;
-                
-                if (state.slotsSuffrageCard === 'conseil_restreint' && (pVoter.name === players[state.curG].name || v.name === state.currentProposedS)) weight = 2;
-                if (state.slotsSuffrageCard === 'greve_zele' && v.choice === 'NON') weight = 2;
-                if (state.slotsSuffrageCard === 'insurrection_populaire' && pVoter.metier === 'Civil') weight = 2;
+                let weight = calculatePlayerVoteWeight(pVoter);
+
+                // SÉCURITÉ : La "Grève du Zèle" ne double le poids QUE si le choix est NON
+                if (state.slotsSuffrageCard === 'greve_zele' && v.choice === 'NON') {
+                    weight *= 2; 
+                }
 
                 state.votes[v.choice.toLowerCase()] += weight;
                 state.votes.total += weight;
