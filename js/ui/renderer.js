@@ -92,10 +92,16 @@ export function syncTerminals() {
  * Mise à jour des plateaux (Oxygène, Survie, Crise, Suffrage)
  */
 export function render() {
+    // Mise à jour de la barre d'oxygène
     const oxyBar = document.getElementById('oxy-level');
     if (oxyBar) {
         oxyBar.style.width = (state.oxy / 3 * 100) + "%";
         oxyBar.className = (state.oxy <= 1) ? "critical" : "";
+    }
+    // Mise à jour du texte oxygène
+    const oxyText = document.getElementById('oxy-text-central');
+    if (oxyText) {
+        oxyText.innerText = `NIVEAU D'OXYGÈNE : ${state.oxy} / 3`;
     }
     
     // Slots Décrets Survie (Bleu)
