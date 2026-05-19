@@ -54,6 +54,9 @@ function connect(isReconnect = false) {
 
     if (!nameInput || !codeInput) return;
 
+    // On force la majuscule à la source dès la saisie
+    nameInput = nameInput.toUpperCase();
+
     // --- SÉCURITÉ : Expression régulière pour n'autoriser que Lettres, chiffres, accents français, tirets et espaces
     const validPattern = /^[a-zA-Z0-9àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ\-_ ]+$/;
     
