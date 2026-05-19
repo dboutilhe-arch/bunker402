@@ -103,75 +103,7 @@ function handleData(data) {
             break;
 
         case 'SYNC_STATE':
-            serverState = data.state;
-            updateMiniBoard(data.state);
-            
-            if (document.getElementById('main-ui').innerText.includes("VOUS ÊTES MORT")) return;
-      
-            const btn = document.getElementById('btn-power');
-            if (btn) {
-                const isVigile = document.getElementById('metier-display').innerText.includes("Vigile");
-
-                // CONDITION SPÉCIFIQUE VIGILE : Actif UNIQUEMENT en phase de DÉSIGNATION
-                if (isVigile) {
-                    if (!hasUsedPower && data.state.currentPhase === "DÉSIGNATION") {
-                        btn.disabled = false;
-                        btn.style.opacity = "1";
-                        btn.style.pointerEvents = "auto";
-                    } else {
-                        btn.disabled = true;
-                        btn.style.opacity = "0.3";
-                        btn.style.pointerEvents = "none";
-                    }
-                } 
-                // Gestion normale pour les autres métiers actifs (Docteur, Intendant, Militaire)
-                else if (!hasUsedPower && !data.state.currentPowerActive) {
-                    btn.disabled = false;
-                    btn.style.opacity = "1";
-                    btn.style.pointerEvents = "auto";
-                }
-                
-                // Conserve ton bloc Fossoyeur juste ici si tu l'as toujours
-                const isFossoyeur = document.getElementById('metier-display').innerText.includes("Fossoyeur");
-                if (isFossoyeur && data.state.deadCount !== undefined) {
-                    const bonus = data.state.deadCount;
-                    btn.innerText = `NÉCROLOGIE : +${bonus} VOIX (${bonus} CADAVRE${bonus > 1 ? 'S' : ''})`;
-                }
-            }
-
-            // ARCHIVISTE : On vérifie le conteneur HTML pour savoir si on est Archiviste
-            const isArchiviste = document.getElementById('metier-display').innerText.includes("Archiviste");
-            if (isArchiviste) {
-                const jobZone = document.getElementById('job-ui');
-                jobZone.innerHTML = ""; 
-        
-                const btnPower = document.createElement('button');
-                btnPower.id = "btn-power"; // On lui donne l'ID standard pour qu'il soit aussi ciblé par les grisailles forcées
-                btnPower.className = "btn-power";
-                btnPower.innerText = "📜 ARCHIVER LE PROCHAIN VOTE";
-                
-                // Si déjà utilisé, ou si le Conseil est déjà en train de choisir les cartes, on bloque
-                if (hasUsedPower || data.state.currentPhase.startsWith("LÉGISLATION")) {
-                    btnPower.disabled = true;
-                    btnPower.style.opacity = "0.3";
-                    btnPower.style.pointerEvents = "none";
-                }
-        
-                btnPower.onclick = () => {
-                    if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
-                    
-                    // On fige le bouton visuellement et techniquement dès le clic
-                    btnPower.disabled = true;
-                    btnPower.style.opacity = "0.3";
-                    btnPower.style.pointerEvents = "none";
-                    btnPower.innerText = "📜 PROTOCOLE ENCLENCHÉ...";
-                    
-                    hasUsedPower = true; // On passe le flag local à true
-                    
-                    conn.send({ type: 'USE_ARCHIVISTE_POWER' });
-                };
-                jobZone.appendChild(btnPower);
-            }
+            handleSyncStateAction(data.state);
             break;
 
         case 'YOUR_TURN':
@@ -1023,4 +955,76 @@ function showBloodSwappedAlert(data) {
             <p style="font-size: 0.75em; color: #555; margin-top: 20px;">[SYNCHRONISATION DES TERMINAUX TERMINÉE]</p>
         </div>
     `;
+}
+
+// --- CENTRALISATION DE LA SYNCHRONISATION DE L'ÉTAT ---
+function handleSyncStateAction(stateData) {
+    // 1. Enregistrement global de l'état reçu
+    serverState = stateData;
+    
+    // 2. Mise à jour des jauges miniatures de l'interface (Oxygène, Plateaux)
+    updateMiniBoard(stateData);
+    
+    // 3. Sécurité : Si le joueur est mort, on bloque toute modification d'interface active
+    const ui = document.getElementById('main-ui');
+    if (ui && ui.innerText.includes("VOUS ÊTES MORT")) return;
+
+    // 4. Extraction sécurisée du métier textuel depuis le DOM
+    const metierText = document.getElementById('metier-display')?.innerText || "";
+    const isVigile = metierText.includes("Vigile");
+    const isFossoyeur = metierText.includes("Fossoyeur");
+    const isArchiviste = metierText.includes("Archiviste");
+    const btn = document.getElementById('btn-power');
+
+    // 5. Gestion des comportements des boutons physiques (si présents)
+    if (btn) {
+        if (isVigile) {
+            // Le Vigile ne peut agir qu'en phase de Désignation
+            if (!hasUsedPower && stateData.currentPhase === "DÉSIGNATION") {
+                btn.disabled = false; btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
+            } else {
+                btn.disabled = true; btn.style.opacity = "0.3"; btn.style.pointerEvents = "none";
+            }
+        } 
+        else if (isFossoyeur) {
+            // Le Fossoyeur met à jour son passif selon le nombre de cadavres en temps réel
+            const deadCount = stateData.deadCount || 0;
+            btn.innerText = `NÉCROLOGIE : +${deadCount} VOIX (${deadCount} CADAVRE${deadCount > 1 ? 'S' : ''})`;
+        }
+        else if (!isArchiviste) { 
+            // Métiers actifs standards (Docteur, Intendant, Militaire)
+            if (!hasUsedPower && !stateData.currentPowerActive) {
+                btn.disabled = false; btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
+            } else {
+                btn.disabled = true; btn.style.opacity = "0.3"; btn.style.pointerEvents = "none";
+            }
+        }
+    }
+
+    // 6. Gestion de l'Archiviste (Reconstruction dynamique de son bouton d'action unique)
+    if (isArchiviste) {
+        const jobZone = document.getElementById('job-ui');
+        if (jobZone) {
+            jobZone.innerHTML = ""; 
+    
+            const btnPower = document.createElement('button');
+            btnPower.id = "btn-power"; 
+            btnPower.className = "btn-power";
+            btnPower.innerText = hasUsedPower ? "📜 PROTOCOLE ENCLENCHÉ" : "📜 ARCHIVER LE PROCHAIN VOTE";
+            
+            // On fige si déjà consommé ou si le Conseil est déjà entré en phase de cartes
+            if (hasUsedPower || stateData.currentPhase.startsWith("LÉGISLATION")) {
+                btnPower.disabled = true; btnPower.style.opacity = "0.3"; btnPower.style.pointerEvents = "none";
+            }
+    
+            btnPower.onclick = () => {
+                if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
+                btnPower.disabled = true; btnPower.style.opacity = "0.3"; btnPower.style.pointerEvents = "none";
+                btnPower.innerText = "📜 PROTOCOLE ENCLENCHÉ...";
+                hasUsedPower = true;
+                conn.send({ type: 'USE_ARCHIVISTE_POWER' });
+            };
+            jobZone.appendChild(btnPower);
+        }
+    }
 }
