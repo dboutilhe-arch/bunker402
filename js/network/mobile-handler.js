@@ -335,6 +335,15 @@ function handleData(data) {
             // La Sentinelle regarde fixement le choix du Gardien
             showSentinelle493View(data.cards);
             break;
+
+        case 'REORGANISATION_RESULT':
+            showReorganisationResult(data);
+            break;
+
+        // Alerte reçue par les deux cibles interverties de la Réorganisation
+        case 'BLOOD_SWAPPED_ALERT':
+            showBloodSwappedAlert(data);
+            break;
     }
 }
 
@@ -627,6 +636,80 @@ function openTargetSelector(actionType, title, isForced = false) {
         });
         return;
     }
+
+    // ─── CAS REORGANISATION : DOUBLE SÉLECTION DYNAMIQUE ─────────────────────
+    if (actionType === 'REQUEST_REORGANISATION') {
+        let selectedTargets = []; // Tableau local pour suivre nos 2 cibles
+        
+        // Création du bouton de validation (Désactivé par défaut)
+        const btnValidate = document.createElement('button');
+        btnValidate.className = "btn";
+        btnValidate.id = "btn-validate-reorg";
+        btnValidate.innerText = "VALIDER L'ÉCHANGE (0/2)";
+        btnValidate.disabled = true;
+        btnValidate.style.opacity = "0.3";
+        btnValidate.style.width = "85%";
+        btnValidate.style.background = "#3498db";
+        btnValidate.style.color = "#000";
+        btnValidate.style.borderColor = "#000";
+        ui.appendChild(btnValidate);
+
+        const listToUse = serverState?.aliveNames || allPlayers;
+        
+        listToUse.forEach(name => {
+            // Le Gardien ne peut pas se cibler lui-même !
+            if (name.toLowerCase() === myName.toLowerCase()) return;
+
+            const btn = document.createElement('button');
+            btn.className = "btn-target";
+            btn.innerText = name.toUpperCase();
+            btn.style.transition = "all 0.2s ease";
+            ui.appendChild(btn);
+
+            btn.onclick = () => {
+                const idx = selectedTargets.indexOf(name);
+
+                if (idx !== -1) {
+                    // Désélection : On l'enlève du tableau et on remet le style CSS d'origine (Vide)
+                    selectedTargets.splice(idx, 1);
+                    btn.style.background = "";
+                    btn.style.color = "";
+                    btn.style.borderColor = "";
+                } else {
+                    // Sélection : On vérifie qu'on n'a pas déjà dépassé 2 cibles
+                    if (selectedTargets.length >= 2) return; 
+                
+                    selectedTargets.push(name);
+                    // On colore le bouton en Bleu Survie/Réorganisation
+                    btn.style.background = "#3498db";
+                    btn.style.color = "#000";
+                    btn.style.borderColor = "#fff";
+                }
+
+                // Mise à jour dynamique du bouton de validation
+                if (selectedTargets.length === 2) {
+                    btnValidate.disabled = false;
+                    btnValidate.style.opacity = "1";
+                    btnValidate.innerText = `CONFIRMER L'ÉCHANGE`;
+                    btnValidate.style.background = "#2ecc71"; // Devient vert opérationnel
+                } else {
+                    btnValidate.disabled = true;
+                    btnValidate.style.opacity = "0.3";
+                    btnValidate.innerText = `VALIDER L'ÉCHANGE (${selectedTargets.length}/2)`;
+                    btnValidate.style.background = "#3498db";
+                }
+            };
+        });
+
+        // Comportement au clic sur Valider
+        btnValidate.onclick = () => {
+            if (selectedTargets.length !== 2) return;
+            if (!confirm(`Confirmer la permutation biologique entre ${selectedTargets[0]} et ${selectedTargets[1]} ?`)) return;
+            
+            sendPowerAction(actionType, { targetAName: selectedTargets[0], targetBName: selectedTargets[1] }, isForced);
+        };
+        return; 
+    }
         
     // ─── CAS NORMAL : SÉLECTION D'UN JOUEUR ─────────────────────────────────
     const listToUse = serverState?.aliveNames || allPlayers;
@@ -829,4 +912,39 @@ function showPurgeResult(data) {
     document.getElementById('btn-ok').onclick = () => {
         conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
     };
+}
+
+function showReorganisationResult(data) {
+    const ui = document.getElementById('main-ui');
+    
+    ui.innerHTML = `
+        <div style="border: 2px solid #3498db; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: #3498db; margin-top: 0; letter-spacing: 1px;">🔄 RÉORGANISATION EFFECTUÉE</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Les bases de données biologiques ont été permutées.</p>
+            <p style="color: #f1c40f; margin: 10px 0;"><b>${data.targetA.toUpperCase()}</b> ⇄ <b>${data.targetB.toUpperCase()}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #3498db; color: #000; border-color: #000;">OK</button>
+        </div>`;
+
+    document.getElementById('btn-ok').onclick = () => {
+        conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+    };
+}
+
+function showBloodSwappedAlert(data) {
+    const ui = document.getElementById('main-ui');
+    
+    // 1. On répercute immédiatement le changement visuel sur l'encadré persistant du Sang
+    const bColor = data.newBlood === "SAIN" ? "#2ecc71" : "#e74c3c";
+    document.getElementById('blood-status').innerHTML = `🩸 SANG : <span style="color: ${bColor}">${data.newBlood}</span>`;
+
+    // 2. On affiche l'alerte d'immersion au centre de l'écran
+    ui.innerHTML = `
+        <div style="border: 2px solid #3498db; padding: 20px; border-radius: 10px; background: rgba(52, 152, 219, 0.1);">
+            <h2 style="color: #3498db; letter-spacing: 1px;">⚠️ DOSSIER INTERVERTI</h2>
+            <p style="color: #e0e0e0;">Le Gardien a réorganisé les archives médicales.</p>
+            <p style="color: #fff;">Votre dossier biologique a été échangé avec celui de : <b style="color: #f1c40f;">${data.withPlayer.toUpperCase()}</b></p>
+            <p style="font-size: 0.9em; margin-top: 15px; color: #aaa;">Votre nouveau statut sanguin est : <b style="color: ${bColor}">${data.newBlood}</b></p>
+            <p style="font-size: 0.75em; color: #555; margin-top: 20px;">[SYNCHRONISATION DES TERMINAUX TERMINÉE]</p>
+        </div>
+    `;
 }
