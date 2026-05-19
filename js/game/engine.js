@@ -98,6 +98,7 @@ export async function initGame() {
  */
 export function nextTurn() {
     state.currentPhase = "DÉSIGNATION";
+    render();
 
     // ✨ FIX RÉÉLECTION : Si une sentinelle est forcée par le décret, on restaure son index immédiatement
     if (state.nextForcedS) {
