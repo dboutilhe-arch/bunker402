@@ -265,20 +265,41 @@ export function purgeCriseCard(requester, cardId) {
 /**
  * Permute le statut du sang de deux joueurs (Décret Réorganisation)
  */
+/**
+ * Permute le statut du sang de deux joueurs et les notifie individuellement
+ */
 export function swapPlayerBlood(requester, targetA_Name, targetB_Name) {
     const pA = players.find(p => p.name === targetA_Name);
     const pB = players.find(p => p.name === targetB_Name);
 
     if (!pA || !pB) return;
 
-    // Swap sang
+    // 1. Permutation des registres sanguins dans le State
     const tempBlood = pA.blood;
     pA.blood = pB.blood;
     pB.blood = tempBlood;
 
-    Logger.add(`🔄 REORGANISATION : ${requester.name} a interverti les registres sanguins de ${targetA_Name} et ${targetB_Name} !`);
+    Logger.add(`🔄 REORGANISATION : ${requester.name} a interverti les dossiers de ${targetA_Name} et ${targetB_Name} !`);
 
-    // On envoie le récapitulatif de l'action au Gardien
+    // 2. Notification exclusive au Joueur A
+    if (pA.conn && pA.conn.open) {
+        pA.conn.send({
+            type: 'BLOOD_SWAPPED_ALERT',
+            withPlayer: pB.name,
+            newBlood: pA.blood
+        });
+    }
+
+    // 3. Notification exclusive au Joueur B
+    if (pB.conn && pB.conn.open) {
+        pB.conn.send({
+            type: 'BLOOD_SWAPPED_ALERT',
+            withPlayer: pA.name,
+            newBlood: pB.blood
+        });
+    }
+
+    // 4. Rapport de fin d'action envoyé au Gardien
     requester.conn.send({
         type: 'REORGANISATION_RESULT',
         targetA: targetA_Name,
