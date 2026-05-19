@@ -257,7 +257,7 @@ export function resolveVote() {
         clearCouncilVisuals();
     }
     syncTerminals(); 
-    render();
+    //render();
 }
 
 // Handler pour la défausse du Gardien
