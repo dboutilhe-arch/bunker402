@@ -106,7 +106,8 @@ function handleJoin(conn, data) {
         jobPowerUsed: false,
         casePowerUsed: false,
         isCensored: false,
-        censoredBy: ""
+        censoredBy: "",
+        blood: "SAIN"
     });
     createPlayerTag(data.name); // On crée l'étiquette
     
