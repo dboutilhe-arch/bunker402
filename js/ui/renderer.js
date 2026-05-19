@@ -182,7 +182,8 @@ export function render() {
                 weightDiv.innerHTML = `<span style="color: #e74c3c; font-weight: bold;">VOIX : 0 (MUET)</span>`;
             } else {
                 const currentWeight = calculatePlayerVoteWeight(p);
-                const color = currentWeight > 1 ? '#f1c40f' : '#2ecc71'; // Jaune si boosté, Vert si normal
+                // Si le poids est normal, on met la couleur par défaut (qui sera écrasée par le CSS lors du vote)
+                const color = currentWeight > 1 ? '#f1c40f' : '#2ecc71'; 
                 weightDiv.innerHTML = `<span style="color: ${color}; font-weight: ${currentWeight > 1 ? 'bold' : 'normal'};">VOIX : ${currentWeight}</span>`;
             }
         }
