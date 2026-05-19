@@ -670,7 +670,7 @@ function openTargetSelector(actionType, title, isForced = false) {
                 const idx = selectedTargets.indexOf(name);
 
                 if (idx !== -1) {
-                    // Désélection : On l'enlève du tableau et on remet le style CSS d'origine (Vide)
+                    // Désélection : On l'enlève du tableau et on nettoie les styles inline
                     selectedTargets.splice(idx, 1);
                     btn.style.background = "";
                     btn.style.color = "";
@@ -678,12 +678,12 @@ function openTargetSelector(actionType, title, isForced = false) {
                 } else {
                     // Sélection : On vérifie qu'on n'a pas déjà dépassé 2 cibles
                     if (selectedTargets.length >= 2) return; 
-                
+
                     selectedTargets.push(name);
-                    // On colore le bouton en Bleu Survie/Réorganisation
+                    // On force le style néon bleu pour que le Gardien voie sa sélection
                     btn.style.background = "#3498db";
-                    btn.style.color = "#000";
-                    btn.style.borderColor = "#fff";
+                    btn.style.color = "#000000";
+                    btn.style.borderColor = "#ffffff";
                 }
 
                 // Mise à jour dynamique du bouton de validation
@@ -691,7 +691,7 @@ function openTargetSelector(actionType, title, isForced = false) {
                     btnValidate.disabled = false;
                     btnValidate.style.opacity = "1";
                     btnValidate.innerText = `CONFIRMER L'ÉCHANGE`;
-                    btnValidate.style.background = "#2ecc71"; // Devient vert opérationnel
+                    btnValidate.style.background = "#2ecc71"; // Vert opérationnel
                 } else {
                     btnValidate.disabled = true;
                     btnValidate.style.opacity = "0.3";
