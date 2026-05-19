@@ -1,22 +1,45 @@
-/root
-│   index.html        (Console Centrale)
-│   joueur.html       (Terminal Mobile)
-├── css/
-│   ├── central.css   (Extraire le <style> de index.html)
-│   └── mobile.css    (Extraire le <style> de joueur.html)
-├── js/
-|   ├── main.js
-│   ├── core/         (Logique pure et données)
-│   │   ├── state.js      (Variables globales)
-│   │   ├── constants.js  (Rôles, Config, PowerMap)
-│   ├── network/      (Communication PeerJS)
-│   │   ├── peer-manager.js
-│   │   └── handlers.js   (Gestion des messages data.type)
-│   │   └── mobile-handler.js
-│   ├── game/         (Mécaniques de jeu)
-│   │   ├── engine.js     (Cycles de tours, votes)
-│   │   └── rules.js      (Calcul des victoires, répartition rôles)
-│   │   └── powers.js     (Actions spécifiques (Docteur, Cases))
-│   └── ui/           (Affichage et DOM)
-│       ├── renderer.js   (Dessin des plateaux)
-│       └── logger.js     (Gestion du log console)
+=========================================================================================
+                                ARCHITECTURE GLOBALE DU BUNKER
+=========================================================================================
+
+📁 js/
+│
+├── 🖥️ [CÔTÉ SERVEUR - CONSOLE CENTRALE PC]
+│   │
+│   ├── 📁 core/
+│   │   ├── state.js          <-- Base de données réactive (state, players, resetGameState)
+│   │   └── constants.js      <-- Compositions des rôles, métiers et Deck initial complet
+│   │
+│   ├── 📁 game/
+│   │   ├── engine.js         <-- Chef d'orchestre : Flux des phases (Désignation, Scrutin, Résolution)
+│   │   ├── decrees.js        <-- [Nouveau] Gestion physique des cartes (Pioche, Défausse, Promulgation)
+│   │   └── powers.js         <-- Résolution technique des décrets et pouvoirs de cases
+│   │
+│   └── 📁 ui/
+│       ├── renderer.js       <-- Affichage de la table centrale (Plateaux, Cartes posées, Étoiles)
+│       └── logger.js         <-- Terminal de logs système ("🔊 SYSTÈME : ...")
+│
+│
+├── 📱 [CÔTÉ CLIENT - TERMINAL SMARTPHONE]
+│   │
+│   ├── 📁 core/
+│   │   └── mobile-constants.js <-- [Nouveau] Version locale de la DB Décrets (Noms, Icônes, Effets)
+│   │
+│   ├── 📁 network/
+│   │   └── mobile-handler.js   <-- Point d'entrée unique. PeerJS, Data Handler et MobileState (Variables)
+│   │
+│   └── 📁 ui/
+│       └── mobile-render.js    <-- [Nouveau] Fabrique à HTML (Interface de vote, choix des décrets, pouvoirs)
+│
+│
+└─────── 📁 network/
+         └── handlers.js        <-- Dispatcher central des messages reçus par le Serveur (JOIN, VOTE_DONE...)
+
+=========================================================================================
+                               FLUX DE DONNÉES EN PARTIE (Exemple)
+=========================================================================================
+
+  [ mobile-handler.js ] ──( Vote 'OUI' )──> [ handlers.js ] ──( Reçoit )──> [ engine.js ]
+           ▲                                                                     │
+           │ (Rendu HTML)                                                        ▼ (Calcule)
+  [ mobile-render.js ] <──( SYNC_STATE )──── [ renderer.js ] <──( Maj State ) [ decrees.js ]
