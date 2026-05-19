@@ -263,6 +263,31 @@ export function purgeCriseCard(requester, cardId) {
 }
 
 /**
+ * Permute le statut du sang de deux joueurs (Décret Réorganisation)
+ */
+export function swapPlayerBlood(requester, targetA_Name, targetB_Name) {
+    const pA = players.find(p => p.name === targetA_Name);
+    const pB = players.find(p => p.name === targetB_Name);
+
+    if (!pA || !pB) return;
+
+    // Swap sang
+    const tempBlood = pA.blood;
+    pA.blood = pB.blood;
+    pB.blood = tempBlood;
+
+    Logger.add(`🔄 REORGANISATION : ${requester.name} a interverti les registres sanguins de ${targetA_Name} et ${targetB_Name} !`);
+
+    // On envoie le récapitulatif de l'action au Gardien
+    requester.conn.send({
+        type: 'REORGANISATION_RESULT',
+        targetA: targetA_Name,
+        targetB: targetB_Name,
+        isForced: state.currentPowerActive
+    });
+}
+
+/**
  * Exécute l'effet immédiat (symbole ⚡) d'un décret promulgué
  * @param {string} cardId - L'identifiant unique du décret (ex: 'sabotage', 'censure')
  * @returns {boolean} - true si le décret demande une action interactive (sélection de cible), false sinon
@@ -406,6 +431,29 @@ export function executeDecreetPower(cardId) {
             // (Si ton moteur réinitialise state.currentProposedS, cette ligne garantit qu'on garde la bonne)
             state.nextForcedS = state.currentProposedS; 
             return false;
+
+        case 'reorganisation':
+            state.currentPowerActive = true; 
+            Logger.add(`🔄 DÉCRET RÉORGANISATION : Protocole activé. En attente du choix du Gardien (${gardien.name}).`);
+            
+            if (gardien && gardien.conn && gardien.conn.open) {
+                gardien.conn.send({ 
+                    type: 'FORCE_POWER_SELECT', 
+                    action: 'REQUEST_REORGANISATION', 
+                    title: 'RÉORGANISATION BIOLOGIQUE (DÉCRET)' 
+                });
+            }
+            // Écran d'attente violet pour les autres
+            players.forEach(p => {
+                if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
+                    p.conn.send({ 
+                        type: 'WAIT_POWER', 
+                        gardienName: gardien.name, 
+                        title: 'RÉORGANISATION DES SYSTÈMES' 
+                    });
+                }
+            });
+            return true;
             
         default:
             // Pour l'instant, les autres cartes n'ont pas d'effet immédiat codé
