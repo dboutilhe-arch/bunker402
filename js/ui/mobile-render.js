@@ -163,16 +163,19 @@ export function showVoteUI(data) {
     const btnOui = document.createElement('button');
     btnOui.className = "btn"; btnOui.style.background = "#2ecc71"; btnOui.style.color = "#000"; btnOui.style.borderColor = "#000"; btnOui.innerText = "ACCEPTER";
     btnOui.onclick = () => {
-        document.getElementById('main-ui').innerHTML = "Vote OUI transmis...";
+        showCleanUI();
         mobileState.conn.send({ type: 'VOTE_DONE', choice: 'OUI', playerName: mobileState.myName });
     };
     
     const btnNon = document.createElement('button');
     btnNon.className = "btn"; btnNon.style.background = "#e74c3c"; btnNon.style.color = "#000"; btnNon.style.borderColor = "#000"; btnNon.innerText = "REFUSER";
     btnNon.onclick = () => {
-        document.getElementById('main-ui').innerHTML = "Vote NON transmis...";
+        showCleanUI();
         mobileState.conn.send({ type: 'VOTE_DONE', choice: 'NON', playerName: mobileState.myName });
     };
+
+    ui.appendChild(btnOui);
+    ui.appendChild(btnNon);
 
     ui.appendChild(btnOui);
     ui.appendChild(btnNon);
