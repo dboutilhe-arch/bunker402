@@ -133,8 +133,6 @@ function handleSentinelle(data) {
     showGov(data.gardienName, data.sentinelleName);
 }
 
-// js/network/handlers.js
-
 function handleVote(data) {
     // 1. SÉCURITÉ : On récupère le joueur qui vote
     const voter = players.find(p => p.name.toLowerCase() === data.playerName.toLowerCase());
@@ -274,11 +272,12 @@ function handleExecution(conn, data) {
     }
 }
 
+// ✨ FIX : Nettoyage de la syntaxe cassée
 function handleReorganisation(conn, data) {
     const requester = players.find(p => p.conn === conn);
     if (!requester || !requester.isAlive) return;
+    
     swapPlayerBlood(requester, data.targetAName, data.targetBName);
-    });
 }
 
 function handleSyncRequest(conn) {
@@ -343,7 +342,7 @@ function handleArchivistePower(conn) {
 
     Logger.add(`📜 SYSTÈME : L'Archiviste (${requester.name}) active ses protocoles de recherche pour ce vote.`);
 
-    // On confirme au joueur que son pouvoir est enclenché
+    // On confirme au joueur que son pouvoir is enclenché
     conn.send({ type: 'POWER_ACTIVATED_CONFIRM', message: "Protocole d'archive activé pour le vote en cours." });
     
     // On synchronise pour griser son bouton sur son téléphone
