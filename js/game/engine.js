@@ -97,6 +97,18 @@ export async function initGame() {
  */
 export function nextTurn() {
     state.currentPhase = "DÉSIGNATION";
+
+    // ✨ FIX RÉÉLECTION : Si une sentinelle est forcée par le décret, on restaure son index immédiatement
+    if (state.nextForcedS) {
+        state.curSIdx = players.findIndex(p => p.name === state.nextForcedS);
+        state.currentProposedS = state.nextForcedS;
+        state.nextForcedS = null; // Effet consommé, on vide l'ancre
+    } else {
+        // Flux normal : si pas de réélection, la Sentinelle repasse à -1 pour le nouveau Gardien
+        state.curSIdx = -1;
+        state.currentProposedS = null;
+    }
+
     let attempts = 0;
     while (!players[state.curG].isAlive && attempts < players.length) {
         state.curG = (state.curG + 1) % players.length;
@@ -116,7 +128,8 @@ export function nextTurn() {
     
     document.getElementById('vote-summary').innerText = "DÉSIGNATION DU CONSEIL... ";
     document.getElementById('g-name').innerText = activeG.name;
-    document.getElementById('s-name').innerText = "?";
+    // ✨ Ajustement visuel : On affiche directement la Sentinelle reconduite au lieu du "?"
+    document.getElementById('s-name').innerText = state.curSIdx !== -1 ? state.currentProposedS : "?";
 
     players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
     players.filter(p => p.isAlive).forEach((p, index) => {
@@ -131,25 +144,22 @@ export function nextTurn() {
         return true;
     });
     
-    // RÉÉLECTION : Si la Sentinelle est déjà figée (différente de -1), on court-circuite le choix !
+    // RÉÉLECTION
     if (state.curSIdx !== -1 && state.currentPhase === "DÉSIGNATION") {
         const currentS = players[state.curSIdx];
         Logger.add(`⚖️ SYSTÈME : Réélection active. Passage direct à la législation pour ${activeG.name} & ${currentS.name}.`);
         
-        // On force le calcul législatif immédiatement en simulant un vote validé d'office !
         state.currentPhase = "LÉGISLATION_G";
         
         const countToDraw = state.archivistePowerActive ? 4 : 3;
         state.currentLegislativeCards = [];
         for (let i = 0; i < countToDraw; i++) {
-            state.currentLegislativeCards.push(drawCard()); // Pioche automatique
+            state.currentLegislativeCards.push(drawCard()); 
         }
         state.currentLegislativeCards = state.currentLegislativeCards.filter(Boolean);
         
-        // Nettoyage des flags éphémères
         if (state.archivistePowerActive) state.archivistePowerActive = false;
 
-        // On envoie les interfaces de session législative aux mobiles
         players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
         
         setTimeout(() => {
@@ -158,7 +168,7 @@ export function nextTurn() {
 
         syncTerminals(); 
         render();
-        return; // ON S'ARRÊTE ICI pour ne pas envoyer le message 'YOUR_TURN' de sélection !
+        return; 
     }
 
     // --- FLUX NORMAL (Si pas de réélection) ---
