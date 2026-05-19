@@ -1,5 +1,6 @@
 import { state, players } from '../core/state.js';
 import { nextTurn, resolveVote } from './engine.js';
+import { applyDecret, applyForced } from './decrees.js';
 import { Logger } from '../ui/logger.js';
 import { POWER_MAP } from '../core/constants.js';
 import { render, syncTerminals, triggerWin, updatePlayerStatusUI, clearCouncilVisuals, updateCensureUI, calculatePlayerVoteWeight } from '../ui/renderer.js';
