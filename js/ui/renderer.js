@@ -342,7 +342,7 @@ export function updateCensureUI(player) {
 /**
  * Calcule le poids de vote dynamique d'un joueur selon ses passifs et le suffrage actif
  */
-function calculatePlayerVoteWeight(player) {
+export function calculatePlayerVoteWeight(player) {
     if (!player.isAlive || player.isCensored) return 0;
 
     let weight = 1;
