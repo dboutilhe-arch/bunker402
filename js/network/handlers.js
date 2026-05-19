@@ -157,6 +157,8 @@ function handleVote(data) {
     state.votes[choiceKey] += voteWeight; 
     state.votes.total += voteWeight; 
     state.votes.list.push({ name: data.playerName, choice: data.choice });
+
+    render();
   
     // Compteur de personnes physiques attendues
     const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
