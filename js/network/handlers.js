@@ -75,14 +75,16 @@ export function handlePlayerData(conn, data) {
 // --- SOUS-FONCTIONS DE TRAITEMENT
 
 function handleJoin(conn, data) {
-    let p = players.find(pl => pl.name.toLowerCase() === data.name.toLowerCase());
+    const sanitizedName = data.name.trim().toUpperCase(); // Nom en majuscule
+
+    let p = players.find(pl => pl.name.toLowerCase() === sanitizedName.toLowerCase());
     if (p) {
-        // CAS RECONNEXION : On ne touche pas au HTML (l'étiquette existe déjà)
+        // CAS RECONNEXION
         p.conn = conn; 
         p.conn.send({ type: 'CONNECTED' });
         const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
-        tags.forEach(tag => { tag.style.opacity = "1"; tag.style.filter = "none"; });  // Reset de l'étiquette
-        Logger.add(`RECONNEXION : Signal de ${p.name} rétabli.`);
+        tags.forEach(tag => { tag.style.opacity = "1"; tag.style.filter = "none"; });
+        Logger.add(`RECONNEXION : Signal de ${p.name} rétabli.`); // p.name est déjà en MAJ
         
         if (document.getElementById('game-zone').style.display === 'block') {
             const canSeeAlpha = ['I', 'A', 'M'].includes(p.role);
@@ -91,8 +93,8 @@ function handleJoin(conn, data) {
                 type: 'INIT', 
                 role: p.role, 
                 metier: p.metier, 
-                all: players.map(pl => pl.name),
-                alphaName: canSeeAlpha ? (alphaObj ? alphaObj.name : "Inconnu") : null,
+                all: players.map(pl => pl.name), // Contient les noms en MAJ
+                alphaName: canSeeAlpha ? (alphaObj ? alphaObj.name : "INCONNU") : null,
                 powerUsed: p.jobPowerUsed
             });
             syncTerminals();
@@ -105,7 +107,7 @@ function handleJoin(conn, data) {
     if (players.length >= 100) return conn.send({ type: 'ERROR_BUNKER_FULL' });
 
     players.push({ 
-        name: data.name, 
+        name: sanitizedName,
         conn: conn, 
         jobPowerUsed: false,
         casePowerUsed: false,
@@ -113,7 +115,7 @@ function handleJoin(conn, data) {
         censoredBy: "",
         blood: "SAIN"
     });
-    createPlayerTag(data.name); // On crée l'étiquette
+    createPlayerTag(sanitizedName); // Génère l'étiquette avec le nom en MAJ
     
     document.getElementById('count').innerText = players.length;
     if(players.length >= 5) document.getElementById('start-btn').disabled = false;
