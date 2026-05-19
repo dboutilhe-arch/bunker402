@@ -72,6 +72,7 @@ export async function initGame() {
         p.jobPowerUsed = false;
         p.casePowerUsed = false;
         p.isAlive = true;
+        p.blood = ['A', 'I', 'IM'].includes(p.role) ? "INFECTÉ" : "SAIN";
 
         const canSeeAlpha = ['I', 'A', 'M'].includes(p.role);
         p.conn.send({

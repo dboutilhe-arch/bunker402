@@ -11,8 +11,7 @@ export function testPlayerBlood(requester, targetName) {
     const target = players.find(p => p.name === targetName);
     if (!target) return;
 
-    const isInfected = ['A', 'I', 'IM'].includes(target.role);
-    const bloodResult = isInfected ? "INFECTÉ" : "SAIN";
+    const bloodResult = target.blood;
 
     Logger.add(`POUVOIR : ${requester.name} a analysé ${targetName}.`);
 
