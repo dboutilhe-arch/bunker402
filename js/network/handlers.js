@@ -4,7 +4,7 @@ import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors } from '../ui/renderer.js';
 import { showGov, resolveVote, applyDecret, restorePlayerAction, handleDiscardFromNet, nextTurn } from '../game/engine.js';
-import { testPlayerBlood, executePlayer, applyCensure, purgeCriseCard } from '../game/powers.js';
+import { testPlayerBlood, executePlayer, applyCensure, purgeCriseCard, swapPlayerBlood } from '../game/powers.js';
 
 export function handlePlayerData(conn, data) {
     if (state.gameOver) return;
@@ -44,6 +44,10 @@ export function handlePlayerData(conn, data) {
 
         case 'REQUEST_PURGE':
             handlePurgeDecret(conn, data);
+            break;
+
+        case 'REQUEST_REORGANISATION':
+            handleReorganisation(conn, data);
             break;
 
         case 'REQUEST_COUP_ETAT':
@@ -268,6 +272,13 @@ function handleExecution(conn, data) {
             executePlayer(requester, data.targetName);
         }
     }
+}
+
+function handleReorganisation(conn, data) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive) return;
+    swapPlayerBlood(requester, data.targetAName, data.targetBName);
+    });
 }
 
 function handleSyncRequest(conn) {
