@@ -79,6 +79,7 @@ export function resetGameState() {
         p.casePowerUsed = false; 
         p.isAlive = true;        
         p.isCensored = false;    
-        p.censoredBy = "";       
+        p.censoredBy = "";   
+        p.blood = "SAIN";
     });
 }
