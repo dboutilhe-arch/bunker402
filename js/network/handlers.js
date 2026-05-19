@@ -148,7 +148,7 @@ function handleVote(data) {
 
     // RÈGLE SPÉCIFIQUE EN COURS DE SCRUTIN : Grève du Zèle
     if (state.slotsSuffrageCard === 'greve_zele' && data.choice.toLowerCase() === 'non') {
-        voteWeight = 2; // (Ou voteWeight * 2 si cumulable, ici 2 selon ton code initial)
+        voteWeight *= 2;
         Logger.add(`🗳️ SUFFRAGE [Grève du Zèle] : Le vote REFUSER de ${voter.name} compte DOUBLE.`);
     }
 
