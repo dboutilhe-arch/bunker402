@@ -2,7 +2,7 @@
 import { DECREETS_DATABASE } from '../core/constants.js';
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
-import { render, createPlayerTag, syncTerminals, resetVoteColors } from '../ui/renderer.js';
+import { render, createPlayerTag, syncTerminals, resetVoteColors, calculatePlayerVoteWeight } from '../ui/renderer.js';
 import { showGov, resolveVote, applyDecret, restorePlayerAction, handleDiscardFromNet, nextTurn } from '../game/engine.js';
 import { testPlayerBlood, executePlayer, applyCensure, purgeCriseCard, swapPlayerBlood } from '../game/powers.js';
 
@@ -134,70 +134,46 @@ function handleSentinelle(data) {
 }
 
 function handleVote(data) {
-    // 1. SÉCURITÉ : On récupère le joueur qui vote
     const voter = players.find(p => p.name.toLowerCase() === data.playerName.toLowerCase());
 
-    // 2. Si le joueur est mort ou censuré, on ignore totalement son message
+    // Sécurités fondamentales
     if (!voter || !voter.isAlive || voter.isCensored) return;
 
-    // 3. Vérifie si ce joueur a DÉJÀ voté
+    // Déjà voté ?
     const dejaVote = state.votes.list.some(v => v.name.toLowerCase() === data.playerName.toLowerCase());
     if (dejaVote) return;
   
-    // --- 4. CALCUL DYNAMIQUE DU POIDS DU VOTE (SUFFRAGE) ---
-    let voteWeight = 1;
-    const choiceKey = data.choice.toLowerCase(); // 'oui' ou 'non'
+    // --- CALCUL DYNAMIQUE CENTRALISÉ ---
+    let voteWeight = calculatePlayerVoteWeight(voter);
 
-    // PASSIF MÉTIER : Shérif (Son vote compte double de base)
-    if (voter.metier === 'Shérif') {
-        voteWeight = 2;
-        Logger.add(`🗳️ MÉTIER [Shérif] : Le vote de base de ${voter.name} compte DOUBLE.`);
-    }
-
-    // PASSIF MÉTIER : Fossoyeur (+1 voix par joueur mort)
-    if (voter.metier === 'Fossoyeur') {
-        const deadCount = players.filter(p => !p.isAlive).length;
-        voteWeight += deadCount;
-        Logger.add(`🗳️ MÉTIER [Fossoyeur] : ${voter.name} obtient +${deadCount} voix grâce aux morts (Poids total : ${voteWeight}).`);
-    }
-    
-    // CAS A : Conseil Restreint (Gardien & Sentinelle comptent double)
-    if (state.slotsSuffrageCard === 'conseil_restreint') {
-        const isGardien = (voter.name === players[state.curG].name);
-        const isSentinelle = (state.curSIdx !== -1 && voter.name === players[state.curSIdx].name);
-        if (isGardien || isSentinelle) {
-            voteWeight = 2;
-            Logger.add(`🗳️ SUFFRAGE [Conseil Restreint] : Vote doublé pour l'élu ${voter.name}.`);
-        }
-    } 
-    // CAS B : Grève du Zèle (Les votes NON comptent double)
-    else if (state.slotsSuffrageCard === 'greve_zele' && choiceKey === 'non') {
-        voteWeight = 2;
+    // RÈGLE SPÉCIFIQUE EN COURS DE SCRUTIN : Grève du Zèle
+    if (state.slotsSuffrageCard === 'greve_zele' && data.choice.toLowerCase() === 'non') {
+        voteWeight *= 2;
         Logger.add(`🗳️ SUFFRAGE [Grève du Zèle] : Le vote REFUSER de ${voter.name} compte DOUBLE.`);
     }
-    // CAS C : Insurrection Populaire (Les Civils comptent double)
-    else if (state.slotsSuffrageCard === 'insurrection_populaire' && voter.metier === 'Civil') {
-        voteWeight = 2;
-        Logger.add(`🗳️ SUFFRAGE [Insurrection Populaire] : Le vote du Civil ${voter.name} compte DOUBLE.`);
-    }
 
-    // Enregistrement du vote sur le serveur
+    // Enregistrement des scores
+    const choiceKey = data.choice.toLowerCase(); // 'oui' ou 'non'
     state.votes[choiceKey] += voteWeight; 
     state.votes.total += voteWeight; 
     state.votes.list.push({ name: data.playerName, choice: data.choice });
+
+    render();
   
-    // --- 5. COMPTEUR DE PERSONNES PHYSIQUES ATTENDUES ---
+    // Compteur de personnes physiques attendues
     const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
     const totalJoueursAyantVote = state.votes.list.length;
 
-    // Mise à jour du compteur PC
+    // Mise à jour de la console
     const summary = document.getElementById('vote-summary');
-    summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${totalJoueursAyantVote} / ${eligibleCount}`;
-    summary.style.color = "#f1c40f";
+    if (summary) {
+        summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${totalJoueursAyantVote} / ${eligibleCount}`;
+        summary.style.color = "#f1c40f";
+    }
   
     Logger.add(`Données de vote reçues de : ${data.playerName}`);
   
-    // 6. CLÔTURE DU SCRUTIN
+    // Clôture automatique si tout le monde a voté
     if (totalJoueursAyantVote === eligibleCount) {
         Logger.add("Scrutin terminé. Calcul des résultats...");
         resolveVote();

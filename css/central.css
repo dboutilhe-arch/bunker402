@@ -1,215 +1,313 @@
-  
-        body { background: #1a1a1a; color: #e0e0e0; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 10px; }
-        .lobby-code { 
-            font-size: 2.5em; 
-            color: #f1c40f; 
-            background: #000; 
-            padding: 5px 20px; /* Moins de padding vertical */
-            border: 2px solid #f1c40f; /* Bordure jaune assortie au texte */
-            display: inline-block; 
-            margin: 10px;
-            letter-spacing: 5px; /* Pour faire ressortir le code */
-        }
-        
-        /* Jauge d'Oxygène */
-        #oxy-bar { 
-            height: 25px; 
-            background: #333; 
-            border-radius: 15px; 
-            border: 2px solid #555; 
-            overflow: hidden; 
-            width: 80%; 
-            margin: 10px auto; 
-            position: relative; /* sert d'ancre pour le texte absolu */
-        }
-        #oxy-level { height: 100%; background: #3498db; width: 100%; transition: 1s; }
-        .critical { animation: blink 1s infinite; background: #e74c3c !important; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        #oxy-text-central { /* Le texte centralisé par-dessus la barre */
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%); /* Centrage absolu parfait */
-            color: #ffffff;
-            font-weight: bold;
-            font-size: 0.85em;
-            letter-spacing: 2px;
-            text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; /* Ombre noire pour rester lisible sur le bleu ET sur le gris */
-            pointer-events: none; /* Évite que le texte bloque les clics perdus */
-        }
+/* ==========================================================================
+   1. ARCHITECTURE GLOBALE & DESIGN DE BASE
+   ========================================================================== */
 
-        /* Mise en page des Plateaux */
-        .main-layout { 
-            display: flex; 
-            justify-content: space-around; 
-            align-items: stretch; /* Force tous les enfants directs à étirer leur hauteur uniformément */
-            margin-bottom: 30px; 
-        }
+body { 
+    background: #1a1a1a; 
+    color: #e0e0e0; 
+    font-family: 'Courier New', monospace; 
+    text-align: center; 
+    margin: 0; 
+    padding: 10px; 
+}
 
-        /* --- CONFIGURATION DES PLATEAUX --- */
-        .board { 
-            background: #2d2d2d; 
-            padding: 15px; 
-            border-radius: 10px; 
-            border: 1px solid #555; 
-            min-height: 140px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; 
-        }
-        /* Gestion des titres de plateaux pour éviter les décalages */
-        .board h4 {
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-        /* Les plateaux Survie et Crise prennent plus de place (40% chacun) */
-        .main-layout .board:first-child,
-        .main-layout .board:last-child {
-            width: 37%;
-        }
-        /* Le plateau du milieu (Ordre du jour) est réduit à 16% */
-        .main-layout .board:nth-child(2) {
-            width: 16%;
-        }
-        .slot { width: 40px; height: 60px; border: 2px dashed #555; display: inline-block; margin: 5px; border-radius: 4px; }
-        .filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; }
-        .filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; }
-        .filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; }
+/* Code d'accès généré dans le Lobby pour lier les téléphones */
+.lobby-code { 
+    font-size: 2.5em; 
+    color: #f1c40f; 
+    background: #000; 
+    padding: 5px 20px; 
+    border: 2px solid #f1c40f; 
+    display: inline-block; 
+    margin: 10px;
+    letter-spacing: 5px; 
+}
 
-        .info-box {
-            background: #111;
-            border: 2px solid;
-            border-radius: 8px;
-            padding: 10px;
-            min-height: 100px;
-        }
-        
-        #log { background: #000; color: #00ff00; padding: 10px; height: 80px; overflow-y: auto; width: 90%; margin: 10px auto; text-align: left; font-size: 0.8em; }
 
-        /* Animations Lobby */
-        @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(10px); } 
-            to { opacity: 1; transform: translateY(0); } 
-        }
-        #player-list div {
-            background: #333; 
-            color: #2ecc71; 
-            padding: 10px 20px; 
-            border: 1px solid #2ecc71; 
-            border-radius: 5px; 
-            font-weight: bold; 
-            box-shadow: 0 0 10px rgba(46, 204, 113, 0.2); 
-            animation: fadeIn 0.5s ease-out forwards;
-        }
+/* ==========================================================================
+   2. INTERFACES ET COMPTEURS SYSTÈME (HAUT DE PAGE)
+   ========================================================================== */
 
-        /* État par défaut des étiquettes */
-        .player-tag {
-            background: #333;
-            color: #2ecc71;
-            padding: 5px 15px;
-            border: 1px solid #2ecc71;
-            border-radius: 5px;
-            font-weight: bold;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-width: 100px; /* pour que les tags aient tous une taille similaire */
-            line-height: 1.1;  /* Pour que les deux lignes soient proches */
-            transition: all 0.3s ease;
-            flex-grow: 0;     /* Empêche les étiquettes de s'étirer bizarrement */
-        }
+/* Conteneur principal de la jauge d'Oxygène */
+#oxy-bar { 
+    height: 25px; 
+    background: #333; 
+    border-radius: 15px; 
+    border: 2px solid #555; 
+    overflow: hidden; 
+    width: 80%; 
+    margin: 10px auto; 
+    position: relative; /* Sert d'ancre pour le texte absolu par-dessus */
+}
 
-        #player-list .player-tag {
-            min-width: 100px;
-            padding: 5px 10px;
-            font-size: 0.8em;
-        }
-        
-        /* Coloration des étiquettes */
-        .voted-oui { background: #2ecc71 !important; color: #000 !important; border-color: #FFF !important; }
-        .voted-non { background: #e74c3c !important; color: #fff !important; border-color: #FFF !important; }
-        /* CHAMBRE NOIRE : Look rétro-dark ultra-sombre pour les votes anonymes */
-        .voted-secret { 
-            background: #0d0514 !important;      /* Un noir très profond teinté de violet */
-            border-color: #8e44ad !important;     /* Une bordure violette intermédiaire */
-            color: #dfa6ff !important;            /* Un texte violet très clair, presque blanc au centre */
-            /* 🌌 Aura lumineuse autour de la case (interne et externe) */
-            box-shadow: 0 0 15px rgba(142, 68, 173, 0.6), 
-                        inset 0 0 10px rgba(142, 68, 173, 0.4) !important;
-            /* 🔮 Effet néon / rayonnement sur le texte */
-            text-shadow: 0 0 8px rgba(223, 166, 255, 0.8), 
-                         0 0 2px #8e44ad !important;
-                         
-            transition: all 0.5s ease;
-        }
+/* Barre de progression bleue de l'oxygène */
+#oxy-level { 
+    height: 100%; 
+    background: #3498db; 
+    width: 100%; 
+    transition: 1s; 
+}
 
-        .p-name {
-            font-size: 1.1em;
-            margin-bottom: 2px;
-        }
-        .p-job {
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+/* Texte informatif centralisé par-dessus la jauge d'oxygène */
+#oxy-text-central { 
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 0.85em;
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; /* Assure la lisibilité sur le bleu ou le gris */
+    pointer-events: none; 
+}
 
-        #vote-summary {
-            white-space: pre-line; /* Permet de respecter les \n dans le texte */
-            line-height: 1.4;      /* Un peu d'air entre les deux lignes */
-            margin-top: 10px;
-        }
+/* Alerte critique : fait clignoter la jauge en rouge si l'oxygène est <= 1 */
+.critical { 
+    animation: blink 1s infinite; 
+    background: #e74c3c !important; 
+}
 
-        /* Ecran de Fin */
-        #end-screen { 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.98); /* Plus opaque pour le style */
-            display: none; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 1000; 
-            padding: 20px;
-        }
-        
-        #role-reveal-zone {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-            max-width: 900px;
-            z-index: 1001; /* S'assure d'être au-dessus du fond noir */
-        }
-        
-        .reveal-card {
-            background: #1a1a1a;
-            border: 1px solid #444;
-            padding: 15px;
-            border-radius: 8px;
-            min-width: 160px;
-            text-align: left;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        
-        .rev-S { border-left: 5px solid #3498db !important; }  /* Survivant : Bleu */
-        .rev-I { border-left: 5px solid #e74c3c !important; }  /* Infecté : Rouge */
-        .rev-A { border-left: 5px solid #9400d3 !important; }  /* Alpha : Violet */
-        .rev-M { border-left: 5px solid #1b4d3e !important; }  /* Mycologue : Vert foncé */
-        .rev-IM { border-left: 5px solid #d4af37 !important; } /* Immunisé : Jaune doré */
+@keyframes blink { 
+    0% { opacity: 1; } 
+    50% { opacity: 0.5; } 
+    100% { opacity: 1; } 
+}
 
-        /* --- COMPTEURS PIOCHE ET DÉFAUSSE --- */
-        .deck-counters {
-            text-align: center;
-            font-size: 0.9em;
-            letter-spacing: 2px;
-            margin-top: 15px;
-            margin-bottom: 5px;
-            color: #888;
-            font-family: 'Courier New', monospace;
-        }
-        .deck-counters b {
-            font-size: 1.1em;
-        }
-        
+/* Blocs d'informations (Dernier Conseil, Conseil Actuel, Composition) */
+.info-box {
+    background: #111;
+    border: 2px solid;
+    border-radius: 8px;
+    padding: 10px;
+    min-height: 100px;
+}
+
+/* Résumé textuel de l'état du vote en cours sous le Conseil Actuel */
+#vote-summary {
+    white-space: pre-line; 
+    line-height: 1.4;      
+    margin-top: 10px;
+}
+
+
+/* ==========================================================================
+   3. CONFIGURATION ET EMPLACEMENTS DES PLATEAUX DE JEU
+   ========================================================================== */
+
+/* Structure d'alignement des 3 plateaux de décrets */
+.main-layout { 
+    display: flex; 
+    justify-content: space-around; 
+    align-items: stretch; /* Aligne la hauteur de tous les plateaux uniformément */
+    margin-bottom: 30px; 
+}
+
+/* Style générique d'un plateau de décrets */
+.board { 
+    background: #2d2d2d; 
+    padding: 15px; 
+    border-radius: 10px; 
+    border: 1px solid #555; 
+    min-height: 140px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; 
+}
+
+/* Titres des plateaux (ajustés pour éviter les décalages de hauteur) */
+.board h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+/* Répartition des largeurs : Survie (37%) | Suffrage (16%) | Crise (37%) */
+.main-layout .board:first-child,
+.main-layout .board:last-child {
+    width: 37%;
+}
+.main-layout .board:nth-child(2) {
+    width: 16%;
+}
+
+/* Emplacement physique d'une carte décret sur un plateau (Slot pointillé) */
+.slot { 
+    width: 40px; 
+    height: 60px; 
+    border: 2px dashed #555; 
+    display: inline-block; 
+    margin: 5px; 
+    border-radius: 4px; 
+}
+
+/* Coloration des slots quand un décret est posé */
+.filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; } /* Survie : Bleu */
+.filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; } /* Crise : Rouge */
+.filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; } /* Suffrage : Gris */
+
+/* Indicateurs textuels de l'état de la Pioche et de la Défausse */
+.deck-counters {
+    text-align: center;
+    font-size: 0.9em;
+    letter-spacing: 2px;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color: #888;
+    font-family: 'Courier New', monospace;
+}
+.deck-counters b {
+    font-size: 1.1em;
+}
+
+
+/* ==========================================================================
+   4. GESTION DU PERSONNEL & ÉTIQUETTES DES JOUEURS (LOBBY & JEU)
+   ========================================================================== */
+
+/* Alignement des étiquettes des joueurs connectés */
+#player-list, #active-player-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    max-width: 95%;
+    margin: 0 auto;
+}
+
+/* Blocs des joueurs en phase de Lobby (avec animation d'entrée) */
+#player-list div {
+    background: #333; 
+    color: #2ecc71; 
+    padding: 10px 20px; 
+    border: 1px solid #2ecc71; 
+    border-radius: 5px; 
+    font-weight: bold; 
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.2); 
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* Modificateur pour réduire la taille des étiquettes dans la liste du Lobby */
+#player-list .player-tag {
+    min-width: 100px;
+    padding: 5px 10px;
+    font-size: 0.8em;
+}
+
+/* État persistant d'une étiquette joueur sur l'écran de jeu actif */
+.player-tag {
+    background: #333;
+    color: #2ecc71;
+    padding: 5px 15px;
+    border: 1px solid #2ecc71;
+    border-radius: 5px;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 100px; 
+    line-height: 1.1;  
+    transition: all 0.3s ease;
+    flex-grow: 0;     
+}
+
+.p-name { font-size: 1.1em; margin-bottom: 2px; }
+.p-job  { letter-spacing: 1px; text-transform: uppercase; }
+
+
+/* ==========================================================================
+   5. ETATS DE VOTE DES JOUEURS & LOGS INTERFACES
+   ========================================================================== */
+
+/* Changement de couleur des étiquettes selon la validation du scrutin */
+.voted-oui { background: #2ecc71 !important; color: #000 !important; border-color: #FFF !important; }
+.voted-non { background: #e74c3c !important; color: #fff !important; border-color: #FFF !important; }
+
+/* Mode Chambre Noire : Look rétro-néon ultra-sombre pour préserver l'anonymat */
+.voted-secret { 
+    background: #0d0514 !important;      
+    border-color: #8e44ad !important;     
+    color: #dfa6ff !important;            
+    box-shadow: 0 0 15px rgba(142, 68, 173, 0.6), inset 0 0 10px rgba(142, 68, 173, 0.4) !important;
+    text-shadow: 0 0 8px rgba(223, 166, 255, 0.8), 0 0 2px #8e44ad !important;
+    transition: all 0.5s ease;
+}
+
+/* --- Ajustements dynamiques du texte des voix (Poids de vote) --- */
+
+/* Contraste sur étiquette verte (OUI) : texte et métier passent en noir */
+.voted-oui .p-weight span { color: #000000 !important; font-weight: bold !important; }
+.voted-oui .p-job { color: rgba(0, 0, 0, 0.7) !important; }
+
+/* Contraste sur étiquette rouge (NON) : texte et métier passent en blanc brillant */
+.voted-non .p-weight span { color: #ffffff !important; font-weight: bold !important; }
+.voted-non .p-job { color: rgba(255, 255, 255, 0.7) !important; }
+
+/* Contraste en Chambre Noire : Le compteur brille en rose/magenta électrique */
+.voted-secret .p-weight span { color: #ff00ff !important; text-shadow: 0 0 5px rgba(255, 0, 255, 0.8) !important; }
+
+/* Log système (défilement des actions en bas de l'écran central) */
+#log { 
+    background: #000; 
+    color: #00ff00; 
+    padding: 10px; 
+    height: 80px; 
+    overflow-y: auto; 
+    width: 90%; 
+    margin: 10px auto; 
+    text-align: left; 
+    font-size: 0.8em; 
+}
+
+
+/* ==========================================================================
+   6. ÉCRAN DE FIN DE PARTIE & REVELATION DES ROLES
+   ========================================================================== */
+
+/* Fond d'écran de victoire (noir opaque couvrant le plateau) */
+#end-screen { 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.98); 
+    display: none; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1000; 
+    padding: 20px;
+}
+
+/* Zone d'alignement des cartes d'identité révélées */
+#role-reveal-zone {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px 0;
+    max-width: 900px;
+    z-index: 1001; 
+}
+
+/* Carte d'identité de fin de partie d'un membre du personnel */
+.reveal-card {
+    background: #1a1a1a;
+    border: 1px solid #444;
+    padding: 15px;
+    border-radius: 8px;
+    min-width: 160px;
+    text-align: left;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+/* Bordure latérale thématique selon l'allégeance finale révélée */
+.rev-S  { border-left: 5px solid #3498db !important; }  /* Survivant : Bleu */
+.rev-I  { border-left: 5px solid #e74c3c !important; }  /* Infecté : Rouge */
+.rev-A  { border-left: 5px solid #9400d3 !important; }  /* Alpha : Violet */
+.rev-M  { border-left: 5px solid #1b4d3e !important; }  /* Mycologue : Vert foncé */
+.rev-IM { border-left: 5px solid #d4af37 !important; }  /* Immunisé : Jaune doré */
