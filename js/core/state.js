@@ -30,6 +30,7 @@ export let state = {
     curG: 0, 
     curSIdx: -1,
     nextNormalGardien: null, //Stockage du prochain Gardien pour le coup d'état
+    nextForcedS: null,
 
     // Gestion des votes
     votes: { oui: 0, non: 0, total: 0, list: [] },
@@ -71,6 +72,7 @@ export function resetGameState() {
     state.rebellionActive = false;
     state.archivistePowerActive = false;
     state.nextNormalGardien = null;
+    state.nextForcedS = null;
     state.loi493Active = false;
     state.vigileBannedPlayer = null;
     
