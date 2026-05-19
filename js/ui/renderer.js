@@ -103,6 +103,13 @@ export function render() {
     if (oxyText) {
         oxyText.innerText = `NIVEAU D'OXYGÈNE : ${state.oxy} / 3`;
     }
+
+    // Mise à jour des compteurs de pioche et défausse
+    const deckCountEl = document.getElementById('deck-count');
+    const discardCountEl = document.getElementById('discard-count');
+    
+    if (deckCountEl) deckCountEl.innerText = state.deck ? state.deck.length : 0;
+    if (discardCountEl) discardCountEl.innerText = state.discard ? state.discard.length : 0;
     
     // Slots Décrets Survie (Bleu)
     document.getElementById('slots-s').innerHTML = Array(5).fill(0)
