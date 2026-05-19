@@ -195,12 +195,9 @@ export function resolveVote() {
     // 1. Gestion de l'affichage des couleurs (Prend en compte la Chambre Noire)
     state.votes.list.forEach(v => {
         const tags = document.querySelectorAll(`[id="tag-${v.name.toLowerCase()}"]`);
-        
         if (state.slotsSuffrageCard === 'chambre_noire') {
-            // ✨ On applique la classe CSS pour le mode secret
             tags.forEach(t => t.classList.add('voted-secret'));
         } else {
-            // Affichage classique (Vert pour OUI, Rouge pour NON)
             tags.forEach(t => t.classList.add(v.choice === 'OUI' ? 'voted-oui' : 'voted-non'));
         }
     });
@@ -209,8 +206,12 @@ export function resolveVote() {
     const countPhysiqueOui = state.votes.list.filter(v => v.choice === 'OUI').length;
     const countPhysiqueNon = state.votes.list.filter(v => v.choice === 'NON').length;
 
-    // 1.2. ENVOI DU LOG DÉTAILLÉ AVEC COMPARAISON PHYSIQUE ET INFLUENCE
-    Logger.add(`🗳️ SCRUTIN CLOS — RÉSULTATS DU VOTE :`);
+    // 1.2. DÉTERMINATION DYNAMIQUE DU RÉSULTAT POUR LE LOG
+    // Loi de la majorité : STRICTEMENT PLUS de voix POUR que de voix CONTRE
+    const resultatText = (state.votes.oui > state.votes.non) ? "CONSEIL APPROUVÉ" : "CONSEIL REJETÉ";
+
+    // 1.3. ENVOI DU LOG DÉTAILLÉ
+    Logger.add(`🗳️ SCRUTIN CLOS — RÉSULTATS DU VOTE : ${resultatText}`);
     Logger.add(`   • INDIVIDUS : ${countPhysiqueOui} POUR vs ${countPhysiqueNon} CONTRE`);
     Logger.add(`   • INFLUENCE : ${state.votes.oui} VOIX vs ${state.votes.non} VOIX`);
 
