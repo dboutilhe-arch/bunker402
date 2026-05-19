@@ -12,10 +12,31 @@
         }
         
         /* Jauge d'Oxygène */
-        #oxy-bar { height: 25px; background: #333; border-radius: 15px; border: 2px solid #555; overflow: hidden; width: 80%; margin: 10px auto; }
+        #oxy-bar { 
+            height: 25px; 
+            background: #333; 
+            border-radius: 15px; 
+            border: 2px solid #555; 
+            overflow: hidden; 
+            width: 80%; 
+            margin: 10px auto; 
+            position: relative; /* sert d'ancre pour le texte absolu */
+        }
         #oxy-level { height: 100%; background: #3498db; width: 100%; transition: 1s; }
         .critical { animation: blink 1s infinite; background: #e74c3c !important; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        #oxy-text-central { /* Le texte centralisé par-dessus la barre */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centrage absolu parfait */
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 0.85em;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; /* Ombre noire pour rester lisible sur le bleu ET sur le gris */
+            pointer-events: none; /* Évite que le texte bloque les clics perdus */
+        }
 
         /* Mise en page des Plateaux */
         .main-layout { 
@@ -177,4 +198,18 @@
         .rev-A { border-left: 5px solid #9400d3 !important; }  /* Alpha : Violet */
         .rev-M { border-left: 5px solid #1b4d3e !important; }  /* Mycologue : Vert foncé */
         .rev-IM { border-left: 5px solid #d4af37 !important; } /* Immunisé : Jaune doré */
+
+        /* --- COMPTEURS PIOCHE ET DÉFAUSSE --- */
+        .deck-counters {
+            text-align: center;
+            font-size: 0.9em;
+            letter-spacing: 2px;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #888;
+            font-family: 'Courier New', monospace;
+        }
+        .deck-counters b {
+            font-size: 1.1em;
+        }
         

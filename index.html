@@ -31,7 +31,10 @@
     </div>
 
     <div id="game-zone" style="display:none">
-        <div id="oxy-bar"><div id="oxy-level"></div></div>
+        <div id="oxy-bar">
+            <div id="oxy-level"></div>
+            <div id="oxy-text-central">NIVEAU D'OXYGÈNE : 3 / 3</div>
+        </div>
     
         <div id="game-info-row" style="display: none; justify-content: space-around; gap: 10px; margin-bottom: 20px;">
             <div class="info-box" style="border-color: #e74c3c; width: 25%;">
@@ -47,6 +50,12 @@
                 <h4 style="color: #2ecc71; margin: 5px 0;">COMPOSITION</h4>
                 <div id="composition-display" style="text-align: left; font-size: 0.85em; padding-left: 15px;"></div>
             </div>
+        </div>
+
+        <div class="deck-counters">
+            <span>[ PIOCHE : <b id="deck-count" style="color: #f1c40f;">0</b> CARTES ]</span>
+            <span style="color: #555;">|</span>
+            <span>[ DÉFAUSSE : <b id="discard-count" style="color: #7f8c8d;">0</b> CARTES ]</span>
         </div>
     
         <div class="main-layout" style="margin-bottom: 30px;">

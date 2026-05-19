@@ -1,4 +1,4 @@
-// state.js 
+// state.js  
 // Ce fichier centralise toutes les variables qui évoluent pendant la partie.
 
 export let players = []; // On garde players à part car c'est un tableau de référence
@@ -30,6 +30,7 @@ export let state = {
     curG: 0, 
     curSIdx: -1,
     nextNormalGardien: null, //Stockage du prochain Gardien pour le coup d'état
+    nextForcedS: null,
 
     // Gestion des votes
     votes: { oui: 0, non: 0, total: 0, list: [] },
@@ -71,6 +72,7 @@ export function resetGameState() {
     state.rebellionActive = false;
     state.archivistePowerActive = false;
     state.nextNormalGardien = null;
+    state.nextForcedS = null;
     state.loi493Active = false;
     state.vigileBannedPlayer = null;
     
