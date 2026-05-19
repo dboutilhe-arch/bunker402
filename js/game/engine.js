@@ -131,9 +131,41 @@ export function nextTurn() {
         return true;
     });
     
+    // RÉÉLECTION : Si la Sentinelle est déjà figée (différente de -1), on court-circuite le choix !
+    if (state.curSIdx !== -1 && state.currentPhase === "DÉSIGNATION") {
+        const currentS = players[state.curSIdx];
+        Logger.add(`⚖️ SYSTÈME : Réélection active. Passage direct à la législation pour ${activeG.name} & ${currentS.name}.`);
+        
+        // On force le calcul législatif immédiatement en simulant un vote validé d'office !
+        state.currentPhase = "LÉGISLATION_G";
+        
+        const countToDraw = state.archivistePowerActive ? 4 : 3;
+        state.currentLegislativeCards = [];
+        for (let i = 0; i < countToDraw; i++) {
+            state.currentLegislativeCards.push(drawCard()); // Pioche automatique
+        }
+        state.currentLegislativeCards = state.currentLegislativeCards.filter(Boolean);
+        
+        // Nettoyage des flags éphémères
+        if (state.archivistePowerActive) state.archivistePowerActive = false;
+
+        // On envoie les interfaces de session législative aux mobiles
+        players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
+        
+        setTimeout(() => {
+            activeG.conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
+        }, 100);
+
+        syncTerminals(); 
+        render();
+        return; // ON S'ARRÊTE ICI pour ne pas envoyer le message 'YOUR_TURN' de sélection !
+    }
+
+    // --- FLUX NORMAL (Si pas de réélection) ---
     activeG.conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
     syncTerminals(); 
     render();
+}
 }
 
 /**
