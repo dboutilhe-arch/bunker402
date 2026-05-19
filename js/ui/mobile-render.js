@@ -564,12 +564,20 @@ export function showCensoredAlertUI(byPlayer) {
         </div>`;
 }
 
-export function showCleanUI() {
+export function showCleanUI(choix) {
+    const colorChoix = choix === 'OUI' ? '#2ecc71' : '#e74c3c';
+    
     document.getElementById('main-ui').innerHTML = `
         <div style="margin-top: 40px;">
             <h2 style="color: #2ecc71; text-transform: uppercase;">TRANSMISSION REÇUE</h2>
-            <p style="color: #e0e0e0;">Votre vote a été enregistré par la console centrale.</p>
-            <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite;"></div>
+            <p style="color: #e0e0e0; margin-bottom: 15px;">Votre vote a été enregistré par la console centrale.</p>
+            
+            <div style="display: inline-block; padding: 6px 20px; border: 1px solid ${colorChoix}; border-radius: 5px; background: rgba(0,0,0,0.3); margin-bottom: 20px;">
+                <span style="color: #888; font-size: 0.85em; letter-spacing: 1px;">STATUT :</span> 
+                <b style="color: ${colorChoix}; letter-spacing: 1px; font-size: 1.1em;">${choix}</b>
+            </div>
+
+            <div class="loader" style="margin: 10px auto 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite;"></div>
             <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[SYNCHRONISATION TERMINAL EN ATTENTE DU SCRUTIN]</p>
         </div>`;
 }
