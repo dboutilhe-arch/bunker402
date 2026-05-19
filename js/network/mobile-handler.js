@@ -840,7 +840,7 @@ function showEndGame(data) {
 }
 
 function resetAffichageJ() {
-// 1. On nettoie les données locales de la partie finie
+    // 1. On nettoie les données locales de la partie finie
     hasUsedPower = false;
     currentHand = [];
     serverState = {};
@@ -857,6 +857,19 @@ function resetAffichageJ() {
         jobUi.innerHTML = "";
         jobUi.style.opacity = "1"; // On remet l'opacité à 100%
     }
+    
+    // Nettoyage complet des champs persistants
+    const alphaInfo = document.getElementById('alpha-info');
+    if (alphaInfo) alphaInfo.innerHTML = ""; // Efface l'ancien Alpha définitivement
+    
+    const teamGoal = document.getElementById('team-goal');
+    if (teamGoal) teamGoal.innerHTML = "";
+    
+    const bloodStatus = document.getElementById('blood-status');
+    if (bloodStatus) bloodStatus.innerHTML = "";
+    
+    const winCond = document.getElementById('win-cond');
+    if (winCond) winCond.innerHTML = "";
     
     // On réinitialise l'en-tête (Rôle inconnu)
     document.getElementById('role-display').innerText = "RÔLE : EN ATTENTE...";
