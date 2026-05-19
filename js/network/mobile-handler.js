@@ -503,14 +503,53 @@ function updateMiniBoard(state) {
 
 function showGardienUI(eligible) {
     const ui = document.getElementById('main-ui');
-    ui.innerHTML = "<h3>TOUR DU GARDIEN</h3><p>Désignez votre Sentinelle :</p>";
+    ui.innerHTML = `<h3>TOUR DU GARDIEN</h3><p>Désignez votre Sentinelle :</p>`;
+    
+    // Conteneur thématique
+    const container = document.createElement('div');
+    container.className = "theme-sentinelle";
+    
+    // Zone de contrôles (Valider / Annuler absent ici car obligatoire)
+    const controls = document.createElement('div');
+    controls.className = "action-controls";
+    
+    const btnValidate = document.createElement('button');
+    btnValidate.className = "btn-action validate";
+    btnValidate.innerText = "NOMMER LA SENTINELLE";
+    controls.appendChild(btnValidate);
+    container.appendChild(controls);
+
+    let selectedSentinelle = null;
+    const buttonsMap = {};
+
     eligible.forEach(name => {
         const btn = document.createElement('button');
-        btn.className = "btn";
-        btn.innerText = name;
-        btn.onclick = () => conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: myName, sentinelleName: name });
-        ui.appendChild(btn);
+        btn.className = "btn-target";
+        btn.innerText = name.toUpperCase();
+        buttonsMap[name] = btn;
+
+        btn.onclick = () => {
+            // Un-select l'ancien bouton
+            if (selectedSentinelle && buttonsMap[selectedSentinelle]) {
+                buttonsMap[selectedSentinelle].classList.remove('selected');
+            }
+            
+            selectedSentinelle = name;
+            btn.classList.add('selected');
+            
+            // Activation du bouton de validation
+            btnValidate.classList.add('ready');
+        };
+        container.appendChild(btn);
     });
+
+    btnValidate.onclick = () => {
+        if (!selectedSentinelle) return;
+        conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: myName, sentinelleName: selectedSentinelle });
+        ui.innerHTML = `<div style="margin-top:40px;">Transmission des codes d'accès...</div>`;
+    };
+
+    ui.appendChild(container);
 }
 
 function showVoteUI(data) {
@@ -549,14 +588,27 @@ function sendVote(v) {
 
 function showLegislativeUI(role, cards) {
     const ui = document.getElementById('main-ui');
-    currentHand = cards; // Contient maintenant les IDs de cartes
+    currentHand = cards;
     
     ui.innerHTML = `<h3>LÉGISLATION : ${role}</h3>`;
     ui.innerHTML += `<p style="font-size:0.85em; color:#888;">${role === 'GARDIEN' ? 'SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER' : 'SÉLECTIONNEZ LE DÉCRET À PROMULGUER'}</p>`;
     
-    // Conteneur Flex pour aligner nos belles cartes de jeu de société
+    // Contrôles de validation intégrés
+    const controls = document.createElement('div');
+    controls.className = "action-controls theme-power"; // Utilise le thème violet pour les décrets
+    
+    const btnValidate = document.createElement('button');
+    btnValidate.className = "btn-action validate";
+    btnValidate.innerText = role === 'GARDIEN' ? "DÉFAUSSER" : "PROMULGUER";
+    controls.appendChild(btnValidate);
+    ui.appendChild(controls);
+
     const cardContainer = document.createElement('div');
     cardContainer.className = "legislative-container";
+    
+    let selectedCardId = null;
+    let selectedCardIndex = null;
+    const cardsElements = [];
     
     cards.forEach((cardId, i) => {
         const data = DECREETS_DB_LOCAL[cardId];
@@ -564,6 +616,7 @@ function showLegislativeUI(role, cards) {
 
         const cardElement = document.createElement('div');
         cardElement.className = `decree-card card-type-${data.type}`;
+        cardsElements.push(cardElement);
         
         let typeText = data.type === 'S' ? "SURVIE" : (data.type === 'C' ? "CRISE" : "SUFFRAGE");
 
@@ -577,158 +630,181 @@ function showLegislativeUI(role, cards) {
         `;
         
         cardElement.onclick = () => {
-            if (role === 'GARDIEN') {
-                if (!confirm(`Défausser définitivement la carte : ${data.name} ?`)) return;
-                let remaining = [...currentHand]; 
-                remaining.splice(i, 1); // Retire la carte cliquée
-                conn.send({ type: 'DISCARD_DONE', discardedCardId: cardId, remaining: remaining });
-            } else {
-                if (!confirm(`Promulguer et appliquer le décret : ${data.name} ?`)) return;
-                conn.send({ type: 'FINAL_CHOICE', card: cardId });
-            }
-            ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
+            // Nettoyer la sélection précédente
+            cardsElements.forEach(el => el.style.boxShadow = "");
+            
+            selectedCardId = cardId;
+            selectedCardIndex = i;
+            
+            // Effet visuel de sélection de carte (Surbrillance blanche)
+            cardElement.style.boxShadow = "0 0 20px #ffffff, inset 0 0 10px #ffffff";
+            btnValidate.classList.add('ready');
         };
         
         cardContainer.appendChild(cardElement);
     });
     
+    btnValidate.onclick = () => {
+        if (selectedCardId === null) return;
+        
+        if (role === 'GARDIEN') {
+            let remaining = [...currentHand]; 
+            remaining.splice(selectedCardIndex, 1);
+            conn.send({ type: 'DISCARD_DONE', discardedCardId: selectedCardId, remaining: remaining });
+        } else {
+            conn.send({ type: 'FINAL_CHOICE', card: selectedCardId });
+        }
+        ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
+    };
+    
     ui.appendChild(cardContainer);
 }
-
 
 function openTargetSelector(actionType, title, isForced = false) {
     if (!isForced && hasUsedPower) return alert("Capacité déjà utilisée.");
         
     const ui = document.getElementById('main-ui');
-    ui.innerHTML = `<h3>${title}</h3><p>Sélectionnez une cible :</p>`;
+    ui.innerHTML = `<h3>${title}</h3><p>Sélectionnez une ou plusieurs cibles :</p>`;
 
-    // 1. Bouton ANNULER global (si l'action n'est pas imposée par le jeu)
+    // Structure englobante thématique Pouvoir (Violet)
+    const container = document.createElement('div');
+    container.className = "theme-power";
+
+    // Barre d'actions intégrée
+    const controls = document.createElement('div');
+    controls.className = "action-controls";
+
     if (!isForced) {
         const btnCancel = document.createElement('button');
-        btnCancel.className = "btn-cancel";
+        btnCancel.className = "btn-action cancel";
         btnCancel.innerText = "ANNULER";
         btnCancel.onclick = () => conn.send({ type: 'SYNC_REQUEST' });
-        ui.appendChild(btnCancel);
-        
-        const breakLine = document.createElement('div');
-        breakLine.style.width = "100%";
-        ui.appendChild(breakLine);
+        controls.appendChild(btnCancel);
     }
 
-    // ─── CAS SPÉCIAL : PURGE DES SYSTÈMES ──────────────────────────────────
+    const btnValidate = document.createElement('button');
+    btnValidate.className = "btn-action validate";
+    btnValidate.innerText = "VALIDER L'ACTION";
+    controls.appendChild(btnValidate);
+    container.appendChild(controls);
+
+    let selectedTargets = [];
+    const isReorganisation = (actionType === 'REQUEST_REORGANISATION');
+    const targetLimit = isReorganisation ? 2 : 1;
+
+    // Mise à jour de l'intitulé du bouton de validation
+    const updateValidationButtonText = () => {
+        if (isReorganisation) {
+            btnValidate.innerText = `ÉCHANGE (${selectedTargets.length}/2)`;
+        } else {
+            btnValidate.innerText = "VALIDER L'ACTION";
+        }
+    };
+    updateValidationButtonText();
+
+    // ─── CAS PARTICULIER : PURGE DES SYSTÈMES ──────────────────────────────────
     if (actionType === 'REQUEST_PURGE') {
         const crisesActives = serverState?.slotsCriseCards || [];
         
         if (crisesActives.length === 0) {
             ui.innerHTML += "<p style='color:#888;'>Aucun décret de crise actif sur le plateau.</p>";
-            createTargetButton("CONFIRMER (PLATEAU VIDE)", () => {
-                conn.send({ type: 'ACTION_CONFIRMED' });
-            }, "#555");
+            btnValidate.innerText = "CONFIRMER (PLATEAU VIDE)";
+            btnValidate.classList.add('ready');
+            btnValidate.onclick = () => conn.send({ type: 'ACTION_CONFIRMED' });
+            ui.appendChild(container);
             return;
         }
 
+        let selectedPurgeCard = null;
+        const purgeButtons = {};
+
         crisesActives.forEach(cardId => {
             const cardData = DECREETS_DB_LOCAL[cardId] || { name: cardId };
-            createTargetButton(cardData.name.toUpperCase(), () => {
-                if (!confirm(`Purger définitivement le décret : ${cardData.name} ?`)) return;
-                sendPowerAction(actionType, { cardId: cardId }, isForced);
-            }, "#e74c3c");
+            const btn = document.createElement('button');
+            btn.className = "btn-target";
+            btn.innerText = cardData.name.toUpperCase();
+            purgeButtons[cardId] = btn;
+
+            btn.onclick = () => {
+                if (selectedPurgeCard && purgeButtons[selectedPurgeCard]) {
+                    purgeButtons[selectedPurgeCard].classList.remove('selected');
+                }
+                selectedPurgeCard = cardId;
+                btn.classList.add('selected');
+                btnValidate.classList.add('ready');
+            };
+            container.appendChild(btn);
         });
+
+        btnValidate.onclick = () => {
+            if (!selectedPurgeCard) return;
+            sendPowerAction(actionType, { cardId: selectedPurgeCard }, isForced);
+        };
+        ui.appendChild(container);
         return;
     }
 
-    // ─── CAS REORGANISATION : DOUBLE SÉLECTION DYNAMIQUE ─────────────────────
-    if (actionType === 'REQUEST_REORGANISATION') {
-        let selectedTargets = []; // Tableau local pour suivre nos 2 cibles
-        
-        // Création du bouton de validation (Désactivé par défaut)
-        const btnValidate = document.createElement('button');
-        btnValidate.className = "btn";
-        btnValidate.id = "btn-validate-reorg";
-        btnValidate.innerText = "VALIDER L'ÉCHANGE (0/2)";
-        btnValidate.disabled = true;
-        btnValidate.style.opacity = "0.3";
-        btnValidate.style.width = "85%";
-        btnValidate.style.background = "#3498db";
-        btnValidate.style.color = "#000";
-        btnValidate.style.borderColor = "#000";
-        ui.appendChild(btnValidate);
-
-        const listToUse = serverState?.aliveNames || allPlayers;
-        
-        listToUse.forEach(name => {
-            // Le Gardien ne peut pas se cibler lui-même !
-            if (name.toLowerCase() === myName.toLowerCase()) return;
-
-            const btn = document.createElement('button');
-            btn.className = "btn-target";
-            btn.innerText = name.toUpperCase();
-            btn.style.transition = "all 0.2s ease";
-            ui.appendChild(btn);
-
-            btn.onclick = () => {
-                const idx = selectedTargets.indexOf(name);
-
-                if (idx !== -1) {
-                    // Désélection : On l'enlève du tableau et on nettoie les styles inline
-                    selectedTargets.splice(idx, 1);
-                    btn.style.background = "";
-                    btn.style.color = "";
-                    btn.style.borderColor = "";
-                } else {
-                    // Sélection : On vérifie qu'on n'a pas déjà dépassé 2 cibles
-                    if (selectedTargets.length >= 2) return; 
-
-                    selectedTargets.push(name);
-                    // On force le style néon bleu pour que le Gardien voie sa sélection
-                    btn.style.background = "#3498db";
-                    btn.style.color = "#000000";
-                    btn.style.borderColor = "#ffffff";
-                }
-
-                // Mise à jour dynamique du bouton de validation
-                if (selectedTargets.length === 2) {
-                    btnValidate.disabled = false;
-                    btnValidate.style.opacity = "1";
-                    btnValidate.innerText = `CONFIRMER L'ÉCHANGE`;
-                    btnValidate.style.background = "#2ecc71"; // Vert opérationnel
-                } else {
-                    btnValidate.disabled = true;
-                    btnValidate.style.opacity = "0.3";
-                    btnValidate.innerText = `VALIDER L'ÉCHANGE (${selectedTargets.length}/2)`;
-                    btnValidate.style.background = "#3498db";
-                }
-            };
-        });
-
-        // Comportement au clic sur Valider
-        btnValidate.onclick = () => {
-            if (selectedTargets.length !== 2) return;
-            if (!confirm(`Confirmer la permutation biologique entre ${selectedTargets[0]} et ${selectedTargets[1]} ?`)) return;
-            
-            sendPowerAction(actionType, { targetAName: selectedTargets[0], targetBName: selectedTargets[1] }, isForced);
-        };
-        return; 
-    }
-        
-    // ─── CAS NORMAL : SÉLECTION D'UN JOUEUR ─────────────────────────────────
+    // ─── COMPORTEMENT STANDARD ET REORGANISATION (SÉLECTION JOUEURS) ───────────
     const listToUse = serverState?.aliveNames || allPlayers;
-    if (listToUse.length === 0) ui.innerHTML += "<p>Aucune cible éligible détectée.</p>";
+    const playerButtons = {};
 
     listToUse.forEach(name => {
         if (name.toLowerCase() === myName.toLowerCase()) return;
         
-        // Filtres spécifiques à la Censure
         if (actionType === 'REQUEST_CENSURE') {
             if (serverState?.censoredNames?.includes(name)) return;
             if (serverState?.journalisteNames?.includes(name)) return;
         }
         
-        createTargetButton(name.toUpperCase(), () => {
-            if (!confirm(`Confirmer l'action sur ${name} ?`)) return;
-            sendPowerAction(actionType, { targetName: name }, isForced);
-        });
+        const btn = document.createElement('button');
+        btn.className = "btn-target";
+        btn.innerText = name.toUpperCase();
+        playerButtons[name] = btn;
+
+        btn.onclick = () => {
+            const idx = selectedTargets.indexOf(name);
+
+            if (idx !== -1) {
+                // Désélection
+                selectedTargets.splice(idx, 1);
+                btn.classList.remove('selected');
+            } else {
+                // Sélection
+                if (selectedTargets.length >= targetLimit) {
+                    if (targetLimit === 1) {
+                        // Mode mono-cible : on intervertit automatiquement la cible
+                        const oldTarget = selectedTargets.pop();
+                        if (playerButtons[oldTarget]) playerButtons[oldTarget].classList.remove('selected');
+                    } else {
+                        return; // Mode multi-cible : bloqué au maximum
+                    }
+                }
+                selectedTargets.push(name);
+                btn.classList.add('selected');
+            }
+
+            // Gestion dynamique de l'état du bouton de validation
+            if (selectedTargets.length === targetLimit) {
+                btnValidate.classList.add('ready');
+            } else {
+                btnValidate.classList.remove('ready');
+            }
+            updateValidationButtonText();
+        };
+        container.appendChild(btn);
     });
+
+    btnValidate.onclick = () => {
+        if (selectedTargets.length !== targetLimit) return;
+        
+        if (isReorganisation) {
+            sendPowerAction(actionType, { targetAName: selectedTargets[0], targetBName: selectedTargets[1] }, isForced);
+        } else {
+            sendPowerAction(actionType, { targetName: selectedTargets[0] }, isForced);
+        }
+    };
+
+    ui.appendChild(container);
 }
 
 // ─── FONCTIONS UTILITAIRES DE SIMPLIFICATION ──────────────────────────────
