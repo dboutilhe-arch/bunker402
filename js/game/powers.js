@@ -96,8 +96,7 @@ export function executePlayer(requester, targetName) {
     }
 
     // --- LE RESTE DE TON CODE EXECUTEPLAYER RESTE IDENTIQUE ---
-    const isInfected = ['A', 'I', 'IM'].includes(target.role);
-    const revealResult = isInfected ? "INFECTÉ" : "SAIN";
+    const revealResult = target.blood; // Prend la valeur "INFECTÉ" ou "SAIN" (et survit au swap)
 
     Logger.add(`🚨 EXÉCUTION : ${requester.name} a éliminé ${targetName}.`);
     Logger.add(`SYSTÈME : Le sujet ${targetName} était ${revealResult}.`);
