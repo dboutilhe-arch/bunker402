@@ -349,33 +349,34 @@ export function calculatePlayerVoteWeight(player) {
     // 1. CALCUL DE LA BASE (Métiers)
     let weight = 1;
 
-    // Passif Shérif : Poids de base de 2
     if (player.metier === 'Shérif') {
         weight = 2;
     }
 
-    // Passif Fossoyeur : 1 voix de base + 1 voix par mort
     if (player.metier === 'Fossoyeur') {
         const deadCount = players.filter(p => !p.isAlive).length;
         weight += deadCount;
     }
     
     // 2. APPLICATION DES MULTIPLICATEURS (Décrets de Suffrage)
-    // CAS A : Conseil Restreint (Le vote des membres du conseil est DOUBLÉ)
     if (state.slotsSuffrageCard === 'conseil_restreint') {
         const isGardien = (player.name === players[state.curG]?.name);
         const isSentinelle = (state.curSIdx !== -1 && player.name === players[state.curSIdx]?.name);
         if (isGardien || isSentinelle) {
-            weight *= 2; // Multiplication cumulée
+            weight *= 2;
         }
     } 
-    // CAS C : Insurrection Populaire (Le vote des Civils est DOUBLÉ)
     else if (state.slotsSuffrageCard === 'insurrection_populaire' && player.metier === 'Civil') {
-        weight *= 2; // ✨ Multiplication cumulée !
+        weight *= 2;
     }
 
-    // Note : Le cas "Grève du Zèle" est toujours géré à part lors du scrutin physique 
-    // car il nécessite de savoir si le joueur clique sur "NON".
+    // Si la Grève du Zèle est active, on regarde si le joueur A DÉJÀ voté NON
+    if (state.slotsSuffrageCard === 'greve_zele') {
+        const joueurAVote = state.votes.list.find(v => v.name.toLowerCase() === player.name.toLowerCase());
+        if (joueurAVote && joueurAVote.choice === 'NON') {
+            weight *= 2; // Le poids double rétroactivement sur l'étiquette s'il a refusé !
+        }
+    }
 
     return weight;
 }
