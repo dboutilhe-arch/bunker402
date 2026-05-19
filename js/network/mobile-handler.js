@@ -312,6 +312,8 @@ function setupIdentity(data) {
 
     if (data.alphaName && (data.role === 'I' || data.role === 'M')) {
         document.getElementById('alpha-info').innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
+    } else {
+        document.getElementById('alpha-info').innerHTML = ""; // vide le champ pour les survivants/alphas/immunisés
     }
 
     // Bouton de métier
