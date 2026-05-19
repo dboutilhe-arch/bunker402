@@ -340,39 +340,41 @@ export function updateCensureUI(player) {
 }
 
 /**
- * Calcule le poids de vote dynamique d'un joueur selon ses passifs et le suffrage actif
+ * Calcule le poids de vote dynamique d'un joueur selon ses passifs et le suffrage actif (Effets cumulés)
  */
 export function calculatePlayerVoteWeight(player) {
     if (!player.isAlive || player.isCensored) return 0;
 
+    // 1. CALCUL DE LA BASE (Métiers)
     let weight = 1;
 
-    // Passif Shérif : Compte double de base
+    // Passif Shérif : Poids de base de 2
     if (player.metier === 'Shérif') {
         weight = 2;
     }
 
-    // Passif Fossoyeur : +1 voix par joueur mort
+    // Passif Fossoyeur : 1 voix de base + 1 voix par mort
     if (player.metier === 'Fossoyeur') {
         const deadCount = players.filter(p => !p.isAlive).length;
         weight += deadCount;
     }
     
-    // CAS A : Conseil Restreint (Gardien & Sentinelle comptent double)
+    // 2. APPLICATION DES MULTIPLICATEURS (Décrets de Suffrage)
+    // CAS A : Conseil Restreint (Le vote des membres du conseil est DOUBLÉ)
     if (state.slotsSuffrageCard === 'conseil_restreint') {
         const isGardien = (player.name === players[state.curG]?.name);
         const isSentinelle = (state.curSIdx !== -1 && player.name === players[state.curSIdx]?.name);
         if (isGardien || isSentinelle) {
-            weight = 2;
+            weight *= 2; // Multiplication cumulée
         }
     } 
-    // CAS C : Insurrection Populaire (Les Civils comptent double)
+    // CAS C : Insurrection Populaire (Le vote des Civils est DOUBLÉ)
     else if (state.slotsSuffrageCard === 'insurrection_populaire' && player.metier === 'Civil') {
-        weight = 2;
+        weight *= 2; // ✨ Multiplication cumulée !
     }
 
-    // Note : Le cas "Grève du Zèle" n'est pas inclus ici car il ne double le poids 
-    // que SI le joueur vote "NON" (spécifique au choix fait lors du scrutin).
+    // Note : Le cas "Grève du Zèle" est toujours géré à part lors du scrutin physique 
+    // car il nécessite de savoir si le joueur clique sur "NON".
 
     return weight;
 }
