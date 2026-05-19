@@ -166,7 +166,6 @@ export function nextTurn() {
     syncTerminals(); 
     render();
 }
-}
 
 /**
  * Calcul du résultat du vote
