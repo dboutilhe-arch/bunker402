@@ -7,7 +7,7 @@ import {
     showEndGame, resetAffichageJ, showSentinelle493View, 
     showPurgeResult, showReorganisationResult, showBloodSwappedAlert,
     showWaitSentinelleUI, showWaitLegislationUI, showWaitPowerUI, 
-    showDeadUI, showCensoredAlertUI, showCleanUI, showWaitPropheteVoteUI, showTalionUI();                 
+    showDeadUI, showCensoredAlertUI, showCleanUI, showWaitPropheteVoteUI, showTalionUI                 
 } from '../ui/mobile-render.js';
 
 // Conteneur d'état dynamique partagé par référence entre les modules
