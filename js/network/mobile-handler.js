@@ -4,7 +4,7 @@ import {
     updateMiniBoard, setupIdentity, showGardienUI, showVoteUI, 
     showLegislativeUI, openTargetSelector, showBloodResult, 
     showExecutionResult, showCensureResult, showCoupEtatResult, 
-    showEndGame, resetAffichageJ, showSentinelle493View, 
+    showEndGame, resetAffichageJ, showView493, 
     showPurgeResult, showReorganisationResult, showBloodSwappedAlert,
     showWaitSentinelleUI, showWaitLegislationUI, showWaitPowerUI, 
     showDeadUI, showCensoredAlertUI, showCleanUI, showWaitPropheteVoteUI, showTalionUI,
@@ -213,10 +213,6 @@ function handleData(data) {
 
         case 'GARDIEN_493_PICK':
             showLegislativeUI("GARDIEN (49.3 - CHOIX FINAL)", data.cards);
-            break;
-
-        case 'SENTINELLE_493_VIEW':
-            showSentinelle493View(data.cards);
             break;
 
         case 'REORGANISATION_RESULT':
