@@ -134,7 +134,34 @@ export function nextTurn() {
         Logger.add(`⚖️ SYSTÈME : Réélection active. Passage direct à la législation pour ${activeG.name.toUpperCase()} & ${currentS.name.toUpperCase()}.`);
         
         state.currentPhase = "LÉGISLATION_G";
+
+        // 🔮 INTERCEPTION PROPHÈTE PENDANT LA RÉÉLECTION
+        if (state.propheteIdx !== -1) {
+            const activeProphete = players[state.propheteIdx];
+            Logger.add(`🔮 PROPHÉTIE : Le Prophète ${activeProphete.name} intercepte la pioche de la Réélection et tire 4 cartes !`);
+            
+            state.currentLegislativeCards = [];
+            for (let i = 0; i < 4; i++) {
+                state.currentLegislativeCards.push(drawCard());
+            }
+            state.currentLegislativeCards = state.currentLegislativeCards.filter(Boolean);
+
+            // On met tout le monde en attente
+            players.filter(p => p.isAlive).forEach(p => {
+                p.conn.send({ type: 'WAIT_LEGISLATION', step: `PROPHÈTE (${activeProphete.name})` });
+            });
+
+            // On envoie les 4 cartes au Prophète
+            setTimeout(() => {
+                activeProphete.conn.send({ type: 'PROPHETE_PICK', cards: state.currentLegislativeCards });
+            }, 100);
+
+            syncTerminals();
+            render();
+            return; // 🛑 ON COUPE LE FLUX ICI ! Le Gardien attendra que le Prophète défausse.
+        }
         
+        // 🛑 FLUX NORMAL STANDARD DE RÉÉLECTION (Si pas de Prophète)
         const countToDraw = state.archivistePowerActive ? 4 : 3;
         state.currentLegislativeCards = [];
         for (let i = 0; i < countToDraw; i++) {
@@ -154,11 +181,6 @@ export function nextTurn() {
         render();
         return; 
     }
-
-    activeG.conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
-    syncTerminals(); 
-    render();
-}
 
 /**
  * Calcul du résultat du vote
