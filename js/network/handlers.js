@@ -381,3 +381,22 @@ function handleVigileBan(conn, data) {
         restorePlayerAction(currentGardien);
     }
 }
+
+export function handlePropheteDiscard(conn, data) {
+    // data.discardedCardId : l'ID de la carte jetée par le prophète
+    // data.remainingCards : le tableau des 3 cartes restantes
+    
+    Logger.add(`🔮 PROPHÉTIE : Le Prophète a écarté une carte secrètement et transmet les 3 restantes au Gardien.`);
+    
+    // 1. On met la carte écartée dans la défausse
+    state.discard.push(data.discardedCardId);
+    
+    // 2. On transmet les 3 cartes restantes au Gardien actuel pour qu'il fasse son travail normal
+    const activeG = players[state.curG];
+    activeG.conn.send({
+        type: 'DECREET_PICK', // Le Gardien ne voit aucune différence, il reçoit ses 3 cartes comme d'habitude !
+        cards: data.remainingCards
+    });
+    
+    syncTerminals();
+}
