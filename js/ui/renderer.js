@@ -158,14 +158,23 @@ export function render() {
         </div>`;
 
     // ✨ METTRE À JOUR LE POIDS DES VOTES SOUS LES ÉTIQUETTES DE L'ÉCRAN CENTRAL
-    players.forEach(p => {
-        // On cible uniquement les étiquettes de la zone de jeu active pour éviter de casser le lobby
+    players.forEach((p, idx) => { // ◄── Ajout de idx ici
         const activeList = document.getElementById('active-player-list');
         if (!activeList) return;
         
         const tag = activeList.querySelector(`[id="tag-${p.name.toLowerCase()}"]`);
         if (tag) {
-            // On cherche ou on crée une div dédiée au poids pour éviter d'écraser le nom/métier
+            // On gère la classe et le nom si c'est le Prophète
+            const nameDiv = tag.querySelector('.p-name');
+            if (idx === state.propheteIdx) {
+                tag.classList.add('prophete-style');
+                if (nameDiv && !nameDiv.innerHTML.includes("🔮")) {
+                    nameDiv.innerHTML = `🔮 ${p.name.toUpperCase()} [PROPHÈTE]`;
+                }
+            } else {
+                tag.classList.remove('prophete-style');
+            }
+
             let weightDiv = tag.querySelector('.p-weight');
             if (!weightDiv) {
                 weightDiv = document.createElement('div');
