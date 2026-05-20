@@ -40,10 +40,15 @@ export const POWER_MAP = {
     //default: { 2: 'CENSURE', 3: 'TEST', 4: 'EXEC', 5: 'EXEC' }
 };
 
-//export const JOBS_LIST = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile', 'Scientifique', 'Ingénieur', 'Pilote'];
+// En Projet :
+//export const JOBS_LIST = ['Technicien', 'Psychologue', 'Contrebandier', 'Éclaireur', 'Scientifique', 'Ingénieur', 'Pilote'];
+
+// Déjà implémenté :
 //export const JOBS_LIST = ['Militaire', 'Docteur', 'Intendant', 'Shérif', 'Fossoyeur', 'Journaliste', 'Archiviste', 'Vigile']
+
 //TEST
 export const JOBS_LIST = ['Militaire', 'Fossoyeur']
+
 export const DEFAULT_JOB = "Sans emploi";
 
 /**
@@ -89,14 +94,16 @@ export const DECREETS_DATABASE = {
  */
 export const INITIAL_DECK_LIST = [
     //TEST
-    'conseil_restreint', 'greve_zele', 'chambre_noire', 'licenciement'
+    'conseil_restreint', 'greve_zele', 'chambre_noire', 'licenciement', 'presse'
     /*
     // 10 Bleues
-    'test_sanguin', 'test_sanguin', 'fuite_air_s', 'rebellion', 'purge', 'reorganisation',
-    // 'commission', 'presse', 'transparence', 'contre_pouvoir',
+    'test_sanguin', 'test_sanguin', 'fuite_air_s', 'rebellion', 'purge', 'reorganisation', 'presse',
+    // A venir: 'commission', 'transparence', 'contre_pouvoir',
+    
     // 15 Rouges
     'censure', 'censure', 'censure', 'sabotage', 'fuite_air_c', 'court_circuit', 'coup_etat', 'loi_493', 'loi_493', 'reelection', 'prophete', 'talion', 'licenciement',
-    // 'silence', 'secret_etat',
+    // A venir : 'silence', 'secret_etat',
+    
     // 4 Grises
     'conseil_restreint', 'greve_zele', 'chambre_noire', 'insurrection_populaire'
     */

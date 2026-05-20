@@ -29,6 +29,19 @@ export function handleDiscardFromNet(cardId, remainingCards) {
     state.discard.push(cardId); 
     state.currentLegislativeCards = remainingCards; // Contient les 2 cartes restantes
 
+    // LIBERTÉ DE LA PRESSE
+    if (state.activeEffectsS.includes('presse')) {
+        const discardedCardData = DECREETS_DATABASE[cardId];
+        if (discardedCardData) {
+            let typeString = "";
+            if (discardedCardData.type === 'S') typeString = "BLEU (SURVIE)";
+            else if (discardedCardData.type === 'C') typeString = "ROUGE (CRISE)";
+            else if (discardedCardData.type === 'F') typeString = "GRIS (SUFFRAGE)";
+            
+            Logger.add(`📰 LIBERTÉ DE LA PRESSE : Le Gardien a défaussé le décret ${discardedCardData.name.toUpperCase()} [${typeString}].`);
+        }
+    }
+    
     // INTERCEPTION 49.3 ACTIVÉ
     if (state.loi493Active) {
         state.loi493Active = false; // Effet consommé !
