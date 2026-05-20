@@ -603,21 +603,11 @@ export function showDeadUI(reveal) {
 }
 
 export function showCensoredAlertUI(byPlayer) {
-    const isTalion = (byPlayer === "LOI DU TALION");
-    
-    // Titre dynamique
-    const title = isTalion ? "⚖️ LOI DU TALION" : "🤐 CENSURE ACTIVÉE";
-    
-    // Description dynamique
-    const desc = isTalion 
-        ? `<p>Votre précédent Conseil a été rejeté par le complexe.</p><p style="color: #f1c40f; margin-top: 10px;">En vertu de la Loi du Talion, <b>vous êtes privé(e) de vote</b> pour ce scrutin.</p>` 
-        : `<p>Le joueur <b>${byPlayer}</b> a suspendu vos droits de vote pour ce scrutin.</p>`;
-
     document.getElementById('main-ui').innerHTML = `
         <div style="border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; background: rgba(231, 76, 60, 0.1);">
-            <h2 style="color: #e74c3c;">${title}</h2>
-            ${desc}
-            <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">Attendez la fin du tour...</p>
+             <h2 style="color: #e74c3c;">🤐 CENSURE ACTIVÉE</h2>
+             <p>Le joueur <b>${byPlayer}</b> a suspendu vos droits de vote pour ce scrutin.</p>
+             <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">Attendez la fin du tour...</p>
         </div>`;
 }
 
