@@ -219,6 +219,19 @@ body {
 .p-name { font-size: 1.1em; margin-bottom: 2px; }
 .p-job  { letter-spacing: 1px; text-transform: uppercase; }
 
+/* Étiquette du Prophète */
+.prophete-style {
+    border: 2px dashed #9b59b6 !important; /* Bordure violette discontinue */
+    background: rgba(155, 89, 182, 0.15) !important;
+    box-shadow: 0 0 10px rgba(155, 89, 182, 0.5);
+    animation: pulseProphete 2s infinite alternate;
+}
+
+@keyframes pulseProphete {
+    from { opacity: 0.8; }
+    to { opacity: 1; box-shadow: 0 0 15px rgba(155, 89, 182, 0.8); }
+}
+
 
 /* ==========================================================================
    5. ETATS DE VOTE DES JOUEURS & LOGS INTERFACES
