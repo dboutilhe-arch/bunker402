@@ -311,3 +311,77 @@ body {
 .rev-A  { border-left: 5px solid #9400d3 !important; }  /* Alpha : Violet */
 .rev-M  { border-left: 5px solid #1b4d3e !important; }  /* Mycologue : Vert foncé */
 .rev-IM { border-left: 5px solid #d4af37 !important; }  /* Immunisé : Jaune doré */
+
+/* ==========================================================================
+   7. DESIGN DU PANNEAU DES DIRECTIVES PERMANENTES ACTIVES
+   ========================================================================== */
+
+#active-rules-panel {
+    margin: 20px auto;
+    background: #111;
+    border: 2px solid #555;
+    border-radius: 8px;
+    padding: 15px;
+    width: 90%;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+}
+
+#active-rules-panel h3 {
+    text-transform: uppercase;
+    font-size: 1.1em;
+    color: #fff;
+    border-bottom: 1px solid #444;
+    padding-bottom: 8px;
+    margin-top: 0;
+    letter-spacing: 2px;
+}
+
+.rules-columns {
+    display: flex;
+    gap: 15px;
+    justify-content: space-around;
+}
+
+.rules-column {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    padding: 12px;
+    border-radius: 4px;
+    text-align: left;
+}
+
+/* Couleurs thématiques des bordures de colonnes */
+.blue-column { border-top: 4px solid #3498db; }
+.red-column { border-top: 4px solid #e74c3c; }
+.grey-column { border-top: 4px solid #7f8c8d; }
+
+.rules-column h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.rules-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.rules-column li {
+    font-size: 0.75em;
+    padding: 8px;
+    margin-bottom: 6px;
+    background: #0d0d0d;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #e0e0e0;
+    line-height: 1.3;
+}
+
+.rules-column li strong {
+    color: #fff;
+}

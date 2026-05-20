@@ -19,6 +19,8 @@ export let state = {
     slotsSurvieCards: [], 
     slotsCriseCards: [],
     slotsSuffrageCard: null,
+    activeEffectsS: [], // Contient les IDs des décrets bleus dont l'effet permanent est actif (Max 2)
+    activeEffectsC: [], // Contient les IDs des décrets rouges dont l'effet permanent est actif (Max 2)
     rebellionActive: false, // Suivi du décret Rébellion
     loi493Active: false,
     
@@ -63,6 +65,8 @@ export function resetGameState() {
     state.slotsSurvieCards = [];
     state.slotsCriseCards = [];
     state.slotsSuffrageCard = null;
+    state.activeEffectsS = [];
+    state.activeEffectsC = [];
     state.votes = { oui: 0, non: 0, total: 0, list: [] };
     state.isProcessingAction = false;
     state.currentPhase = "DÉSIGNATION";
