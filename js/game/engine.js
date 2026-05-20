@@ -171,11 +171,22 @@ export function nextTurn() {
         
         if (state.archivistePowerActive) state.archivistePowerActive = false;
 
-        players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
+        // GESTION DU CONTRE-POUVOIR
+        const isContrePouvoir = state.activeEffectsS.includes('contre_pouvoir');
         
-        setTimeout(() => {
-            activeG.conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
-        }, 100);
+        if (isContrePouvoir) {
+            state.currentPhase = "LÉGISLATION_S_DISCARD";
+            players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
+            setTimeout(() => {
+                players[state.curSIdx].conn.send({ type: 'SENTINELLE_DISCARD_PICK', cards: state.currentLegislativeCards });
+            }, 100);
+        } else {
+            state.currentPhase = "LÉGISLATION_G";
+            players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
+            setTimeout(() => {
+                players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
+            }, 100);
+        }
 
         syncTerminals(); 
         render();
@@ -265,15 +276,26 @@ export function resolveVote() {
 
         state.oxy = getOxygenMaxLimit();
 
-        players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
-        
         if (state.crise >= 3 && players[state.curSIdx].role === 'A' && !state.activeEffectsS.includes('rebellion')) {
             return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
         }
 
-        setTimeout(() => {
-            players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
-        }, 100);
+        // GESTION DU CONTRE-POUVOIR
+        const isContrePouvoir = state.activeEffectsS.includes('contre_pouvoir');
+        
+        if (isContrePouvoir) {
+            state.currentPhase = "LÉGISLATION_S_DISCARD";
+            players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
+            setTimeout(() => {
+                players[state.curSIdx].conn.send({ type: 'SENTINELLE_DISCARD_PICK', cards: state.currentLegislativeCards });
+            }, 100);
+        } else {
+            state.currentPhase = "LÉGISLATION_G";
+            players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
+            setTimeout(() => {
+                players[state.curG].conn.send({ type: 'GARDIEN_PICK', cards: state.currentLegislativeCards });
+            }, 100);
+        }
 
     } else {
         state.oxy--;
