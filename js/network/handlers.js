@@ -27,6 +27,10 @@ export function handlePlayerData(conn, data) {
             handleDiscard(data);
             break;
 
+        case 'PROPHETE_DISCARD_DONE':
+            handlePropheteDiscard(conn, data);
+            break;
+
         case 'FINAL_CHOICE':
             handleFinalChoice(data);
             break;
@@ -139,6 +143,12 @@ function handleSentinelle(data) {
 function handleVote(data) {
     const voter = players.find(p => p.name.toLowerCase() === data.playerName.toLowerCase());
 
+    // 🔮 SÉCURITÉ PROPHÈTE : Le prophète a abandonné son droit de vote
+    if (voter && players.indexOf(voter) === state.propheteIdx) {
+        Logger.add(`⚠️ PROTOCOLE : Le Prophète ${voter.name} a tenté de voter, mais sa voix est désactivée.`);
+        return; 
+    }
+
     // Sécurités fondamentales
     if (!voter || !voter.isAlive || voter.isCensored) return;
 
@@ -163,11 +173,11 @@ function handleVote(data) {
 
     render();
   
-    // Compteur de personnes physiques attendues
-    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
+    // Compteur de personnes physiques attendues (exclusion des morts, des censurés et du Prophète)
+    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored && players.indexOf(p) !== state.propheteIdx).length;
     const totalJoueursAyantVote = state.votes.list.length;
 
-    // Mise à jour de la console
+    // Mise à jour de la console centrale PC
     const summary = document.getElementById('vote-summary');
     if (summary) {
         summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${totalJoueursAyantVote} / ${eligibleCount}`;
@@ -176,7 +186,7 @@ function handleVote(data) {
   
     Logger.add(`Données de vote reçues de : ${data.playerName}`);
   
-    // Clôture automatique si tout le monde a voté
+    // Clôture automatique si toutes les voix physiques éligibles sont reçues
     if (totalJoueursAyantVote === eligibleCount) {
         Logger.add("Scrutin terminé. Calcul des résultats...");
         resolveVote();
@@ -251,7 +261,6 @@ function handleExecution(conn, data) {
     }
 }
 
-// ✨ FIX : Nettoyage de la syntaxe cassée
 function handleReorganisation(conn, data) {
     const requester = players.find(p => p.conn === conn);
     if (!requester || !requester.isAlive) return;
@@ -333,18 +342,23 @@ function handleCoupEtat(conn, data) {
     const targetIdx = players.findIndex(p => p.name === data.targetName);
     if (targetIdx === -1 || !players[targetIdx].isAlive) return;
 
+    // 🔮 SÉCURITÉ CRITIQUE : Le Prophète ne peut pas subir de Coup d'État pour devenir Gardien
+    if (targetIdx === state.propheteIdx) {
+        Logger.add(`⚠️ PROTOCOLE SÉCURITÉ : Tentative de Coup d'État sur le Prophète annulée.`);
+        requester.conn.send({ type: 'SYNC_REQUEST' }); // Force le reset du mobile fraudeur
+        return;
+    }
+
     Logger.add(`🔥 COUP D'ÉTAT : ${requester.name} a déstabilisé le pouvoir et téléporté la ligne temporelle sur ${data.targetName} !`);
 
-    // ✨ LA SIMPLIFICATION INDICE : On force le Gardien sur la cible définitivement
+    // On force le Gardien sur la cible
     state.curG = targetIdx;
-
-    // On s'aligne sur le système de validation de Censure/Test Sanguin
     state.currentPowerActive = true;
 
     requester.conn.send({
         type: 'COUP_ETAT_RESULT',
         target: data.targetName,
-        isForced: true // Force l'attente du clic sur le bouton OK
+        isForced: true 
     });
 
     syncTerminals();
@@ -380,4 +394,34 @@ function handleVigileBan(conn, data) {
     if (currentGardien && currentGardien.conn.open) {
         restorePlayerAction(currentGardien);
     }
+}
+
+export function handlePropheteDiscard(conn, data) {
+    Logger.add(`🔮 PROPHÉTIE : Le Prophète a écarté une carte secrètement et transmet les 3 restantes au Gardien.`);
+    
+    // 1. On stocke la carte écartée dans la défausse globale
+    state.discard.push(data.discardedCardId);
+    
+    // 2. On met à jour l'état central pour la phase législative du Gardien
+    state.currentPhase = "LÉGISLATION_G";
+    state.currentLegislativeCards = data.remaining; // Correction du nom de variable (data.remaining)
+    
+    // 3. On allume l'écran du Gardien actuel avec les 3 cartes filtrées
+    const activeG = players[state.curG];
+    if (activeG && activeG.conn && activeG.conn.open) {
+        activeG.conn.send({
+            type: 'GARDIEN_PICK', // Modifié pour forcer l'affichage de l'interface du Gardien
+            cards: data.remaining
+        });
+    }
+    
+    // 4. On met tous les autres joueurs (y compris le prophète qui a fini) en attente du Gardien
+    players.forEach((p, idx) => {
+        if (p.isAlive && idx !== state.curG) {
+            p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
+        }
+    });
+    
+    syncTerminals();
+    render();
 }

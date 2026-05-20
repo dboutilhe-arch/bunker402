@@ -219,6 +219,56 @@ body {
 .p-name { font-size: 1.1em; margin-bottom: 2px; }
 .p-job  { letter-spacing: 1px; text-transform: uppercase; }
 
+/* _______________________________Étiquette du Prophète __________________________________________*/
+
+.prophete-style {
+    /* Fond blanc immaculé */
+    background: #ffffff !important;
+    border-color: #ffffff !important;
+    
+    /* L'AURA DIVINE : rayonne en blanc autour de l'étiquette */
+    box-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.5),   
+        0 0 20px rgba(255, 255, 255, 0.3),   
+        0 0 40px rgba(255, 255, 255, 0.1),   
+        inset 0 0 10px rgba(0, 0, 0, 0.05); /* Ombre interne ultra légère pour le relief */
+
+    animation: divineGlow 4s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+}
+
+/* Texte en noir absolu pour le contraste */
+.prophete-style .p-name {
+    color: #000000 !important;
+    text-shadow: none !important; /* Pas d'ombre, on veut de la lisibilité pure */
+    font-weight: 900 !important;
+}
+
+/* Gris très foncé pour le métier pour hiérarchiser l'info */
+.prophete-style .p-job {
+    color: #333333 !important;
+    font-weight: bold !important;
+}
+
+/* Animation de pulsation de l'aura blanche */
+@keyframes divineGlow {
+    0%, 100% {
+        box-shadow: 
+            0 0 15px rgba(255, 255, 255, 0.6),
+            0 0 25px rgba(255, 255, 255, 0.4),
+            0 0 50px rgba(255, 255, 255, 0.2),
+            inset 0 0 12px rgba(0, 0, 0, 0.05);
+    }
+    50% {
+        box-shadow: 
+            0 0 10px rgba(255, 255, 255, 0.4),
+            0 0 20px rgba(255, 255, 255, 0.2),
+            0 0 35px rgba(255, 255, 255, 0.1),
+            inset 0 0 8px rgba(0, 0, 0, 0.02);
+    }
+}
+
 
 /* ==========================================================================
    5. ETATS DE VOTE DES JOUEURS & LOGS INTERFACES

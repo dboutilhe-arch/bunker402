@@ -186,14 +186,30 @@ export function showLegislativeUI(role, cards) {
     mobileState.currentHand = cards;
     
     ui.innerHTML = `<h3>LÉGISLATION : ${role}</h3>`;
-    ui.innerHTML += `<p style="font-size:0.85em; color:#888;">${role === 'GARDIEN' ? 'SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER' : 'SÉLECTIONNEZ LE DÉCRET À PROMULGUER'}</p>`;
+    
+    // Ajustement de la consigne textuelle si c'est le Prophète
+    let descAction = 'SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER';
+    if (role === 'PROPHÈTE') {
+        descAction = 'SÉLECTIONNEZ LE DÉCRET À ÉCARTER (3 RESTANTS POUR LE GARDIEN)';
+    } else if (role !== 'GARDIEN') {
+        descAction = 'SÉLECTIONNEZ LE DÉCRET À PROMULGUER';
+    }
+    
+    ui.innerHTML += `<p style="font-size:0.85em; color:#888;">${descAction}</p>`;
     
     const controls = document.createElement('div');
     controls.className = "action-controls theme-power";
     
     const btnValidate = document.createElement('button');
     btnValidate.className = "btn-action validate";
-    btnValidate.innerText = role === 'GARDIEN' ? "DÉFAUSSER" : "PROMULGUER";
+    
+    // Libellé du bouton
+    if (role === 'PROPHÈTE' || role === 'GARDIEN') {
+        btnValidate.innerText = "DÉFAUSSER";
+    } else {
+        btnValidate.innerText = "PROMULGUER";
+    }
+    
     controls.appendChild(btnValidate);
     ui.appendChild(controls);
 
@@ -227,23 +243,45 @@ export function showLegislativeUI(role, cards) {
             cardsElements.forEach(el => el.style.boxShadow = "");
             selectedCardId = cardId;
             selectedCardIndex = i;
-            cardElement.style.boxShadow = "0 0 20px #ffffff, inset 0 0 10px #ffffff";
+            // Si c'est le prophète, on fait briller la carte sélectionnée en violet magique, sinon en blanc standard
+            if (role === 'PROPHÈTE') {
+                cardElement.style.boxShadow = "0 0 20px #9b59b6, inset 0 0 10px #9b59b6";
+            } else {
+                cardElement.style.boxShadow = "0 0 20px #ffffff, inset 0 0 10px #ffffff";
+            }
             btnValidate.classList.add('ready');
         };
         cardContainer.appendChild(cardElement);
     });
     
-    btnValidate.onclick = () => {
+   btnValidate.onclick = () => {
         if (selectedCardId === null) return;
         
-        if (role === 'GARDIEN') {
+        if (role === 'PROPHÈTE') {
+            // 🔮 LOGIQUE MOBILE DU PROPHÈTE : On filtre pour lui donner les 3 cartes restantes
+            let remaining = [...mobileState.currentHand];
+            remaining.splice(selectedCardIndex, 1);
+            
+            // FLUX GARDIEN
+            mobileState.conn.send({ 
+                type: 'PROPHETE_DISCARD_DONE', 
+                discardedCardId: selectedCardId, 
+                remaining: remaining 
+            });
+            ui.innerHTML = `<div style="margin-top:40px; color:#9b59b6;">🔮 Alignement Prophétique transmis...<br>Génération des choix du Gardien.</div>`;
+            
+        } else if (role === 'GARDIEN') {
+            // FLUX STANDARD GARDIEN
             let remaining = [...mobileState.currentHand]; 
             remaining.splice(selectedCardIndex, 1);
             mobileState.conn.send({ type: 'DISCARD_DONE', discardedCardId: selectedCardId, remaining: remaining });
+            ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
+            
         } else {
+            // FLUX STANDARD SENTINELLE
             mobileState.conn.send({ type: 'FINAL_CHOICE', card: selectedCardId });
+            ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
         }
-        ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
     };
     
     ui.appendChild(cardContainer);
@@ -319,9 +357,18 @@ export function openTargetSelector(actionType, title, isForced = false) {
 
     listToUse.forEach(name => {
         if (name.toLowerCase() === mobileState.myName.toLowerCase()) return;
+        
+        // 1. Sécurité Métier : Censure de l'Intendant
         if (actionType === 'REQUEST_CENSURE') {
             if (mobileState.serverState?.censoredNames?.includes(name)) return;
             if (mobileState.serverState?.journalisteNames?.includes(name)) return;
+        }
+        
+        // 🔮 2. SÉCURITÉ PROPHÈTE : On masque son bouton si c'est un Coup d'État
+        // On récupère l'index du joueur pour vérifier s'il est le prophète actif
+        const pIdx = mobileState.allPlayers.findIndex(plName => plName.toUpperCase() === name.toUpperCase());
+        if (actionType === 'REQUEST_COUP_ETAT' && pIdx === mobileState.serverState?.propheteIdx) {
+            return; // On saute ce joueur, son bouton ne sera pas créé !
         }
         
         const btn = document.createElement('button');
@@ -579,5 +626,20 @@ export function showCleanUI(choix) {
 
             <div class="loader" style="margin: 10px auto 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite;"></div>
             <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[SYNCHRONISATION TERMINAL EN ATTENTE DU SCRUTIN]</p>
+        </div>`;
+}
+
+export function showWaitPropheteVoteUI(gardienName, sentinelleName) {
+    document.getElementById('main-ui').innerHTML = `
+        <div style="margin-top: 40px; border: 2px solid #ffffff; padding: 20px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 20px rgba(255, 255, 255, 0.2), inset 0 0 10px rgba(255, 255, 255, 0.1);">
+            <h2 style="color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,255,255,0.5);">🔮 VISION PROPHÉTIQUE</h2>
+            <p style="color: #aaaaaa; font-size: 0.9em; margin-top: 15px; font-style: italic;">Vos adeptes se prononcent sur le conseil :</p>
+            <p style="color: #ffffff; font-weight: bold; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; margin: 10px 0;">
+                ⭐ <span style="border-bottom: 1px solid #ffffff; padding-bottom: 2px;">${gardienName}</span> 
+                &nbsp;&amp;&nbsp; 
+                🔷 <span style="border-bottom: 1px solid #ffffff; padding-bottom: 2px;">${sentinelleName}</span>
+            </p>
+            <div class="loader" style="margin: 30px auto; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #ffffff; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite; box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);"></div>
+            <p style="font-size: 0.8em; color: rgba(255, 255, 255, 0.6); letter-spacing: 1px; font-weight: bold;">[ CLARIFICATION DE LA LIGNE TEMPORELLE EN COURS ]</p>
         </div>`;
 }

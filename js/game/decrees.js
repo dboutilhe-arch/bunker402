@@ -88,6 +88,11 @@ export function applyDecret(cardId, type, isForced = false) {
 
     let decreetBloquant = false;
 
+    if (cardId === 'prophete') {
+        state.propheteIdx = state.curG; // Le Gardien actuel devient le Prophète
+        Logger.add(`🔮 PROPHÉTIE : ${players[state.propheteIdx].name} abandonne son droit de vote et devient le PROPHÈTE !`);
+    }
+
     if (type === 'S') {
         state.survie++;
         state.slotsSurvieCards.push(cardId); // Le point reste TOUJOURS acquis sur le plateau
@@ -105,6 +110,12 @@ export function applyDecret(cardId, type, isForced = false) {
             state.rebellionActive = true;
             Logger.add("✊ SYSTÈME : Le décret RÉBELLION est promulgué. L'Alpha ne peut plus gagner par élection.");
         }
+
+        if (state.propheteIdx !== -1) {
+            Logger.add(`⚖️ SYSTÈME : Un décret de Survie a été voté. Le Prophète ${players[state.propheteIdx].name} perd ses pouvoirs et redevient un citoyen normal.`);
+            state.propheteIdx = -1;
+            state.activeEffectsC = state.activeEffectsC.filter(id => id !== 'prophete'); // On libère l'emplacement d'effet Rouge
+        }
         
         if (!isForced) {
             decreetBloquant = executeDecreetPower(cardId);
@@ -119,9 +130,11 @@ export function applyDecret(cardId, type, isForced = false) {
             if (state.activeEffectsC.length >= 2) {
                 const oldestEffectId = state.activeEffectsC.shift(); // Retire le plus ancien du registre d'effets
                 Logger.add(`💥 SYSTÈME : La directive permanente '${DECREETS_DATABASE[oldestEffectId].name.toUpperCase()}' est neutralisée (Limite de 2 actifs), mais reste sur le plateau.`);
+                if (oldestEffectId === 'prophete') state.propheteIdx = -1;
             }
             state.activeEffectsC.push(cardId); // On active le nouvel effet
         }
+
 
         if (!isForced) {
             decreetBloquant = executeDecreetPower(cardId);
@@ -167,10 +180,11 @@ export function applyDecret(cardId, type, isForced = false) {
         return;
     }
 
-    // --- LOGIQUE DE TRANSITION DE TOUR (TOUT EN BAS DE applyDecret) ---
+    // --- LOGIQUE DE TRANSITION DE TOUR ---
     if (!state.currentPowerActive && !decreetBloquant) {
         state.curG = (state.curG + 1) % players.length;
-        while (!players[state.curG].isAlive) {
+        // On saute le joueur s'il est mort OU s'il est le Prophète
+        while (!players[state.curG].isAlive || state.curG === state.propheteIdx) {
             state.curG = (state.curG + 1) % players.length;
         }
         setTimeout(() => { 

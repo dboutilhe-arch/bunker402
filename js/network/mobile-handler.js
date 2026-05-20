@@ -6,8 +6,8 @@ import {
     showExecutionResult, showCensureResult, showCoupEtatResult, 
     showEndGame, resetAffichageJ, showSentinelle493View, 
     showPurgeResult, showReorganisationResult, showBloodSwappedAlert,
-    showWaitSentinelleUI, showWaitLegislationUI, showWaitPowerUI, // <-- Ajoutés
-    showDeadUI, showCensoredAlertUI, showCleanUI                 // <-- Ajoutés
+    showWaitSentinelleUI, showWaitLegislationUI, showWaitPowerUI, 
+    showDeadUI, showCensoredAlertUI, showCleanUI, showWaitPropheteVoteUI                 
 } from '../ui/mobile-render.js';
 
 // Conteneur d'état dynamique partagé par référence entre les modules
@@ -107,12 +107,20 @@ function handleData(data) {
             showWaitPowerUI(data.gardienName, data.title);
             break;
 
+        case 'WAIT_PROPHETE_VOTE':
+            showWaitPropheteVoteUI(data.g, data.s);
+            break;
+
         case 'GARDIEN_PICK':
             showLegislativeUI("GARDIEN", data.cards);
             break;
 
         case 'SENTINELLE_PICK':
             showLegislativeUI("SENTINELLE", data.cards);
+            break;
+
+        case 'PROPHETE_PICK':
+            showLegislativeUI("PROPHÈTE", data.cards);
             break;
 
         case 'BLOOD_TEST_RESULT':

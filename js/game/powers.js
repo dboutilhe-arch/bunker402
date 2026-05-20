@@ -114,6 +114,12 @@ export function executePlayer(requester, targetName) {
         return triggerWin("SURVIVANTS", "L'Alpha a été éliminé du complexe.");
     }
 
+    if (playerIdx === state.propheteIdx) {
+        Logger.add(`💀 MORGUE : Le Prophète a été éliminé. La Prophétie prend fin immédiatement.`);
+        state.propheteIdx = -1;
+        state.activeEffectsC = state.activeEffectsC.filter(id => id !== 'prophete');
+    }
+
     requester.conn.send({
         type: 'EXECUTION_RESULT',
         target: targetName,
@@ -433,7 +439,6 @@ export function executeDecreetPower(cardId) {
             state.currentPowerActive = true; 
             Logger.add(`🚨 DÉCRET COUP D'ÉTAT : Instabilité politique ! Le Gardien (${gardien.name}) va nommer son successeur.`);
             
-            // 1. On force le Gardien à choisir un joueur (hors lui-même, géré par le mobile)
             if (gardien && gardien.conn && gardien.conn.open) {
                 gardien.conn.send({ 
                     type: 'FORCE_POWER_SELECT', 
@@ -442,8 +447,9 @@ export function executeDecreetPower(cardId) {
                 });
             }
             // 2. On met les autres en attente
-            players.forEach(p => {
+            players.forEach((p, idx) => {
                 if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
+                    // Le prophète garde son écran d'attente customisé ou hérite de celui-ci
                     p.conn.send({ 
                         type: 'WAIT_POWER', 
                         gardienName: gardien.name, 

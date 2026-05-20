@@ -90,7 +90,8 @@ export function nextTurn() {
     }
 
     let attempts = 0;
-    while (!players[state.curG].isAlive && attempts < players.length) {
+    // 🔮 SÉCURITÉ PROPHÈTE : On saute le joueur s'il est mort OU s'il est le Prophète
+    while ((!players[state.curG].isAlive || state.curG === state.propheteIdx) && attempts < players.length) {
         state.curG = (state.curG + 1) % players.length;
         attempts++;
     }
@@ -115,10 +116,15 @@ export function nextTurn() {
     });
 
     let eligiblePlayers = players.filter(p => p.isAlive).map(p => p.name).filter(name => {
+        const pObj = players.find(pl => pl.name === name);
+        const pIdx = players.indexOf(pObj);
+
         if (name === activeG.name) return false;
         if (name === state.lastSentinelle) return false;
         if (players.length > 5 && name === state.lastGardien) return false;
         if (state.vigileBannedPlayer && name.toLowerCase() === state.vigileBannedPlayer.toLowerCase()) return false;
+        if (pIdx === state.propheteIdx) return false; 
+        
         return true;
     });
     
@@ -128,7 +134,34 @@ export function nextTurn() {
         Logger.add(`⚖️ SYSTÈME : Réélection active. Passage direct à la législation pour ${activeG.name.toUpperCase()} & ${currentS.name.toUpperCase()}.`);
         
         state.currentPhase = "LÉGISLATION_G";
+
+        // 🔮 INTERCEPTION PROPHÈTE PENDANT LA RÉÉLECTION
+        if (state.propheteIdx !== -1) {
+            const activeProphete = players[state.propheteIdx];
+            Logger.add(`🔮 PROPHÉTIE : Le Prophète ${activeProphete.name} intercepte la pioche de la Réélection et tire 4 cartes !`);
+            
+            state.currentLegislativeCards = [];
+            for (let i = 0; i < 4; i++) {
+                state.currentLegislativeCards.push(drawCard());
+            }
+            state.currentLegislativeCards = state.currentLegislativeCards.filter(Boolean);
+
+            // On met tout le monde en attente
+            players.filter(p => p.isAlive).forEach(p => {
+                p.conn.send({ type: 'WAIT_LEGISLATION', step: `PROPHÈTE (${activeProphete.name})` });
+            });
+
+            // On envoie les 4 cartes au Prophète
+            setTimeout(() => {
+                activeProphete.conn.send({ type: 'PROPHETE_PICK', cards: state.currentLegislativeCards });
+            }, 100);
+
+            syncTerminals();
+            render();
+            return; // 🛑 ON COUPE LE FLUX ICI ! Le Gardien attendra que le Prophète défausse.
+        }
         
+        // 🛑 FLUX NORMAL STANDARD DE RÉÉLECTION (Si pas de Prophète)
         const countToDraw = state.archivistePowerActive ? 4 : 3;
         state.currentLegislativeCards = [];
         for (let i = 0; i < countToDraw; i++) {
@@ -148,7 +181,7 @@ export function nextTurn() {
         render();
         return; 
     }
-
+    
     activeG.conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
     syncTerminals(); 
     render();
@@ -187,6 +220,33 @@ export function resolveVote() {
     if (state.votes.oui > state.votes.non) {
         state.currentPhase = "LÉGISLATION_G";
         
+        // 🔮 INTERCEPTION PROPHÈTE : S'il y a un prophète actif en jeu
+        if (state.propheteIdx !== -1) {
+            const activeProphete = players[state.propheteIdx];
+            Logger.add(`🔮 PROPHÉTIE : Le Prophète ${activeProphete.name} intercepte la pioche législative et tire 4 cartes !`);
+            
+            state.currentLegislativeCards = [];
+            for (let i = 0; i < 4; i++) {
+                state.currentLegislativeCards.push(drawCard());
+            }
+            state.currentLegislativeCards = state.currentLegislativeCards.filter(Boolean);
+
+            // On met tout le monde en attente sauf le Prophète
+            players.filter(p => p.isAlive).forEach(p => {
+                p.conn.send({ type: 'WAIT_LEGISLATION', step: `PROPHÈTE (${activeProphete.name})` });
+            });
+
+            // On envoie les 4 cartes au Prophète (On crée un protocole dédié pour son smartphone)
+            setTimeout(() => {
+                activeProphete.conn.send({ type: 'PROPHETE_PICK', cards: state.currentLegislativeCards });
+            }, 100);
+
+            state.oxy = getOxygenMaxLimit();
+            syncTerminals();
+            return; // 🛑 ON CORTE LE FLUX ICI ! Le Gardien n'a pas encore de cartes.
+        }
+
+        // 🛑 FLUX NORMAL STANDARD (Si pas de Prophète)
         const countToDraw = state.archivistePowerActive ? 4 : 3;
         state.currentLegislativeCards = [];
         
@@ -247,6 +307,13 @@ export function restorePlayerAction(player) {
         case "VOTE":
             if (player.isCensored) {
                 player.conn.send({ type: 'CENSORED_ALERT', by: player.censoredBy });
+            } else if (players.indexOf(player) === state.propheteIdx) {
+                // 🔮 SÉCURITÉ RECONNEXION PROPHÈTE
+                player.conn.send({ 
+                    type: 'WAIT_PROPHETE_VOTE', 
+                    g: g.toUpperCase(), 
+                    s: s.toUpperCase()
+                });
             } else {
                 const aDejaVote = state.votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
                 if (aDejaVote) player.conn.send({ type: 'CLEAN_UI' });
@@ -270,10 +337,15 @@ export function restorePlayerAction(player) {
                     .filter(p => p.isAlive)
                     .map(p => p.name)
                     .filter(name => {
+                        const pObj = players.find(pl => pl.name === name);
+                        const pIdx = players.indexOf(pObj);
+
                         if (name === players[state.curG].name) return false;
                         if (name === state.lastSentinelle) return false;
                         if (players.length > 5 && name === state.lastGardien) return false;
                         if (state.vigileBannedPlayer && name.toLowerCase() === state.vigileBannedPlayer.toLowerCase()) return false;
+                        if (pIdx === state.propheteIdx) return false;
+
                         return true;
                     });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
@@ -335,16 +407,23 @@ export function showGov(g, s) {
     document.getElementById('s-name').innerText = s.toUpperCase(); 
     document.getElementById('s-name').style.color = "#3498db";
 
-    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
+    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored && players.indexOf(p) !== state.propheteIdx).length;
     document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : 0 / ${eligibleCount}`;
     document.getElementById('vote-summary').style.color = "#f1c40f"; 
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g.toUpperCase()} & ${s.toUpperCase()}`);
 
     syncTerminals();
     
-    players.filter(p => p.isAlive).forEach(p => {
+    players.filter(p => p.isAlive).forEach((p, idx) => {
         if (p.isCensored) {
             p.conn.send({ type: 'CENSORED_ALERT', by: p.censoredBy });
+        } else if (idx === state.propheteIdx) {
+            // 🔮 INTERCEPTION PROPHÈTE : On lui coupe l'accès au vote et on lui envoie un écran d'attente dédié
+            p.conn.send({ 
+                type: 'WAIT_PROPHETE_VOTE', 
+                g: g.toUpperCase(), 
+                s: s.toUpperCase()
+            });
         } else {
             p.conn.send({ type: 'VOTE_START', g: g.toUpperCase(), s: s.toUpperCase() });
         }
