@@ -261,7 +261,6 @@ function handleExecution(conn, data) {
     }
 }
 
-// ✨ FIX : Nettoyage de la syntaxe cassée
 function handleReorganisation(conn, data) {
     const requester = players.find(p => p.conn === conn);
     if (!requester || !requester.isAlive) return;
@@ -343,18 +342,23 @@ function handleCoupEtat(conn, data) {
     const targetIdx = players.findIndex(p => p.name === data.targetName);
     if (targetIdx === -1 || !players[targetIdx].isAlive) return;
 
+    // 🔮 SÉCURITÉ CRITIQUE : Le Prophète ne peut pas subir de Coup d'État pour devenir Gardien
+    if (targetIdx === state.propheteIdx) {
+        Logger.add(`⚠️ PROTOCOLE SÉCURITÉ : Tentative de Coup d'État sur le Prophète annulée.`);
+        requester.conn.send({ type: 'SYNC_REQUEST' }); // Force le reset du mobile fraudeur
+        return;
+    }
+
     Logger.add(`🔥 COUP D'ÉTAT : ${requester.name} a déstabilisé le pouvoir et téléporté la ligne temporelle sur ${data.targetName} !`);
 
-    // ✨ LA SIMPLIFICATION INDICE : On force le Gardien sur la cible définitivement
+    // On force le Gardien sur la cible
     state.curG = targetIdx;
-
-    // On s'aligne sur le système de validation de Censure/Test Sanguin
     state.currentPowerActive = true;
 
     requester.conn.send({
         type: 'COUP_ETAT_RESULT',
         target: data.targetName,
-        isForced: true // Force l'attente du clic sur le bouton OK
+        isForced: true 
     });
 
     syncTerminals();
