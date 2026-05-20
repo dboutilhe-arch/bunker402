@@ -8,8 +8,7 @@ import {
     triggerWin,
     resetLobbyVisuals,
     clearCouncilVisuals,
-    rebuildActivePlayerTags,
-    updateCensureUI
+    rebuildActivePlayerTags
 } from '../ui/renderer.js';
 import { Logger } from '../ui/logger.js';
 import { drawCard, applyForced, getOxygenMaxLimit } from './decrees.js';
@@ -275,14 +274,6 @@ export function resolveVote() {
 
     } else {
         state.oxy--;
-
-        // LOI DU TALION : Sanction du Gardien si le vote échoue
-        if (state.activeEffectsC.includes('loi_talion')) {
-            const failedGardien = players[state.curG];
-            failedGardien.isCensored = true;
-            failedGardien.censoredBy = "LOI DU TALION";
-            Logger.add(`⚖️ LOI DU TALION : Le conseil a été rejeté. ${failedGardien.name} est privé(e) de vote pour le prochain scrutin !`);
-        }
         
         if (state.oxy <= 0) {
             applyForced();
@@ -426,7 +417,6 @@ export function showGov(g, s) {
     
     players.filter(p => p.isAlive).forEach((p, idx) => {
         if (p.isCensored) {
-            updateCensureUI(p);
             p.conn.send({ type: 'CENSORED_ALERT', by: p.censoredBy });
         } else if (idx === state.propheteIdx) {
             // 🔮 INTERCEPTION PROPHÈTE : On lui coupe l'accès au vote et on lui envoie un écran d'attente dédié
