@@ -139,6 +139,12 @@ function handleSentinelle(data) {
 function handleVote(data) {
     const voter = players.find(p => p.name.toLowerCase() === data.playerName.toLowerCase());
 
+    // 🔮 SÉCURITÉ PROPHÈTE : Le prophète a abandonné son droit de vote
+    if (voter && players.indexOf(voter) === state.propheteIdx) {
+        Logger.add(`⚠️ PROTOCOLE : Le Prophète ${voter.name} a tenté de voter, mais sa voix est désactivée.`);
+        return; 
+    }
+
     // Sécurités fondamentales
     if (!voter || !voter.isAlive || voter.isCensored) return;
 
