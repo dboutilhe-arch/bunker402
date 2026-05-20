@@ -329,6 +329,37 @@ export function swapPlayerBlood(requester, targetA_Name, targetB_Name) {
     });
 }
 
+export function applyLicenciement(requester, targetName) {
+    const target = players.find(p => p.name === targetName);
+    if (!target || !target.isAlive) return;
+
+    // 1. On détruit son métier mécaniquement dans le State
+    target.metier = "Civil";
+    target.jobPowerUsed = true; // Empêche toute tentative d'utiliser un vieux bouton
+
+    Logger.add(`📉 LICENCIEMENT : ${requester.name} a révoqué les accès de ${targetName}.`);
+    Logger.add(`SYSTÈME : ${targetName} retourne à l'état de CIVIL.`);
+
+    // 2. Mise à jour immédiate de l'écran central pour afficher "CIVIL"
+    import('../ui/renderer.js').then(m => {
+        m.updateTagsWithJobs();
+        m.syncTerminals();
+        m.render();
+    });
+
+    // 3. Notification brutale au joueur ciblé
+    if (target.conn && target.conn.open) {
+        target.conn.send({ type: 'LICENCIEMENT_ALERT' });
+    }
+
+    // 4. Rapport bloquant au Gardien
+    requester.conn.send({
+        type: 'LICENCIEMENT_RESULT',
+        target: targetName,
+        isForced: state.currentPowerActive
+    });
+}
+
 /**
  * Exécute l'effet immédiat (symbole ⚡) d'un décret promulgué
  * @param {string} cardId - L'identifiant unique du décret (ex: 'sabotage', 'censure')
@@ -492,6 +523,28 @@ export function executeDecreetPower(cardId) {
                         type: 'WAIT_POWER', 
                         gardienName: gardien.name, 
                         title: 'RÉORGANISATION DES SYSTÈMES' 
+                    });
+                }
+            });
+            return true;
+
+        case 'licenciement':
+            state.currentPowerActive = true; 
+            Logger.add(`📉 DÉCRET LICENCIEMENT : Protocole activé. Le Gardien (${gardien.name}) choisit sa cible.`);
+            
+            if (gardien && gardien.conn && gardien.conn.open) {
+                gardien.conn.send({ 
+                    type: 'FORCE_POWER_SELECT', 
+                    action: 'REQUEST_LICENCIEMENT', 
+                    title: 'LICENCIEMENT ADMINISTRATIF' 
+                });
+            }
+            players.forEach(p => {
+                if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
+                    p.conn.send({ 
+                        type: 'WAIT_POWER', 
+                        gardienName: gardien.name, 
+                        title: 'LICENCIEMENT ADMINISTRATIF' 
                     });
                 }
             });
