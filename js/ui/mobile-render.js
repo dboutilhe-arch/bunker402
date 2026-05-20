@@ -363,8 +363,13 @@ export function openTargetSelector(actionType, title, isForced = false) {
             if (mobileState.serverState?.censoredNames?.includes(name)) return;
             if (mobileState.serverState?.journalisteNames?.includes(name)) return;
         }
+
+        // 2. Sécurité Licenciement : Ignorer les Civils
+        if (actionType === 'REQUEST_LICENCIEMENT') {
+            if (mobileState.serverState?.civilianNames?.includes(name)) return; 
+        }
         
-        // 🔮 2. SÉCURITÉ PROPHÈTE : On masque son bouton si c'est un Coup d'État
+        // 🔮 3. SÉCURITÉ PROPHÈTE : On masque son bouton si c'est un Coup d'État
         // On récupère l'index du joueur pour vérifier s'il est le prophète actif
         const pIdx = mobileState.allPlayers.findIndex(plName => plName.toUpperCase() === name.toUpperCase());
         if (actionType === 'REQUEST_COUP_ETAT' && pIdx === mobileState.serverState?.propheteIdx) {
@@ -653,4 +658,43 @@ export function showTalionUI() {
         </div>`;
     // On vide le bouton de pouvoir si besoin
     document.getElementById('job-ui').innerHTML = ""; 
+}
+
+export function showLicenciementResult(data) {
+    document.getElementById('main-ui').innerHTML = `
+        <div style="border: 2px solid #e67e22; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
+            <h3 style="color: #e67e22; margin-top: 0; letter-spacing: 1px;">📉 LICENCIEMENT VALIDÉ</h3>
+            <p style="color: #e0e0e0; margin: 10px 0;">Les accréditations du sujet ont été révoquées avec succès.</p>
+            <p style="color: #f1c40f; margin: 10px 0;">Cible civile : <b>${data.target.toUpperCase()}</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #e67e22; color: #000; border-color: #000;">OK</button>
+        </div>`;
+        
+    // Le bouton OK renverra 'ACTION_CONFIRMED' qui fera passer le tour proprement via handleActionConfirmed()
+    document.getElementById('btn-ok').onclick = () => mobileState.conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
+}
+
+export function showLicenciementAlert() {
+    // 1. Destruction immédiate du métier sur l'en-tête du mobile
+    const metierEl = document.getElementById('metier-display');
+    if (metierEl) metierEl.innerText = "MÉTIER : CIVIL";
+    
+    // 2. Suppression du bouton d'action potentiel
+    const jobZone = document.getElementById('job-ui');
+    if (jobZone) {
+        jobZone.innerHTML = "<p style='color:#e67e22; font-style:italic; border: 1px solid #e67e22; padding: 10px; border-radius: 5px; font-size: 0.85em;'>Accréditations révoquées. Vous êtes désormais CIVIL.</p>";
+        jobZone.style.opacity = "1";
+    }
+
+    // 3. Affichage de la sanction
+    document.getElementById('main-ui').innerHTML = `
+        <div style="border: 2px solid #e67e22; padding: 20px; border-radius: 10px; background: rgba(230, 126, 34, 0.1);">
+             <h2 style="color: #e67e22;">📉 LICENCIEMENT</h2>
+             <p style="color:#e0e0e0;">Le Gardien a révoqué toutes vos accréditations gouvernementales.</p>
+             <p style="font-size: 0.9em; margin-top: 15px; color: #fff;">Vous perdez définitivement vos capacités spéciales.</p>
+             <button class="btn" id="btn-ok-lic" style="margin-top: 15px; width: 50%; background: #e67e22; color: #000; border-color: #000;">COMPRIS</button>
+        </div>`;
+    
+    document.getElementById('btn-ok-lic').onclick = () => {
+         mobileState.conn.send({ type: 'SYNC_REQUEST' });
+    };
 }

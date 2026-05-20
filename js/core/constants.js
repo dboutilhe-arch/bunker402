@@ -41,7 +41,9 @@ export const POWER_MAP = {
 };
 
 //export const JOBS_LIST = ['Shérif', 'Docteur', 'Technicien', 'Journaliste', 'Militaire', 'Psychologue', 'Contrebandier', 'Fossoyeur', 'Éclaireur', 'Vigile', 'Scientifique', 'Ingénieur', 'Pilote'];
-export const JOBS_LIST = ['Militaire', 'Docteur', 'Intendant', 'Shérif', 'Fossoyeur', 'Journaliste', 'Archiviste', 'Vigile']
+//export const JOBS_LIST = ['Militaire', 'Docteur', 'Intendant', 'Shérif', 'Fossoyeur', 'Journaliste', 'Archiviste', 'Vigile']
+//TEST
+export const JOBS_LIST = ['Militaire', 'Fossoyeur']
 export const DEFAULT_JOB = "Sans emploi";
 
 /**
@@ -87,14 +89,14 @@ export const DECREETS_DATABASE = {
  */
 export const INITIAL_DECK_LIST = [
     //TEST
-    'conseil_restreint', 'greve_zele', 'chambre_noire', 'coup_etat', 'reelection', 'prophete',  'fuite_air_s', 'talion'
+    'conseil_restreint', 'greve_zele', 'chambre_noire', 'licenciement'
     /*
     // 10 Bleues
     'test_sanguin', 'test_sanguin', 'fuite_air_s', 'rebellion', 'purge', 'reorganisation',
     // 'commission', 'presse', 'transparence', 'contre_pouvoir',
     // 15 Rouges
-    'censure', 'censure', 'censure', 'sabotage', 'fuite_air_c', 'court_circuit', 'coup_etat', 'loi_493', 'loi_493', 'reelection', 'prophete', 'talion'
-    // 'licenciement', 'silence', 'secret_etat',
+    'censure', 'censure', 'censure', 'sabotage', 'fuite_air_c', 'court_circuit', 'coup_etat', 'loi_493', 'loi_493', 'reelection', 'prophete', 'talion', 'licenciement',
+    // 'silence', 'secret_etat',
     // 4 Grises
     'conseil_restreint', 'greve_zele', 'chambre_noire', 'insurrection_populaire'
     */
