@@ -219,17 +219,58 @@ body {
 .p-name { font-size: 1.1em; margin-bottom: 2px; }
 .p-job  { letter-spacing: 1px; text-transform: uppercase; }
 
-/* Étiquette du Prophète */
+/* _______________________________Étiquette du Prophète __________________________________________*/
 .prophete-style {
-    border: 2px dashed #9b59b6 !important; /* Bordure violette discontinue */
-    background: rgba(155, 89, 182, 0.15) !important;
-    box-shadow: 0 0 10px rgba(155, 89, 182, 0.5);
-    animation: pulseProphete 2s infinite alternate;
+    /* Fond noir mat pour que l'aura ressorte */
+    background: #000000 !important;
+    border-color: #ffffff !important;
+    
+    /* Couleur du texte par défaut en blanc */
+    color: #ffffff !important;
+
+    /* 💥 L'AURA DIVINE : Superposition d'ombres pour un effet de halo doux et diffus */
+    box-shadow: 
+        0 0 10px rgba(255, 255, 255, 0.5),   /* Halo proche */
+        0 0 20px rgba(255, 255, 255, 0.3),   /* Halo moyen */
+        0 0 40px rgba(255, 255, 255, 0.1),   /* Halo lointain */
+        inset 0 0 10px rgba(255, 255, 255, 0.2); /* Éclat intérieur */
+
+    /* Animation d'éclat doux (Pulsation) */
+    animation: divineGlow 4s ease-in-out infinite;
+    
+    /* Pour s'assurer que le contenu reste au-dessus de l'aura */
+    position: relative;
+    z-index: 1;
 }
 
-@keyframes pulseProphete {
-    from { opacity: 0.8; }
-    to { opacity: 1; box-shadow: 0 0 15px rgba(155, 89, 182, 0.8); }
+/* On s'assure que le nom et le job dans cette étiquette sont blancs */
+.prophete-style .p-name {
+    color: #ffffff !important;
+    text-shadow: 0 0 8px rgba(255,255,255,0.6);
+}
+
+.prophete-style .p-job {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Définition de l'animation de pulsation de l'aura */
+@keyframes divineGlow {
+    0%, 100% {
+        box-shadow: 
+            0 0 15px rgba(255, 255, 255, 0.6),
+            0 0 25px rgba(255, 255, 255, 0.4),
+            0 0 50px rgba(255, 255, 255, 0.2),
+            inset 0 0 12px rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 1);
+    }
+    50% {
+        box-shadow: 
+            0 0 10px rgba(255, 255, 255, 0.4),
+            0 0 20px rgba(255, 255, 255, 0.2),
+            0 0 35px rgba(255, 255, 255, 0.1),
+            inset 0 0 8px rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.6);
+    }
 }
 
 
