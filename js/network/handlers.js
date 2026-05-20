@@ -5,7 +5,7 @@ import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors, calculatePlayerVoteWeight } from '../ui/renderer.js';
 import { showGov, resolveVote, restorePlayerAction, nextTurn, isEligibleToVote } from '../game/engine.js';
 import { handleDiscardFromNet, applyDecret } from '../game/decrees.js';
-import { testPlayerBlood, executePlayer, applyCensure, purgeCriseCard, swapPlayerBlood } from '../game/powers.js';
+import { testPlayerBlood, executePlayer, applyCensure, purgeCriseCard, swapPlayerBlood, applyLicenciement } from '../game/powers.js';
 
 export function handlePlayerData(conn, data) {
     if (state.gameOver) return;
@@ -61,6 +61,10 @@ export function handlePlayerData(conn, data) {
 
         case 'REQUEST_VIGILE_BAN':
             handleVigileBan(conn, data);
+            break;
+
+        case 'REQUEST_LICENCIEMENT':
+            handleLicenciement(conn, data);
             break;
 
         case 'ACTION_CONFIRMED':
@@ -424,4 +428,10 @@ export function handlePropheteDiscard(conn, data) {
     
     syncTerminals();
     render();
+}
+
+function handleLicenciement(conn, data) {
+    const requester = players.find(p => p.conn === conn);
+    if (!requester || !requester.isAlive) return;
+    applyLicenciement(requester, data.targetName);
 }
