@@ -204,7 +204,7 @@ export function resolveVote() {
 
         players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
         
-        if (state.crise >= 3 && players[state.curSIdx].role === 'A' && !state.rebellionActive) {
+        if (state.crise >= 3 && players[state.curSIdx].role === 'A' && !state.activeEffectsS.includes('rebellion')) {
             return triggerWin("INFECTES", "L'Alpha a été élu Sentinelle.");
         }
 
