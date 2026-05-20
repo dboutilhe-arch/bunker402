@@ -33,6 +33,8 @@ export let state = {
     curSIdx: -1,
     nextNormalGardien: null, //Stockage du prochain Gardien pour le coup d'état
     nextForcedS: null,
+    propheteIdx: -1, // Index du joueur Prophète (-1 = aucun)
+    
 
     // Gestion des votes
     votes: { oui: 0, non: 0, total: 0, list: [] },
@@ -77,6 +79,7 @@ export function resetGameState() {
     state.archivistePowerActive = false;
     state.nextNormalGardien = null;
     state.nextForcedS = null;
+    state.propheteIdx = -1;
     state.loi493Active = false;
     state.vigileBannedPlayer = null;
     
