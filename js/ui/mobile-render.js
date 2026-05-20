@@ -254,7 +254,7 @@ export function showLegislativeUI(role, cards) {
         cardContainer.appendChild(cardElement);
     });
     
-    btnValidate.onclick = () => {
+   btnValidate.onclick = () => {
         if (selectedCardId === null) return;
         
         if (role === 'PROPHÈTE') {
@@ -262,9 +262,9 @@ export function showLegislativeUI(role, cards) {
             let remaining = [...mobileState.currentHand];
             remaining.splice(selectedCardIndex, 1);
             
-            // On envoie le paquet spécifique prophète
+            // FLUX GARDIEN
             mobileState.conn.send({ 
-                type: 'DISCARD_DONE', 
+                type: 'PROPHETE_DISCARD_DONE', 
                 discardedCardId: selectedCardId, 
                 remaining: remaining 
             });
