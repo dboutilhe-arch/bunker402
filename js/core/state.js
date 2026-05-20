@@ -38,6 +38,7 @@ export let state = {
 
     // Gestion des votes
     votes: { oui: 0, non: 0, total: 0, list: [] },
+    talionBanned: [],
     
     // Variables de phase et contrôle
     isProcessingAction: false,
@@ -70,6 +71,7 @@ export function resetGameState() {
     state.activeEffectsS = [];
     state.activeEffectsC = [];
     state.votes = { oui: 0, non: 0, total: 0, list: [] };
+    state.talionBanned = [];
     state.isProcessingAction = false;
     state.currentPhase = "DÉSIGNATION";
     state.currentProposedS = null;

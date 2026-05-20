@@ -643,3 +643,14 @@ export function showWaitPropheteVoteUI(gardienName, sentinelleName) {
             <p style="font-size: 0.8em; color: rgba(255, 255, 255, 0.6); letter-spacing: 1px; font-weight: bold;">[ CLARIFICATION DE LA LIGNE TEMPORELLE EN COURS ]</p>
         </div>`;
 }
+
+export function showTalionUI() {
+    document.getElementById('main-ui').innerHTML = `
+        <div style="border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; background: rgba(231, 76, 60, 0.1);">
+             <h2 style="color: #e74c3c;">⚖️ SANCTION DU TALION</h2>
+             <p>Votre gestion du Conseil ayant échoué, la Loi du Talion a révoqué vos droits pour ce scrutin.</p>
+             <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">Attendez la fin du tour...</p>
+        </div>`;
+    // On vide le bouton de pouvoir si besoin
+    document.getElementById('job-ui').innerHTML = ""; 
+}
