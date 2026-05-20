@@ -3,7 +3,7 @@ import { DECREETS_DATABASE } from '../core/constants.js';
 import { state, players } from '../core/state.js';
 import { Logger } from '../ui/logger.js';
 import { render, createPlayerTag, syncTerminals, resetVoteColors, calculatePlayerVoteWeight } from '../ui/renderer.js';
-import { showGov, resolveVote, restorePlayerAction, nextTurn } from '../game/engine.js';
+import { showGov, resolveVote, restorePlayerAction, nextTurn, isEligibleToVote } from '../game/engine.js';
 import { handleDiscardFromNet, applyDecret } from '../game/decrees.js';
 import { testPlayerBlood, executePlayer, applyCensure, purgeCriseCard, swapPlayerBlood } from '../game/powers.js';
 
@@ -143,10 +143,10 @@ function handleSentinelle(data) {
 function handleVote(data) {
     const voter = players.find(p => p.name.toLowerCase() === data.playerName.toLowerCase());
 
-    // 🔮 SÉCURITÉ PROPHÈTE : Le prophète a abandonné son droit de vote
-    if (voter && players.indexOf(voter) === state.propheteIdx) {
-        Logger.add(`⚠️ PROTOCOLE : Le Prophète ${voter.name} a tenté de voter, mais sa voix est désactivée.`);
-        return; 
+    // SÉCURITÉ STRICTE
+    if (!voter || !isEligibleToVote(voter)) {
+        Logger.add(`⚠️ PROTOCOLE : Tentative de vote invalide de ${data.playerName}.`);
+        return;
     }
 
     // Sécurités fondamentales
@@ -173,8 +173,8 @@ function handleVote(data) {
 
     render();
   
-    // Compteur de personnes physiques attendues (exclusion des morts, des censurés et du Prophète)
-    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored && players.indexOf(p) !== state.propheteIdx).length;
+    // Compteur de personnes physiques attendues
+    const eligibleCount = players.filter(p => isEligibleToVote(p)).length;
     const totalJoueursAyantVote = state.votes.list.length;
 
     // Mise à jour de la console centrale PC
