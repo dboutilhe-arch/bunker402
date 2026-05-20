@@ -184,31 +184,20 @@ export function showVoteUI(data) {
 export function showLegislativeUI(role, cards) {
     const ui = document.getElementById('main-ui');
     mobileState.currentHand = cards;
-    
     ui.innerHTML = `<h3>LÉGISLATION : ${role}</h3>`;
     
-    // Ajustement de la consigne textuelle si c'est le Prophète
-    let descAction = 'SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER';
-    if (role === 'PROPHÈTE') {
-        descAction = 'SÉLECTIONNEZ LE DÉCRET À ÉCARTER (3 RESTANTS POUR LE GARDIEN)';
-    } else if (role !== 'GARDIEN') {
-        descAction = 'SÉLECTIONNEZ LE DÉCRET À PROMULGUER';
-    }
+    let descAction = 'SÉLECTIONNEZ LE DÉCRET À PROMULGUER';
+    if (role === 'PROPHÈTE') descAction = 'SÉLECTIONNEZ LE DÉCRET À ÉCARTER (3 RESTANTS)';
+    else if (role === 'GARDIEN' || role === 'SENTINELLE (DÉFAUSSE)') descAction = 'SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER';
     
     ui.innerHTML += `<p style="font-size:0.85em; color:#888;">${descAction}</p>`;
     
     const controls = document.createElement('div');
     controls.className = "action-controls theme-power";
-    
     const btnValidate = document.createElement('button');
     btnValidate.className = "btn-action validate";
     
-    // Libellé du bouton
-    if (role === 'PROPHÈTE' || role === 'GARDIEN') {
-        btnValidate.innerText = "DÉFAUSSER";
-    } else {
-        btnValidate.innerText = "PROMULGUER";
-    }
+    btnValidate.innerText = (role === 'PROPHÈTE' || role === 'GARDIEN' || role === 'SENTINELLE (DÉFAUSSE)') ? "DÉFAUSSER" : "PROMULGUER";
     
     controls.appendChild(btnValidate);
     ui.appendChild(controls);
@@ -258,32 +247,22 @@ export function showLegislativeUI(role, cards) {
         if (selectedCardId === null) return;
         
         if (role === 'PROPHÈTE') {
-            // 🔮 LOGIQUE MOBILE DU PROPHÈTE : On filtre pour lui donner les 3 cartes restantes
             let remaining = [...mobileState.currentHand];
             remaining.splice(selectedCardIndex, 1);
+            mobileState.conn.send({ type: 'PROPHETE_DISCARD_DONE', discardedCardId: selectedCardId, remaining: remaining });
+            ui.innerHTML = `<div style="margin-top:40px; color:#9b59b6;">🔮 Alignement Prophétique transmis...<br>Génération des choix suivants.</div>`;
             
-            // FLUX GARDIEN
-            mobileState.conn.send({ 
-                type: 'PROPHETE_DISCARD_DONE', 
-                discardedCardId: selectedCardId, 
-                remaining: remaining 
-            });
-            ui.innerHTML = `<div style="margin-top:40px; color:#9b59b6;">🔮 Alignement Prophétique transmis...<br>Génération des choix du Gardien.</div>`;
-            
-        } else if (role === 'GARDIEN') {
-            // FLUX STANDARD GARDIEN
+        } else if (role === 'GARDIEN' || role === 'SENTINELLE (DÉFAUSSE)') {
             let remaining = [...mobileState.currentHand]; 
             remaining.splice(selectedCardIndex, 1);
             mobileState.conn.send({ type: 'DISCARD_DONE', discardedCardId: selectedCardId, remaining: remaining });
             ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
             
         } else {
-            // FLUX STANDARD SENTINELLE
             mobileState.conn.send({ type: 'FINAL_CHOICE', card: selectedCardId });
             ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
         }
     };
-    
     ui.appendChild(cardContainer);
 }
 
@@ -469,7 +448,7 @@ export function showEndGame(data) {
         </div>`;
 }
 
-export function showSentinelle493View(cards) {
+export function showView493(cards, decisionMaker) {
     const cardContainer = document.createElement('div');
     cardContainer.className = "legislative-container";
 
@@ -495,7 +474,7 @@ export function showSentinelle493View(cards) {
     });
 
     const ui = document.getElementById('main-ui');
-    ui.innerHTML = `<h3>👁️ VISUEL TERMINAL (49.3)</h3><p style="font-size:0.85em; color:#ff3333; font-weight:bold;">[LECTURE SEULE] LE GARDIEN SÉLECTIONNE LE DÉCRET FINAL...</p>`;
+    ui.innerHTML = `<h3>👁️ VISUEL TERMINAL (49.3)</h3><p style="font-size:0.85em; color:#ff3333; font-weight:bold;">[LECTURE SEULE] ${decisionMaker} SÉLECTIONNE LE DÉCRET FINAL...</p>`;
     ui.appendChild(cardContainer);
 }
 

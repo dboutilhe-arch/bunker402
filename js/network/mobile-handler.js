@@ -4,7 +4,7 @@ import {
     updateMiniBoard, setupIdentity, showGardienUI, showVoteUI, 
     showLegislativeUI, openTargetSelector, showBloodResult, 
     showExecutionResult, showCensureResult, showCoupEtatResult, 
-    showEndGame, resetAffichageJ, showSentinelle493View, 
+    showEndGame, resetAffichageJ, showView493, 
     showPurgeResult, showReorganisationResult, showBloodSwappedAlert,
     showWaitSentinelleUI, showWaitLegislationUI, showWaitPowerUI, 
     showDeadUI, showCensoredAlertUI, showCleanUI, showWaitPropheteVoteUI, showTalionUI,
@@ -124,6 +124,26 @@ function handleData(data) {
             showLegislativeUI("PROPHÈTE", data.cards);
             break;
 
+        case 'SENTINELLE_DISCARD_PICK':
+            showLegislativeUI("SENTINELLE (DÉFAUSSE)", data.cards);
+            break;
+            
+        case 'GARDIEN_ENACT_PICK':
+            showLegislativeUI("GARDIEN (PROMULGATION)", data.cards);
+            break;
+            
+        case 'SENTINELLE_493_PICK':
+            showLegislativeUI("SENTINELLE (49.3 - CHOIX FINAL)", data.cards);
+            break;
+            
+        case 'GARDIEN_493_VIEW':
+            showView493(data.cards, "SENTINELLE"); // On affiche que la Sentinelle choisit
+            break;
+            
+        case 'SENTINELLE_493_VIEW':
+            showView493(data.cards, "GARDIEN"); // On affiche que le Gardien choisit
+            break;
+
         case 'BLOOD_TEST_RESULT':
             showBloodResult(data);
             break;
@@ -193,10 +213,6 @@ function handleData(data) {
 
         case 'GARDIEN_493_PICK':
             showLegislativeUI("GARDIEN (49.3 - CHOIX FINAL)", data.cards);
-            break;
-
-        case 'SENTINELLE_493_VIEW':
-            showSentinelle493View(data.cards);
             break;
 
         case 'REORGANISATION_RESULT':
