@@ -275,6 +275,13 @@ export function restorePlayerAction(player) {
         case "VOTE":
             if (player.isCensored) {
                 player.conn.send({ type: 'CENSORED_ALERT', by: player.censoredBy });
+            } else if (players.indexOf(player) === state.propheteIdx) {
+                // 🔮 SÉCURITÉ RECONNEXION PROPHÈTE
+                player.conn.send({ 
+                    type: 'WAIT_POWER', 
+                    gardienName: players[state.curG].name.toUpperCase(), 
+                    title: "VOS ADÈPTES SONT EN TRAIN DE VOTER" 
+                });
             } else {
                 const aDejaVote = state.votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
                 if (aDejaVote) player.conn.send({ type: 'CLEAN_UI' });
@@ -363,18 +370,23 @@ export function showGov(g, s) {
     document.getElementById('s-name').innerText = s.toUpperCase(); 
     document.getElementById('s-name').style.color = "#3498db";
 
-    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
+    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored && players.indexOf(p) !== state.propheteIdx).length;
     document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : 0 / ${eligibleCount}`;
     document.getElementById('vote-summary').style.color = "#f1c40f"; 
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g.toUpperCase()} & ${s.toUpperCase()}`);
 
     syncTerminals();
     
-    players.filter(p => p.isAlive).forEach(p => {
+    players.filter(p => p.isAlive).forEach((p, idx) => {
         if (p.isCensored) {
             p.conn.send({ type: 'CENSORED_ALERT', by: p.censoredBy });
+        } else if (idx === state.propheteIdx) {
+            // 🔮 INTERCEPTION PROPHÈTE : On lui coupe l'accès au vote et on lui envoie un écran d'attente dédié
+            p.conn.send({ 
+                type: 'WAIT_POWER', 
+                gardienName: g.toUpperCase(), 
+                title: "VOS ADÈPTES SONT EN TRAIN DE VOTER" 
+            });
         } else {
             p.conn.send({ type: 'VOTE_START', g: g.toUpperCase(), s: s.toUpperCase() });
         }
-    });
-}
