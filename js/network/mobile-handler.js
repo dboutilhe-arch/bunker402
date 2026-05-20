@@ -7,7 +7,8 @@ import {
     showEndGame, resetAffichageJ, showSentinelle493View, 
     showPurgeResult, showReorganisationResult, showBloodSwappedAlert,
     showWaitSentinelleUI, showWaitLegislationUI, showWaitPowerUI, 
-    showDeadUI, showCensoredAlertUI, showCleanUI, showWaitPropheteVoteUI, showTalionUI                 
+    showDeadUI, showCensoredAlertUI, showCleanUI, showWaitPropheteVoteUI, showTalionUI,
+    showLicenciementResult, showLicenciementAlert
 } from '../ui/mobile-render.js';
 
 // Conteneur d'état dynamique partagé par référence entre les modules
@@ -204,6 +205,13 @@ function handleData(data) {
 
         case 'BLOOD_SWAPPED_ALERT':
             showBloodSwappedAlert(data);
+            break;
+
+        case 'LICENCIEMENT_RESULT':
+            showLicenciementResult(data);
+            break;
+        case 'LICENCIEMENT_ALERT':
+            showLicenciementAlert();
             break;
     }
 }
