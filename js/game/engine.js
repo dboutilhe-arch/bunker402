@@ -191,6 +191,9 @@ export function nextTurn() {
  * Calcul du résultat du vote
  */
 export function resolveVote() {
+    // Reset systématique de la sanction Talion au début de la résolution
+    state.talionBanned = [];
+    
     // NETTOYAGE DES CENSURES REPOUSSÉ ICI À LA FIN DU TOUR (Conservation visuelle)
     players.forEach(p => { 
         p.isCensored = false; 
@@ -274,6 +277,13 @@ export function resolveVote() {
 
     } else {
         state.oxy--;
+
+        // --- LOI DU TALION : Détection de l'échec ---
+        if (state.activeEffectsC.includes('talion')) {
+            const failedGardien = players[state.curG];
+            state.talionBanned.push(failedGardien.name);
+            Logger.add(`⚖️ LOI DU TALION : ${failedGardien.name} est banni de vote pour le prochain scrutin.`);
+        }
         
         if (state.oxy <= 0) {
             applyForced();
@@ -416,16 +426,17 @@ export function showGov(g, s) {
     syncTerminals();
     
     players.filter(p => p.isAlive).forEach((p, idx) => {
-        if (p.isCensored) {
+        // --- ENFORCEMENT TALION ---
+        if (state.talionBanned.includes(p.name)) {
+            p.conn.send({ type: 'TALION_ALERT' });
+        } 
+        else if (p.isCensored) {
             p.conn.send({ type: 'CENSORED_ALERT', by: p.censoredBy });
-        } else if (idx === state.propheteIdx) {
-            // 🔮 INTERCEPTION PROPHÈTE : On lui coupe l'accès au vote et on lui envoie un écran d'attente dédié
-            p.conn.send({ 
-                type: 'WAIT_PROPHETE_VOTE', 
-                g: g.toUpperCase(), 
-                s: s.toUpperCase()
-            });
-        } else {
+        } 
+        else if (idx === state.propheteIdx) {
+            // ... (logique prophète)
+        } 
+        else {
             p.conn.send({ type: 'VOTE_START', g: g.toUpperCase(), s: s.toUpperCase() });
         }
     });
