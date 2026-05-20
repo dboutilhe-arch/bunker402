@@ -90,9 +90,18 @@ export function applyDecret(cardId, type, isForced = false) {
 
     if (type === 'S') {
         state.survie++;
-        state.slotsSurvieCards.push(cardId);
+        state.slotsSurvieCards.push(cardId); // Le point reste TOUJOURS acquis sur le plateau
 
-        if (cardId === 'rebellion') {
+        // 🔒 GESTION DE L'EFFET PERMANENT BLEU
+        if (card.symbol === '♾️') {
+            if (state.activeEffectsS.length >= 2) {
+                const oldestEffectId = state.activeEffectsS.shift(); // Retire le plus ancien du registre d'effets
+                Logger.add(`🛡️ SYSTÈME : Le décret permanent '${DECREETS_DATABASE[oldestEffectId].name.toUpperCase()}' est neutralisé (Limite de 2 actifs), mais reste sur le plateau.`);
+            }
+            state.activeEffectsS.push(cardId); // On active le nouvel effet
+        }
+
+        if (cardId === 'rebellion' && state.activeEffectsS.includes('rebellion')) {
             state.rebellionActive = true;
             Logger.add("✊ SYSTÈME : Le décret RÉBELLION est promulgué. L'Alpha ne peut plus gagner par élection.");
         }
@@ -103,8 +112,17 @@ export function applyDecret(cardId, type, isForced = false) {
         
     } else if (type === 'C') {
         state.crise++;
-        state.slotsCriseCards.push(cardId);
+        state.slotsCriseCards.push(cardId); // Le point reste TOUJOURS acquis sur le plateau
         
+        // 🔒 GESTION DE L'EFFET PERMANENT ROUGE
+        if (card.symbol === '♾️') {
+            if (state.activeEffectsC.length >= 2) {
+                const oldestEffectId = state.activeEffectsC.shift(); // Retire le plus ancien du registre d'effets
+                Logger.add(`💥 SYSTÈME : La directive permanente '${DECREETS_DATABASE[oldestEffectId].name.toUpperCase()}' est neutralisée (Limite de 2 actifs), mais reste sur le plateau.`);
+            }
+            state.activeEffectsC.push(cardId); // On active le nouvel effet
+        }
+
         if (!isForced) {
             decreetBloquant = executeDecreetPower(cardId);
             checkCasePower(state.crise);
@@ -112,7 +130,7 @@ export function applyDecret(cardId, type, isForced = false) {
 
         if (state.rebellionActive) {
             state.rebellionActive = false;
-            Logger.add("💥 SYSTÈME : Une Directive de Crise a été promulguée. L'effet du décret RÉBELLION est désormais obsolète (mais le point de Survie reste acquis).");
+            Logger.add("💥 SYSTÈME : Une Directive de Crise a été promulguée. L'effet du décret RÉBELLION est désormais obsolète.");
         }
         
     } else if (type === 'F') {
@@ -186,8 +204,9 @@ export function applyForced() {
  */
 export function getOxygenMaxLimit() {
     let fuiteCount = 0;
-    if (state.slotsSurvieCards.includes('fuite_air_s')) fuiteCount++;
-    if (state.slotsCriseCards.includes('fuite_air_c')) fuiteCount++;
+    // On vérifie si l'EFFET est actif, et non pas si la carte est juste posée
+    if (state.activeEffectsS.includes('fuite_air_s')) fuiteCount++;
+    if (state.activeEffectsC.includes('fuite_air_c')) fuiteCount++;
     
     return Math.max(1, 3 - fuiteCount);
 }
