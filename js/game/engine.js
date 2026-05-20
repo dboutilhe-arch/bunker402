@@ -390,3 +390,5 @@ export function showGov(g, s) {
         } else {
             p.conn.send({ type: 'VOTE_START', g: g.toUpperCase(), s: s.toUpperCase() });
         }
+    });
+}
