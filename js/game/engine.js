@@ -116,11 +116,15 @@ export function nextTurn() {
     });
 
     let eligiblePlayers = players.filter(p => p.isAlive).map(p => p.name).filter(name => {
+        const pObj = players.find(pl => pl.name === name);
+        const pIdx = players.indexOf(pObj);
+
         if (name === activeG.name) return false;
         if (name === state.lastSentinelle) return false;
         if (players.length > 5 && name === state.lastGardien) return false;
         if (state.vigileBannedPlayer && name.toLowerCase() === state.vigileBannedPlayer.toLowerCase()) return false;
-        if (pIdx === state.propheteIdx) return false;
+        if (pIdx === state.propheteIdx) return false; 
+        
         return true;
     });
     
@@ -306,11 +310,15 @@ export function restorePlayerAction(player) {
                     .filter(p => p.isAlive)
                     .map(p => p.name)
                     .filter(name => {
+                        const pObj = players.find(pl => pl.name === name);
+                        const pIdx = players.indexOf(pObj);
+
                         if (name === players[state.curG].name) return false;
                         if (name === state.lastSentinelle) return false;
                         if (players.length > 5 && name === state.lastGardien) return false;
                         if (state.vigileBannedPlayer && name.toLowerCase() === state.vigileBannedPlayer.toLowerCase()) return false;
                         if (pIdx === state.propheteIdx) return false;
+
                         return true;
                     });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
