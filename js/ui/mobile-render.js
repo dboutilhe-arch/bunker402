@@ -631,13 +631,15 @@ export function showCleanUI(choix) {
 
 export function showWaitPropheteVoteUI(gardienName, sentinelleName) {
     document.getElementById('main-ui').innerHTML = `
-        <div style="margin-top: 40px; border: 2px solid #9b59b6; padding: 20px; border-radius: 10px; background: rgba(155, 89, 182, 0.1);">
-            <h2 style="color: #9b59b6; text-transform: uppercase; letter-spacing: 1px;">🔮 VISION PROPHÉTIQUE</h2>
-            <p style="color: #e0e0e0; font-size: 0.9em; margin-top: 15px;">Vos adeptes se prononcent sur le conseil :</p>
-            <p style="color: #f1c40f; font-weight: bold; font-size: 1.1em; text-transform: uppercase;">⭐ ${gardienName} &nbsp;&amp;&nbsp; 🔷 ${sentinelleName}</p>
-            
-            <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #9b59b6; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite; box-shadow: 0 0 15px rgba(155, 89, 182, 0.4);"></div>
-            
-            <p style="font-size: 0.75em; color: #9b59b6; letter-spacing: 1px;">[ MANIPULATION DE LA LIGNE TEMPORELLE EN COURS ]</p>
+        <div style="margin-top: 40px; border: 2px solid #ffffff; padding: 20px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 20px rgba(255, 255, 255, 0.2), inset 0 0 10px rgba(255, 255, 255, 0.1);">
+            <h2 style="color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,255,255,0.5);">🔮 VISION PROPHÉTIQUE</h2>
+            <p style="color: #aaaaaa; font-size: 0.9em; margin-top: 15px; font-style: italic;">Vos adeptes se prononcent sur le conseil :</p>
+            <p style="color: #ffffff; font-weight: bold; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; margin: 10px 0;">
+                ⭐ <span style="border-bottom: 1px solid #ffffff; padding-bottom: 2px;">${gardienName}</span> 
+                &nbsp;&amp;&nbsp; 
+                🔷 <span style="border-bottom: 1px solid #ffffff; padding-bottom: 2px;">${sentinelleName}</span>
+            </p>
+            <div class="loader" style="margin: 30px auto; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #ffffff; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite; box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);"></div>
+            <p style="font-size: 0.8em; color: rgba(255, 255, 255, 0.6); letter-spacing: 1px; font-weight: bold;">[ CLARIFICATION DE LA LIGNE TEMPORELLE EN COURS ]</p>
         </div>`;
 }
