@@ -213,7 +213,11 @@ function handleFinalChoice(data) {
     
     // On ajuste le log si c'était le Gardien sous 49.3
     if (state.currentPhase === "LÉGISLATION_493") {
-        Logger.add(`🔨 49.3 RÉSOLU : Le Gardien a choisi seul de promulguer : ${cardData.name.toUpperCase()}`);
+        Logger.add(`🔨 49.3 RÉSOLU : Le Gardien a promulgué de force : ${cardData.name.toUpperCase()}`);
+    } else if (state.currentPhase === "LÉGISLATION_493_S") {
+        Logger.add(`🔨 49.3 INVERSÉ : La Sentinelle a promulgué de force : ${cardData.name.toUpperCase()}`);
+    } else if (state.currentPhase === "LÉGISLATION_G_ENACT") {
+        Logger.add(`LÉGISLATION (CONTRE-POUVOIR) : Le Gardien a promulgué le décret : ${cardData.name.toUpperCase()}`);
     } else {
         Logger.add(`LÉGISLATION : La Sentinelle a promulgué le décret : ${cardData.name.toUpperCase()}`);
     }
@@ -401,33 +405,23 @@ function handleVigileBan(conn, data) {
 }
 
 export function handlePropheteDiscard(conn, data) {
-    Logger.add(`🔮 PROPHÉTIE : Le Prophète a écarté une carte secrètement et transmet les 3 restantes au Gardien.`);
-    
-    // 1. On stocke la carte écartée dans la défausse globale
+    Logger.add(`🔮 PROPHÉTIE : Le Prophète a écarté une carte secrètement et transmet les 3 restantes.`);
     state.discard.push(data.discardedCardId);
+    state.currentLegislativeCards = data.remaining;
     
-    // 2. On met à jour l'état central pour la phase législative du Gardien
-    state.currentPhase = "LÉGISLATION_G";
-    state.currentLegislativeCards = data.remaining; // Correction du nom de variable (data.remaining)
+    const isContrePouvoir = state.activeEffectsS.includes('contre_pouvoir');
+    state.currentPhase = isContrePouvoir ? "LÉGISLATION_S_DISCARD" : "LÉGISLATION_G";
     
-    // 3. On allume l'écran du Gardien actuel avec les 3 cartes filtrées
-    const activeG = players[state.curG];
-    if (activeG && activeG.conn && activeG.conn.open) {
-        activeG.conn.send({
-            type: 'GARDIEN_PICK', // Modifié pour forcer l'affichage de l'interface du Gardien
-            cards: data.remaining
-        });
+    if (isContrePouvoir) {
+        const activeS = players[state.curSIdx];
+        if (activeS && activeS.conn && activeS.conn.open) activeS.conn.send({ type: 'SENTINELLE_DISCARD_PICK', cards: data.remaining });
+        players.forEach((p, idx) => { if (p.isAlive && idx !== state.curSIdx) p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }); });
+    } else {
+        const activeG = players[state.curG];
+        if (activeG && activeG.conn && activeG.conn.open) activeG.conn.send({ type: 'GARDIEN_PICK', cards: data.remaining });
+        players.forEach((p, idx) => { if (p.isAlive && idx !== state.curG) p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }); });
     }
-    
-    // 4. On met tous les autres joueurs (y compris le prophète qui a fini) en attente du Gardien
-    players.forEach((p, idx) => {
-        if (p.isAlive && idx !== state.curG) {
-            p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
-        }
-    });
-    
-    syncTerminals();
-    render();
+    syncTerminals(); render();
 }
 
 function handleLicenciement(conn, data) {
