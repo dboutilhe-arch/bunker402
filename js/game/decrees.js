@@ -128,9 +128,12 @@ export function applyDecret(cardId, type, isForced = false) {
             checkCasePower(state.crise);
         }
 
+        // On neutralise Rébellion et la retire du tableau des effets bleus actifs
         if (state.rebellionActive) {
             state.rebellionActive = false;
-            Logger.add("💥 SYSTÈME : Une Directive de Crise a été promulguée. L'effet du décret RÉBELLION est désormais obsolète.");
+            state.activeEffectsS = state.activeEffectsS.filter(id => id !== 'rebellion');
+            
+            Logger.add("💥 SYSTÈME : Une Directive de Crise a été promulguée. L'effet du décret RÉBELLION est désormais obsolète (Emplacement d'effet libéré).");
         }
         
     } else if (type === 'F') {
