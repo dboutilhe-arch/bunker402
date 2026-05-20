@@ -75,10 +75,8 @@ export function rebuildActivePlayerTags() {
 export function syncTerminals() {
     state.aliveNames = players.filter(p => p.isAlive).map(p => p.name);
     state.censoredNames = players.filter(p => p.isCensored).map(p => p.name);
-    
-    // ON ENVOIE LES JOURNALISTES AU STATE POUR LES SMARTPHONES
     state.journalisteNames = players.filter(p => p.isAlive && p.metier === 'Journaliste').map(p => p.name);
-    // ON ENVOIE LE NOMBRE DE MORTS AU STATE POUR LE FOSSOYEUR
+    state.civilianNames = players.filter(p => p.isAlive && p.metier === 'Civil').map(p => p.name);
     state.deadCount = players.filter(p => !p.isAlive).length;
     
     players.forEach(p => {
