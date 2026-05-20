@@ -90,7 +90,8 @@ export function nextTurn() {
     }
 
     let attempts = 0;
-    while (!players[state.curG].isAlive && attempts < players.length) {
+    // 🔮 SÉCURITÉ PROPHÈTE : On saute le joueur s'il est mort OU s'il est le Prophète
+    while ((!players[state.curG].isAlive || state.curG === state.propheteIdx) && attempts < players.length) {
         state.curG = (state.curG + 1) % players.length;
         attempts++;
     }
@@ -187,6 +188,33 @@ export function resolveVote() {
     if (state.votes.oui > state.votes.non) {
         state.currentPhase = "LÉGISLATION_G";
         
+        // 🔮 INTERCEPTION PROPHÈTE : S'il y a un prophète actif en jeu
+        if (state.propheteIdx !== -1) {
+            const activeProphete = players[state.propheteIdx];
+            Logger.add(`🔮 PROPHÉTIE : Le Prophète ${activeProphete.name} intercepte la pioche législative et tire 4 cartes !`);
+            
+            state.currentLegislativeCards = [];
+            for (let i = 0; i < 4; i++) {
+                state.currentLegislativeCards.push(drawCard());
+            }
+            state.currentLegislativeCards = state.currentLegislativeCards.filter(Boolean);
+
+            // On met tout le monde en attente sauf le Prophète
+            players.filter(p => p.isAlive).forEach(p => {
+                p.conn.send({ type: 'WAIT_LEGISLATION', step: `PROPHÈTE (${activeProphete.name})` });
+            });
+
+            // On envoie les 4 cartes au Prophète (On crée un protocole dédié pour son smartphone)
+            setTimeout(() => {
+                activeProphete.conn.send({ type: 'PROPHETE_PICK', cards: state.currentLegislativeCards });
+            }, 100);
+
+            state.oxy = getOxygenMaxLimit();
+            syncTerminals();
+            return; // 🛑 ON CORTE LE FLUX ICI ! Le Gardien n'a pas encore de cartes.
+        }
+
+        // 🛑 FLUX NORMAL STANDARD (Si pas de Prophète)
         const countToDraw = state.archivistePowerActive ? 4 : 3;
         state.currentLegislativeCards = [];
         
