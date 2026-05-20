@@ -186,14 +186,30 @@ export function showLegislativeUI(role, cards) {
     mobileState.currentHand = cards;
     
     ui.innerHTML = `<h3>LÉGISLATION : ${role}</h3>`;
-    ui.innerHTML += `<p style="font-size:0.85em; color:#888;">${role === 'GARDIEN' ? 'SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER' : 'SÉLECTIONNEZ LE DÉCRET À PROMULGUER'}</p>`;
+    
+    // Ajustement de la consigne textuelle si c'est le Prophète
+    let descAction = 'SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER';
+    if (role === 'PROPHÈTE') {
+        descAction = 'SÉLECTIONNEZ LE DÉCRET À ÉCARTER (3 RESTANTS POUR LE GARDIEN)';
+    } else if (role !== 'GARDIEN') {
+        descAction = 'SÉLECTIONNEZ LE DÉCRET À PROMULGUER';
+    }
+    
+    ui.innerHTML += `<p style="font-size:0.85em; color:#888;">${descAction}</p>`;
     
     const controls = document.createElement('div');
     controls.className = "action-controls theme-power";
     
     const btnValidate = document.createElement('button');
     btnValidate.className = "btn-action validate";
-    btnValidate.innerText = role === 'GARDIEN' ? "DÉFAUSSER" : "PROMULGUER";
+    
+    // Libellé du bouton
+    if (role === 'PROPHÈTE' || role === 'GARDIEN') {
+        btnValidate.innerText = "DÉFAUSSER";
+    } else {
+        btnValidate.innerText = "PROMULGUER";
+    }
+    
     controls.appendChild(btnValidate);
     ui.appendChild(controls);
 
@@ -227,7 +243,12 @@ export function showLegislativeUI(role, cards) {
             cardsElements.forEach(el => el.style.boxShadow = "");
             selectedCardId = cardId;
             selectedCardIndex = i;
-            cardElement.style.boxShadow = "0 0 20px #ffffff, inset 0 0 10px #ffffff";
+            // Si c'est le prophète, on fait briller la carte sélectionnée en violet magique, sinon en blanc standard
+            if (role === 'PROPHÈTE') {
+                cardElement.style.boxShadow = "0 0 20px #9b59b6, inset 0 0 10px #9b59b6";
+            } else {
+                cardElement.style.boxShadow = "0 0 20px #ffffff, inset 0 0 10px #ffffff";
+            }
             btnValidate.classList.add('ready');
         };
         cardContainer.appendChild(cardElement);
@@ -236,14 +257,31 @@ export function showLegislativeUI(role, cards) {
     btnValidate.onclick = () => {
         if (selectedCardId === null) return;
         
-        if (role === 'GARDIEN') {
+        if (role === 'PROPHÈTE') {
+            // 🔮 LOGIQUE MOBILE DU PROPHÈTE : On filtre pour lui donner les 3 cartes restantes
+            let remaining = [...mobileState.currentHand];
+            remaining.splice(selectedCardIndex, 1);
+            
+            // On envoie le paquet spécifique prophète
+            mobileState.conn.send({ 
+                type: 'DISCARD_DONE', 
+                discardedCardId: selectedCardId, 
+                remaining: remaining 
+            });
+            ui.innerHTML = `<div style="margin-top:40px; color:#9b59b6;">🔮 Alignement Prophétique transmis...<br>Génération des choix du Gardien.</div>`;
+            
+        } else if (role === 'GARDIEN') {
+            // FLUX STANDARD GARDIEN
             let remaining = [...mobileState.currentHand]; 
             remaining.splice(selectedCardIndex, 1);
             mobileState.conn.send({ type: 'DISCARD_DONE', discardedCardId: selectedCardId, remaining: remaining });
+            ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
+            
         } else {
+            // FLUX STANDARD SENTINELLE
             mobileState.conn.send({ type: 'FINAL_CHOICE', card: selectedCardId });
+            ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
         }
-        ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
     };
     
     ui.appendChild(cardContainer);
