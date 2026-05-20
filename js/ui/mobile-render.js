@@ -357,9 +357,18 @@ export function openTargetSelector(actionType, title, isForced = false) {
 
     listToUse.forEach(name => {
         if (name.toLowerCase() === mobileState.myName.toLowerCase()) return;
+        
+        // 1. Sécurité Métier : Censure de l'Intendant
         if (actionType === 'REQUEST_CENSURE') {
             if (mobileState.serverState?.censoredNames?.includes(name)) return;
             if (mobileState.serverState?.journalisteNames?.includes(name)) return;
+        }
+        
+        // 🔮 2. SÉCURITÉ PROPHÈTE : On masque son bouton si c'est un Coup d'État
+        // On récupère l'index du joueur pour vérifier s'il est le prophète actif
+        const pIdx = mobileState.allPlayers.findIndex(plName => plName.toUpperCase() === name.toUpperCase());
+        if (actionType === 'REQUEST_COUP_ETAT' && pIdx === mobileState.serverState?.propheteIdx) {
+            return; // On saute ce joueur, son bouton ne sera pas créé !
         }
         
         const btn = document.createElement('button');
