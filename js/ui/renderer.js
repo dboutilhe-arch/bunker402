@@ -92,7 +92,7 @@ export function syncTerminals() {
  * Mise à jour des plateaux (Oxygène, Survie, Crise, Suffrage)
  */
 export function render() {
-    // Mise à jour de la barre d'oxygène
+    // 1. Mise à jour de la barre d'oxygène
     const oxyBar = document.getElementById('oxy-level');
     if (oxyBar) {
         oxyBar.style.width = (state.oxy / 3 * 100) + "%";
@@ -104,14 +104,14 @@ export function render() {
         oxyText.innerText = `NIVEAU D'OXYGÈNE : ${state.oxy} / 3`;
     }
 
-    // Mise à jour des compteurs de pioche et défausse
+    // 2. Mise à jour des compteurs de pioche et défausse
     const deckCountEl = document.getElementById('deck-count');
     const discardCountEl = document.getElementById('discard-count');
     
     if (deckCountEl) deckCountEl.innerText = state.deck ? state.deck.length : 0;
     if (discardCountEl) discardCountEl.innerText = state.discard ? state.discard.length : 0;
     
-    // Slots Décrets Survie (Bleu)
+    // 3. Slots Décrets Survie (Bleu)
     document.getElementById('slots-s').innerHTML = Array(5).fill(0)
     .map((_, i) => {
         const cardId = state.slotsSurvieCards[i];
@@ -123,9 +123,9 @@ export function render() {
             </div>`;
     }).join('');
     
-    // Slots Décrets Crise avec affichage des Pouvoirs
+    // 4. Slots Décrets Crise avec affichage des Pouvoirs
     const n = players.length;
-    const configPouvoirs = POWER_MAP[n] || POWER_MAP['default']; // Récupère la config selon le nombre de joueurs
+    const configPouvoirs = POWER_MAP[n] || POWER_MAP['default'];
 
     document.getElementById('slots-c').innerHTML = Array(6).fill(0)
     .map((_, i) => {
@@ -133,7 +133,6 @@ export function render() {
         const cardId = state.slotsCriseCards[i];
         const pouvoirNom = configPouvoirs[caseNum];
         
-        // Priorité au nom du décret s'il est posé, sinon affiche le pouvoir de la case
         let labelText = "";
         if (cardId) {
             labelText = `<div style="font-size:0.6em; color:#e74c3c; font-weight:bold; margin-top:4px;">${DECREETS_DATABASE[cardId].name.toUpperCase()}</div>`;
@@ -148,7 +147,7 @@ export function render() {
             </div>`;
     }).join('');
     
-    // Slots Ordre du jour (Gris)
+    // 5. Slots Ordre du jour (Gris)
     const cardIdF = state.slotsSuffrageCard;
     const nameLabelF = cardIdF ? `<div style="font-size:0.6em; color:#7f8c8d; font-weight:bold; margin-top:4px;">${DECREETS_DATABASE[cardIdF].name.toUpperCase()}</div>` : "";
     document.getElementById('slots-f').innerHTML = `
@@ -157,15 +156,16 @@ export function render() {
             ${nameLabelF}
         </div>`;
 
-    // ✨ METTRE À JOUR LE POIDS DES VOTES SOUS LES ÉTIQUETTES DE L'ÉCRAN CENTRAL
-    players.forEach((p, idx) => { // ◄── Ajout de idx ici
+    // 6. ✨ GESTION DYNAMIQUE DES ÉTIQUETTES DES JOUEURS
+    players.forEach((p, idx) => {
         const activeList = document.getElementById('active-player-list');
         if (!activeList) return;
         
         const tag = activeList.querySelector(`[id="tag-${p.name.toLowerCase()}"]`);
         if (tag) {
-            // On gère la classe et le nom si c'est le Prophète
             const nameDiv = tag.querySelector('.p-name');
+            
+            // Gestion visuelle exclusive du Prophète
             if (idx === state.propheteIdx) {
                 tag.classList.add('prophete-style');
                 if (nameDiv && !nameDiv.innerHTML.includes("🔮")) {
@@ -175,6 +175,7 @@ export function render() {
                 tag.classList.remove('prophete-style');
             }
 
+            // Création ou récupération de la zone du poids de vote
             let weightDiv = tag.querySelector('.p-weight');
             if (!weightDiv) {
                 weightDiv = document.createElement('div');
@@ -184,37 +185,31 @@ export function render() {
                 tag.appendChild(weightDiv);
             }
 
-            if (index === state.propheteIdx) {
-                playerElement.classList.add('prophete-style');
-                // Optionnel : ajouter un petit badge textuel à côté de son nom
-                nameElement.innerHTML = `🔮 ${player.name} [PROPHÈTE]`;
-            }
-
-            // Affichage conditionnel selon le statut du personnel
+            // Contenu de la div selon le statut vital et politique
             if (!p.isAlive) {
                 weightDiv.innerHTML = `<span style="color: #555;">[ÉLIMINÉ]</span>`;
             } else if (p.isCensored) {
                 weightDiv.innerHTML = `<span style="color: #e74c3c; font-weight: bold;">VOIX : 0 (MUET)</span>`;
+            } else if (idx === state.propheteIdx) {
+                // Le prophète est vivant, non censuré, mais n'a pas de voix !
+                weightDiv.innerHTML = `<span style="color: #9b59b6; font-weight: bold;">VOIX : PROPHÈTE</span>`;
             } else {
                 const currentWeight = calculatePlayerVoteWeight(p);
-                // Si le poids est normal, on met la couleur par défaut (qui sera écrasée par le CSS lors du vote)
                 const color = currentWeight > 1 ? '#f1c40f' : '#2ecc71'; 
                 weightDiv.innerHTML = `<span style="color: ${color}; font-weight: ${currentWeight > 1 ? 'bold' : 'normal'};">VOIX : ${currentWeight}</span>`;
             }
         }
     });
 
-    // --- RENDU DES DIRECTIVES ET DU SUFFRAGE ACTIF EN BAS D'INDEX ---
+    // 7. --- RENDU DES DIRECTIVES EN VIGUEUR (BAS D'ÉCRAN) ---
     const listBlue = document.getElementById('rules-list-blue');
     const listRed = document.getElementById('rules-list-red');
     const listGrey = document.getElementById('rules-list-grey');
     const countBlue = document.getElementById('count-blue');
     const countRed = document.getElementById('count-red');
 
-    // 1. Rendu des effets permanents Bleus actifs
     if (listBlue) {
         if (countBlue) countBlue.innerText = `(${state.activeEffectsS.length}/2)`;
-        
         if (state.activeEffectsS.length === 0) {
             listBlue.innerHTML = `<li style="color: #555; font-style: italic; border: none; background: none; padding: 0;">Aucun effet permanent actif</li>`;
         } else {
@@ -222,10 +217,8 @@ export function render() {
         }
     }
 
-    // 2. Rendu des effets permanents Rouges actifs
     if (listRed) {
         if (countRed) countRed.innerText = `(${state.activeEffectsC.length}/2)`;
-        
         if (state.activeEffectsC.length === 0) {
             listRed.innerHTML = `<li style="color: #555; font-style: italic; border: none; background: none; padding: 0;">Aucun effet permanent actif</li>`;
         } else {
@@ -233,7 +226,6 @@ export function render() {
         }
     }
 
-    // 3. Rendu du Suffrage unique (Gris)
     if (listGrey) {
         if (!state.slotsSuffrageCard) {
             listGrey.innerHTML = `<li style="color: #555; font-style: italic; border: none; background: none; padding: 0;">Aucun décret de suffrage actif</li>`;
