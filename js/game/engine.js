@@ -317,18 +317,17 @@ export function restorePlayerAction(player) {
     switch(state.currentPhase) {
         case "VOTE":
             if (player.isCensored) {
-                player.conn.send({ type: 'CENSORED_ALERT', by: player.censoredBy });
-            } else if (players.indexOf(player) === state.propheteIdx) {
-                // 🔮 SÉCURITÉ RECONNEXION PROPHÈTE
-                player.conn.send({ 
-                    type: 'WAIT_PROPHETE_VOTE', 
-                    g: g.toUpperCase(), 
-                    s: s.toUpperCase()
-                });
+                    player.conn.send({ type: 'CENSORED_ALERT', by: player.censoredBy }); // Check si censuré
+            } 
+            else if (state.talionBanned.includes(player.name)) {
+                    player.conn.send({ type: 'TALION_ALERT' }); // Check si puni par Talion
+            }
+            else if (players.indexOf(player) === state.propheteIdx) {
+                    player.conn.send({ type: 'WAIT_PROPHETE_VOTE', g: g.toUpperCase(), s: s.toUpperCase() }); // Check si Prophète 
             } else {
                 const aDejaVote = state.votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
-                if (aDejaVote) player.conn.send({ type: 'CLEAN_UI' });
-                else player.conn.send({ type: 'VOTE_START', g: players[state.curG].name.toUpperCase(), s: state.currentProposedS.toUpperCase() });
+                if (aDejaVote) player.conn.send({ type: 'CLEAN_UI' }); // Check si a déjà voté
+                else player.conn.send({ type: 'VOTE_START', g: players[state.curG].name.toUpperCase(), s: state.currentProposedS.toUpperCase() }); // Sinon on remet le vote
             }
             break;
 
@@ -418,7 +417,7 @@ export function showGov(g, s) {
     document.getElementById('s-name').innerText = s.toUpperCase(); 
     document.getElementById('s-name').style.color = "#3498db";
 
-    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored && players.indexOf(p) !== state.propheteIdx).length;
+    const eligibleCount = players.filter(p => isEligibleToVote(p)).length;
     document.getElementById('vote-summary').innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : 0 / ${eligibleCount}`;
     document.getElementById('vote-summary').style.color = "#f1c40f"; 
     Logger.add(`Ouverture du scrutin : Gouvernement proposé ${g.toUpperCase()} & ${s.toUpperCase()}`);
@@ -440,4 +439,21 @@ export function showGov(g, s) {
             p.conn.send({ type: 'VOTE_START', g: g.toUpperCase(), s: s.toUpperCase() });
         }
     });
+}
+
+/**
+ * Fonction centrale pour savoir si un joueur est en droit de voter
+ * à l'instant T.
+ */
+export function isEligibleToVote(player) {
+    // 1. Il doit être vivant
+    if (!player.isAlive) return false;
+    // 2. Il ne doit pas être censuré
+    if (player.isCensored) return false;
+    // 3. Il ne doit pas être banni par le Talion
+    if (state.talionBanned.includes(player.name)) return false;
+    // 4. Il ne doit pas être le prophète
+    if (players.indexOf(player) === state.propheteIdx) return false;
+    
+    return true;
 }
