@@ -114,6 +114,12 @@ export function executePlayer(requester, targetName) {
         return triggerWin("SURVIVANTS", "L'Alpha a été éliminé du complexe.");
     }
 
+    if (playerIdx === state.propheteIdx) {
+        Logger.add(`💀 MORGUE : Le Prophète a été éliminé. La Prophétie prend fin immédiatement.`);
+        state.propheteIdx = -1;
+        state.activeEffectsC = state.activeEffectsC.filter(id => id !== 'prophete');
+    }
+
     requester.conn.send({
         type: 'EXECUTION_RESULT',
         target: targetName,
