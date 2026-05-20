@@ -124,6 +124,26 @@ function handleData(data) {
             showLegislativeUI("PROPHÈTE", data.cards);
             break;
 
+        case 'SENTINELLE_DISCARD_PICK':
+            showLegislativeUI("SENTINELLE (DÉFAUSSE)", data.cards);
+            break;
+            
+        case 'GARDIEN_ENACT_PICK':
+            showLegislativeUI("GARDIEN (PROMULGATION)", data.cards);
+            break;
+            
+        case 'SENTINELLE_493_PICK':
+            showLegislativeUI("SENTINELLE (49.3 - CHOIX FINAL)", data.cards);
+            break;
+            
+        case 'GARDIEN_493_VIEW':
+            showView493(data.cards, "SENTINELLE"); // On affiche que la Sentinelle choisit
+            break;
+            
+        case 'SENTINELLE_493_VIEW':
+            showView493(data.cards, "GARDIEN"); // On affiche que le Gardien choisit
+            break;
+
         case 'BLOOD_TEST_RESULT':
             showBloodResult(data);
             break;
