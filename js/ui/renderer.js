@@ -185,14 +185,14 @@ export function render() {
                 tag.appendChild(weightDiv);
             }
 
-            // Contenu de la div selon le statut vital et politique
+           // Contenu de la div selon le statut vital et politique
             if (!p.isAlive) {
                 weightDiv.innerHTML = `<span style="color: #555;">[ÉLIMINÉ]</span>`;
             } else if (p.isCensored) {
                 weightDiv.innerHTML = `<span style="color: #e74c3c; font-weight: bold;">VOIX : 0 (MUET)</span>`;
             } else if (idx === state.propheteIdx) {
-                // Le prophète est vivant, non censuré, mais n'a pas de voix !
-                weightDiv.innerHTML = `<span style="color: #9b59b6; font-weight: bold;">VOIX : PROPHÈTE</span>`;
+                // 🔮 Le prophète est divin, sa voix est Blanche
+                weightDiv.innerHTML = `<span style="color: #ffffff; font-weight: bold; text-shadow: 0 0 5px rgba(255,255,255,0.5);">PAROLE DIVINE</span>`;
             } else {
                 const currentWeight = calculatePlayerVoteWeight(p);
                 const color = currentWeight > 1 ? '#f1c40f' : '#2ecc71'; 
