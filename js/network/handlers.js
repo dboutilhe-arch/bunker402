@@ -294,11 +294,9 @@ function handleActionConfirmed() {
         state.currentPowerActive = false;
         syncTerminals();
         setTimeout(() => {
-            // Si un ordre extraordinaire est en cours, on ne décale pas l'index.
-            // La variable state.curG a déjà été fixée sur la cible dans handleCoupEtat.
-            if (state.nextNormalGardien === null) {
-                state.curG = (state.curG + 1) % players.length;
-            }
+            // ✨ Comme le Coup d'État a déjà déplacé state.curG sur la bonne cible,
+            // on ne fait un "+1" QUE si aucun pouvoir interactif n'était en cours.
+            // Vu qu'on vient de résoudre un pouvoir (Coup d'état, Censure, Exec), on ne touche à RIEN et on lance !
             state.isProcessingAction = false;
             nextTurn();
         }, 500); 
@@ -335,20 +333,18 @@ function handleCoupEtat(conn, data) {
     const targetIdx = players.findIndex(p => p.name === data.targetName);
     if (targetIdx === -1 || !players[targetIdx].isAlive) return;
 
-    Logger.add(`🔥 COUP D'ÉTAT : ${requester.name} a désigné ${data.targetName} comme prochain Gardien !`);
+    Logger.add(`🔥 COUP D'ÉTAT : ${requester.name} a déstabilisé le pouvoir et téléporté la ligne temporelle sur ${data.targetName} !`);
 
-    // ✨ 1. ON SAUVEGARDE L'AVENIR : Le prochain normal, c'est le successeur de Luc (requester)
-    const currentGardienIdx = players.findIndex(p => p.name === requester.name);
-    state.nextNormalGardien = (currentGardienIdx + 1) % players.length;
-
-    // ✨ 2. ON PROGRESSE DIRECTEMENT VERS LA CIBLE
+    // ✨ LA SIMPLIFICATION INDICE : On force le Gardien sur la cible définitivement
     state.curG = targetIdx;
 
-    // ✨ 3. RÉCAP VISUEL PROPRE : Type dédié envoyé au mobile
+    // On s'aligne sur le système de validation de Censure/Test Sanguin
+    state.currentPowerActive = true;
+
     requester.conn.send({
         type: 'COUP_ETAT_RESULT',
         target: data.targetName,
-        isForced: state.currentPowerActive
+        isForced: true // Force l'attente du clic sur le bouton OK
     });
 
     syncTerminals();

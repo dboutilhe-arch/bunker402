@@ -146,12 +146,10 @@ export function applyDecret(cardId, type, isForced = false) {
         return;
     }
 
+    // --- LOGIQUE DE TRANSITION DE TOUR (TOUT EN BAS DE applyDecret) ---
     if (!state.currentPowerActive && !decreetBloquant) {
-        if (state.nextNormalGardien !== null) {
-            state.curG = state.nextNormalGardien;
-            state.nextNormalGardien = null;
-            Logger.add("🔊 SYSTÈME : Fin du régime extraordinaire. Retour à l'ordre de passage standard.");
-        } else {
+        state.curG = (state.curG + 1) % players.length;
+        while (!players[state.curG].isAlive) {
             state.curG = (state.curG + 1) % players.length;
         }
         setTimeout(() => { 
@@ -159,6 +157,7 @@ export function applyDecret(cardId, type, isForced = false) {
             nextTurn(); 
         }, 1000);
     } else {
+        // ✨ Si decreetBloquant est true (Coup d'état, Censure, Test), on fige et on attend le mobile !
         state.isProcessingAction = true;
     }
 }
