@@ -7,7 +7,7 @@ import {
     showEndGame, resetAffichageJ, showSentinelle493View, 
     showPurgeResult, showReorganisationResult, showBloodSwappedAlert,
     showWaitSentinelleUI, showWaitLegislationUI, showWaitPowerUI, 
-    showDeadUI, showCensoredAlertUI, showCleanUI                 
+    showDeadUI, showCensoredAlertUI, showCleanUI, showWaitPropheteVoteUI                 
 } from '../ui/mobile-render.js';
 
 // Conteneur d'état dynamique partagé par référence entre les modules
@@ -105,6 +105,10 @@ function handleData(data) {
 
         case 'WAIT_POWER':
             showWaitPowerUI(data.gardienName, data.title);
+            break;
+
+        case 'WAIT_PROPHETE_VOTE':
+            showWaitPropheteVoteUI(data.g, data.s);
             break;
 
         case 'GARDIEN_PICK':
