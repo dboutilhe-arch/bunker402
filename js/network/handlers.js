@@ -169,11 +169,11 @@ function handleVote(data) {
 
     render();
   
-    // Compteur de personnes physiques attendues
-    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored).length;
+    // Compteur de personnes physiques attendues (exclusion des morts, des censurés et du Prophète)
+    const eligibleCount = players.filter(p => p.isAlive && !p.isCensored && players.indexOf(p) !== state.propheteIdx).length;
     const totalJoueursAyantVote = state.votes.list.length;
 
-    // Mise à jour de la console
+    // Mise à jour de la console centrale PC
     const summary = document.getElementById('vote-summary');
     if (summary) {
         summary.innerText = `SCRUTIN EN COURS : Approuvez-vous ce conseil ?\nVOTES TRANSMIS : ${totalJoueursAyantVote} / ${eligibleCount}`;
@@ -182,7 +182,7 @@ function handleVote(data) {
   
     Logger.add(`Données de vote reçues de : ${data.playerName}`);
   
-    // Clôture automatique si tout le monde a voté
+    // Clôture automatique si toutes les voix physiques éligibles sont reçues
     if (totalJoueursAyantVote === eligibleCount) {
         Logger.add("Scrutin terminé. Calcul des résultats...");
         resolveVote();
