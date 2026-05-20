@@ -192,7 +192,7 @@ export function render() {
                 weightDiv.innerHTML = `<span style="color: #e74c3c; font-weight: bold;">VOIX : 0 (MUET)</span>`;
             } else if (idx === state.propheteIdx) {
                 // 🔮 Le prophète est divin, sa voix est Blanche
-                weightDiv.innerHTML = `<span style="color: #ffffff; font-weight: bold; text-shadow: 0 0 5px rgba(255,255,255,0.5);">PAROLE DIVINE</span>`;
+                weightDiv.innerHTML = `<span style="color: #000000; font-weight: bold; letter-spacing: 1px;">PAROLE DIVINE</span>`;
             } else {
                 const currentWeight = calculatePlayerVoteWeight(p);
                 const color = currentWeight > 1 ? '#f1c40f' : '#2ecc71'; 
