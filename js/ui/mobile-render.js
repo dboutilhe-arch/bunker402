@@ -628,3 +628,16 @@ export function showCleanUI(choix) {
             <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[SYNCHRONISATION TERMINAL EN ATTENTE DU SCRUTIN]</p>
         </div>`;
 }
+
+export function showWaitPropheteVoteUI(gardienName, sentinelleName) {
+    document.getElementById('main-ui').innerHTML = `
+        <div style="margin-top: 40px; border: 2px solid #9b59b6; padding: 20px; border-radius: 10px; background: rgba(155, 89, 182, 0.1);">
+            <h2 style="color: #9b59b6; text-transform: uppercase; letter-spacing: 1px;">🔮 VISION PROPHÉTIQUE</h2>
+            <p style="color: #e0e0e0; font-size: 0.9em; margin-top: 15px;">Vos adeptes se prononcent sur le conseil :</p>
+            <p style="color: #f1c40f; font-weight: bold; font-size: 1.1em; text-transform: uppercase;">⭐ ${gardienName} &nbsp;&amp;&nbsp; 🔷 ${sentinelleName}</p>
+            
+            <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #9b59b6; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite; box-shadow: 0 0 15px rgba(155, 89, 182, 0.4);"></div>
+            
+            <p style="font-size: 0.75em; color: #9b59b6; letter-spacing: 1px;">[ MANIPULATION DE LA LIGNE TEMPORELLE EN COURS ]</p>
+        </div>`;
+}
