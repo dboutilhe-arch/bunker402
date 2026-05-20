@@ -27,6 +27,10 @@ export function handlePlayerData(conn, data) {
             handleDiscard(data);
             break;
 
+        case 'PROPHETE_DISCARD_DONE':
+            handlePropheteDiscard(conn, data);
+            break;
+
         case 'FINAL_CHOICE':
             handleFinalChoice(data);
             break;
@@ -405,4 +409,34 @@ export function handlePropheteDiscard(conn, data) {
     });
     
     syncTerminals();
+}
+
+export function handlePropheteDiscard(conn, data) {
+    Logger.add(`🔮 PROPHÉTIE : Le Prophète a écarté une carte secrètement et transmet les 3 restantes au Gardien.`);
+    
+    // 1. On stocke la carte écartée dans la défausse globale
+    state.discard.push(data.discardedCardId);
+    
+    // 2. On met à jour l'état central pour la phase législative du Gardien
+    state.currentPhase = "LÉGISLATION_G";
+    state.currentLegislativeCards = data.remaining; // Correction du nom de variable (data.remaining)
+    
+    // 3. On allume l'écran du Gardien actuel avec les 3 cartes filtrées
+    const activeG = players[state.curG];
+    if (activeG && activeG.conn && activeG.conn.open) {
+        activeG.conn.send({
+            type: 'GARDIEN_PICK', // Modifié pour forcer l'affichage de l'interface du Gardien
+            cards: data.remaining
+        });
+    }
+    
+    // 4. On met tous les autres joueurs (y compris le prophète qui a fini) en attente du Gardien
+    players.forEach((p, idx) => {
+        if (p.isAlive && idx !== state.curG) {
+            p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
+        }
+    });
+    
+    syncTerminals();
+    render();
 }
