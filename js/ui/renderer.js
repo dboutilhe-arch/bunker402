@@ -188,6 +188,45 @@ export function render() {
             }
         }
     });
+
+    // --- RENDU DES DIRECTIVES ET DU SUFFRAGE ACTIF EN BAS D'INDEX ---
+    const listBlue = document.getElementById('rules-list-blue');
+    const listRed = document.getElementById('rules-list-red');
+    const listGrey = document.getElementById('rules-list-grey');
+    const countBlue = document.getElementById('count-blue');
+    const countRed = document.getElementById('count-red');
+
+    // 1. Rendu des effets permanents Bleus actifs
+    if (listBlue) {
+        if (countBlue) countBlue.innerText = `(${state.activeEffectsS.length}/2)`;
+        
+        if (state.activeEffectsS.length === 0) {
+            listBlue.innerHTML = `<li style="color: #555; font-style: italic; border: none; background: none; padding: 0;">Aucun effet permanent actif</li>`;
+        } else {
+            listBlue.innerHTML = state.activeEffectsS.map(id => `<li><strong>♾️ ${DECREETS_DATABASE[id].name.toUpperCase()}</strong><br><span style="font-size:0.9em; color:#aaa;">${DECREETS_DATABASE[id].desc}</span></li>`).join('');
+        }
+    }
+
+    // 2. Rendu des effets permanents Rouges actifs
+    if (listRed) {
+        if (countRed) countRed.innerText = `(${state.activeEffectsC.length}/2)`;
+        
+        if (state.activeEffectsC.length === 0) {
+            listRed.innerHTML = `<li style="color: #555; font-style: italic; border: none; background: none; padding: 0;">Aucun effet permanent actif</li>`;
+        } else {
+            listRed.innerHTML = state.activeEffectsC.map(id => `<li><strong>♾️ ${DECREETS_DATABASE[id].name.toUpperCase()}</strong><br><span style="font-size:0.9em; color:#aaa;">${DECREETS_DATABASE[id].desc}</span></li>`).join('');
+        }
+    }
+
+    // 3. Rendu du Suffrage unique (Gris)
+    if (listGrey) {
+        if (!state.slotsSuffrageCard) {
+            listGrey.innerHTML = `<li style="color: #555; font-style: italic; border: none; background: none; padding: 0;">Aucun décret de suffrage actif</li>`;
+        } else {
+            const idF = state.slotsSuffrageCard;
+            listGrey.innerHTML = `<li><strong style="color:#7f8c8d;">🗳️ ${DECREETS_DATABASE[idF].name.toUpperCase()}</strong><br><span style="font-size:0.9em; color:#aaa;">${DECREETS_DATABASE[idF].desc}</span></li>`;
+        }
+    }
 }
 
 /**
