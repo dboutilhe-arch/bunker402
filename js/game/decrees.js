@@ -27,60 +27,73 @@ export function drawCard() {
  */
 export function handleDiscardFromNet(cardId, remainingCards) {
     state.discard.push(cardId); 
-    state.currentLegislativeCards = remainingCards; // Contient les 2 cartes restantes
+    state.currentLegislativeCards = remainingCards;
+    
+    const isContrePouvoir = state.activeEffectsS.includes('contre_pouvoir');
 
-    // LIBERTÉ DE LA PRESSE
+    // 📰 LIBERTÉ DE LA PRESSE (S'applique à la Sentinelle si CP actif, sinon au Gardien)
     if (state.activeEffectsS.includes('presse')) {
         const discardedCardData = DECREETS_DATABASE[cardId];
         if (discardedCardData) {
-            let typeString = "";
-            if (discardedCardData.type === 'S') typeString = "BLEU (SURVIE)";
-            else if (discardedCardData.type === 'C') typeString = "ROUGE (CRISE)";
-            else if (discardedCardData.type === 'F') typeString = "GRIS (SUFFRAGE)";
-            
-            Logger.add(`📰 LIBERTÉ DE LA PRESSE : Le Gardien a défaussé le décret ${discardedCardData.name.toUpperCase()} [${typeString}].`);
+            let typeString = discardedCardData.type === 'S' ? "BLEU" : (discardedCardData.type === 'C' ? "ROUGE" : "GRIS");
+            let actor = isContrePouvoir ? "La Sentinelle" : "Le Gardien";
+            Logger.add(`📰 LIBERTÉ DE LA PRESSE : ${actor} a défaussé publiquement : ${discardedCardData.name.toUpperCase()} [${typeString}].`);
         }
     }
-    
+
     // INTERCEPTION 49.3 ACTIVÉ
     if (state.loi493Active) {
         state.loi493Active = false; // Effet consommé !
-        state.currentPhase = "LÉGISLATION_493"; // Nouvelle phase temporaire pour la synchro
-
-        Logger.add(`⚖️ SYSTÈME [49.3] : Le Gardien transmet le visuel des 2 décrets restants à la Sentinelle.`);
-
-        // 1. On donne le visuel "Lecture seule" à la Sentinelle
-        if (players[state.curSIdx] && players[state.curSIdx].conn.open) {
-            players[state.curSIdx].conn.send({ 
-                type: 'SENTINELLE_493_VIEW', 
-                cards: state.currentLegislativeCards 
-            });
-        }
-
-        // 2. On met instantanément les AUTRES joueurs en attente
-        players.forEach((p, idx) => {
-            if (p.isAlive && idx !== state.curG && idx !== state.curSIdx) {
-                p.conn.send({ type: 'WAIT_LEGISLATION', step: 'CHOIX FINAL GARDIEN (49.3)' });
+        
+        if (isContrePouvoir) {
+            // 49.3 INVERSÉ
+            state.currentPhase = "LÉGISLATION_493_S";
+            Logger.add(`⚖️ SYSTÈME [49.3 + CONTRE-POUVOIR] : La Sentinelle transmet le visuel des 2 décrets restants au Gardien, mais choisira elle-même.`);
+            
+            if (players[state.curG] && players[state.curG].conn.open) {
+                players[state.curG].conn.send({ type: 'GARDIEN_493_VIEW', cards: state.currentLegislativeCards });
             }
-        });
-
-        // 3. On rallume l'écran du Gardien pour qu'il choisisse la carte à PROMULGUER
-        setTimeout(() => {
-            players[state.curG].conn.send({ 
-                type: 'GARDIEN_493_PICK', 
-                cards: state.currentLegislativeCards 
+            players.forEach((p, idx) => {
+                if (p.isAlive && idx !== state.curG && idx !== state.curSIdx) {
+                    p.conn.send({ type: 'WAIT_LEGISLATION', step: 'CHOIX FINAL SENTINELLE (49.3)' });
+                }
             });
-        }, 100);
-
-    } else {
-        // --- FLUX NORMAL STANDARD ---
-        state.currentPhase = "LÉGISLATION_S";
-        players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
-        setTimeout(() => {
+            setTimeout(() => { players[state.curSIdx].conn.send({ type: 'SENTINELLE_493_PICK', cards: state.currentLegislativeCards }); }, 100);
+            
+        } else {
+            // 49.3 CLASSIQUE
+            state.currentPhase = "LÉGISLATION_493";
+            Logger.add(`⚖️ SYSTÈME [49.3] : Le Gardien transmet le visuel des 2 décrets restants à la Sentinelle.`);
+            
             if (players[state.curSIdx] && players[state.curSIdx].conn.open) {
-                players[state.curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: state.currentLegislativeCards });
+                players[state.curSIdx].conn.send({ type: 'SENTINELLE_493_VIEW', cards: state.currentLegislativeCards });
             }
-        }, 100);
+            players.forEach((p, idx) => {
+                if (p.isAlive && idx !== state.curG && idx !== state.curSIdx) {
+                    p.conn.send({ type: 'WAIT_LEGISLATION', step: 'CHOIX FINAL GARDIEN (49.3)' });
+                }
+            });
+            setTimeout(() => { players[state.curG].conn.send({ type: 'GARDIEN_493_PICK', cards: state.currentLegislativeCards }); }, 100);
+        }
+    } else {
+        // --- FLUX STANDARD SANS 49.3 ---
+        if (isContrePouvoir) {
+            state.currentPhase = "LÉGISLATION_G_ENACT";
+            players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' }));
+            setTimeout(() => {
+                if (players[state.curG] && players[state.curG].conn.open) {
+                    players[state.curG].conn.send({ type: 'GARDIEN_ENACT_PICK', cards: state.currentLegislativeCards });
+                }
+            }, 100);
+        } else {
+            state.currentPhase = "LÉGISLATION_S";
+            players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' }));
+            setTimeout(() => {
+                if (players[state.curSIdx] && players[state.curSIdx].conn.open) {
+                    players[state.curSIdx].conn.send({ type: 'SENTINELLE_PICK', cards: state.currentLegislativeCards });
+                }
+            }, 100);
+        }
     }
 
     syncTerminals();
