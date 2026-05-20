@@ -181,6 +181,11 @@ export function nextTurn() {
         render();
         return; 
     }
+    
+    activeG.conn.send({ type: 'YOUR_TURN', eligible: eligiblePlayers });
+    syncTerminals(); 
+    render();
+}
 
 /**
  * Calcul du résultat du vote
