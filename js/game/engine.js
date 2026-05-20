@@ -310,9 +310,9 @@ export function restorePlayerAction(player) {
             } else if (players.indexOf(player) === state.propheteIdx) {
                 // 🔮 SÉCURITÉ RECONNEXION PROPHÈTE
                 player.conn.send({ 
-                    type: 'WAIT_POWER', 
-                    gardienName: players[state.curG].name.toUpperCase(), 
-                    title: "VOS ADÈPTES SONT EN TRAIN DE VOTER" 
+                    type: 'WAIT_PROPHETE_VOTE', 
+                    g: g.toUpperCase(), 
+                    s: s.toUpperCase()
                 });
             } else {
                 const aDejaVote = state.votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
@@ -420,9 +420,9 @@ export function showGov(g, s) {
         } else if (idx === state.propheteIdx) {
             // 🔮 INTERCEPTION PROPHÈTE : On lui coupe l'accès au vote et on lui envoie un écran d'attente dédié
             p.conn.send({ 
-                type: 'WAIT_POWER', 
-                gardienName: g.toUpperCase(), 
-                title: "VOS ADÈPTES SONT EN TRAIN DE VOTER" 
+                type: 'WAIT_PROPHETE_VOTE', 
+                g: g.toUpperCase(), 
+                s: s.toUpperCase()
             });
         } else {
             p.conn.send({ type: 'VOTE_START', g: g.toUpperCase(), s: s.toUpperCase() });
