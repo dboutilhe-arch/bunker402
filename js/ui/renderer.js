@@ -175,6 +175,12 @@ export function render() {
                 tag.appendChild(weightDiv);
             }
 
+            if (index === state.propheteIdx) {
+                playerElement.classList.add('prophete-style');
+                // Optionnel : ajouter un petit badge textuel à côté de son nom
+                nameElement.innerHTML = `🔮 ${player.name} [PROPHÈTE]`;
+            }
+
             // Affichage conditionnel selon le statut du personnel
             if (!p.isAlive) {
                 weightDiv.innerHTML = `<span style="color: #555;">[ÉLIMINÉ]</span>`;
