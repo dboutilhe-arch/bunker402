@@ -362,6 +362,28 @@ export function restorePlayerAction(player) {
             if (isSentinelle) player.conn.send({ type: 'SENTINELLE_PICK', cards: state.currentLegislativeCards });
             else player.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' });
             break;
+
+        case "LÉGISLATION_S_DISCARD":
+            if (isSentinelle) player.conn.send({ type: 'SENTINELLE_DISCARD_PICK', cards: state.currentLegislativeCards });
+            else player.conn.send({ type: 'WAIT_LEGISLATION', step: 'SENTINELLE' });
+            break;
+            
+        case "LÉGISLATION_G_ENACT":
+            if (isGardien) player.conn.send({ type: 'GARDIEN_ENACT_PICK', cards: state.currentLegislativeCards });
+            else player.conn.send({ type: 'WAIT_LEGISLATION', step: 'GARDIEN' });
+            break;
+            
+        case "LÉGISLATION_493":
+            if (isGardien) player.conn.send({ type: 'GARDIEN_493_PICK', cards: state.currentLegislativeCards });
+            else if (isSentinelle) player.conn.send({ type: 'SENTINELLE_493_VIEW', cards: state.currentLegislativeCards });
+            else player.conn.send({ type: 'WAIT_LEGISLATION', step: 'CHOIX FINAL GARDIEN (49.3)' });
+            break;
+
+        case "LÉGISLATION_493_S":
+            if (isSentinelle) player.conn.send({ type: 'SENTINELLE_493_PICK', cards: state.currentLegislativeCards });
+            else if (isGardien) player.conn.send({ type: 'GARDIEN_493_VIEW', cards: state.currentLegislativeCards });
+            else player.conn.send({ type: 'WAIT_LEGISLATION', step: 'CHOIX FINAL SENTINELLE (49.3)' });
+            break;
         
         default:
             if (isGardien) {
