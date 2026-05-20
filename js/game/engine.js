@@ -120,6 +120,7 @@ export function nextTurn() {
         if (name === state.lastSentinelle) return false;
         if (players.length > 5 && name === state.lastGardien) return false;
         if (state.vigileBannedPlayer && name.toLowerCase() === state.vigileBannedPlayer.toLowerCase()) return false;
+        if (pIdx === state.propheteIdx) return false;
         return true;
     });
     
@@ -309,6 +310,7 @@ export function restorePlayerAction(player) {
                         if (name === state.lastSentinelle) return false;
                         if (players.length > 5 && name === state.lastGardien) return false;
                         if (state.vigileBannedPlayer && name.toLowerCase() === state.vigileBannedPlayer.toLowerCase()) return false;
+                        if (pIdx === state.propheteIdx) return false;
                         return true;
                     });
                 player.conn.send({ type: 'YOUR_TURN', eligible: eligible });
