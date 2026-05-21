@@ -8,7 +8,7 @@ import {
     showPurgeResult, showReorganisationResult, showBloodSwappedAlert,
     showWaitSentinelleUI, showWaitLegislationUI, showWaitPowerUI, 
     showDeadUI, showCensoredAlertUI, showCleanUI, showWaitPropheteVoteUI, showTalionUI,
-    showLicenciementResult, showLicenciementAlert
+    showLicenciementResult, showLicenciementAlert, showLobbyWaitingUI
 } from '../ui/mobile-render.js';
 
 // Conteneur d'état dynamique partagé par référence entre les modules
@@ -65,6 +65,8 @@ function connect(isReconnect = false) {
         document.getElementById('setup').classList.add('hidden');
         document.getElementById('game').classList.remove('hidden');
         document.getElementById('display-name').innerText = mobileState.myName.toUpperCase();
+
+        showLobbyWaitingUI();
     });
 
     mobileState.conn.on('data', handleData);

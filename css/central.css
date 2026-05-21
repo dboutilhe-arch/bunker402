@@ -1,26 +1,147 @@
 /* ==========================================================================
-   1. ARCHITECTURE GLOBALE & DESIGN DE BASE
+   1. ARCHITECTURE GLOBALE & DESIGN DE BASE (STYLE TERMINAL CRT)
    ========================================================================== */
 
+* {
+    box-sizing: border-box;
+}
+
 body { 
-    background: #1a1a1a; 
-    color: #e0e0e0; 
+    background-color: #0a0b0d;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9)), 
+                      url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #2ecc71; /* Vert terminal par défaut */
     font-family: 'Courier New', monospace; 
     text-align: center; 
     margin: 0; 
     padding: 10px; 
+    min-height: 100vh;
+}
+
+/* --- EFFET FILTRE CRT (SCANLINES) --- */
+/*body::before {
+    content: " ";
+    display: block;
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    z-index: 9999;
+    background-size: 100% 4px, 6px 100%;
+    pointer-events: none;
+}*/
+
+h1 {
+    font-size: 2.2em;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+/* ==========================================================================
+   1.5. ECRAN D'INITIALISATION (SETUP ZONE)
+   ========================================================================== */
+
+#setup-zone {
+    background: rgba(7, 12, 9, 0.9);
+    border: 2px solid #2ecc71;
+    border-radius: 4px;
+    padding: 40px;
+    width: 90%;
+    max-width: 600px;
+    margin: 40px auto;
+    box-shadow: 0 0 35px rgba(46, 204, 113, 0.15), inset 0 0 20px rgba(0, 0, 0, 0.9);
+    position: relative;
+}
+
+/* Voyant matériel */
+#setup-zone::after {
+    content: "";
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    width: 8px;
+    height: 8px;
+    background-color: #2ecc71;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #2ecc71;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; box-shadow: 0 0 12px #2ecc71; }
+    100% { opacity: 0.4; }
+}
+
+#custom-id {
+    width: 80%;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #27ae60;
+    padding: 15px;
+    color: #2ecc71;
+    font-family: inherit;
+    font-size: 1.1em;
+    letter-spacing: 1px;
+    outline: none;
+    text-transform: uppercase;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#custom-id:focus {
+    border-color: #2ecc71;
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.3), inset 0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+#start-server-btn, #start-btn {
+    width: 80%;
+    background: #2ecc71;
+    color: #050806;
+    border: none;
+    padding: 15px;
+    font-family: inherit;
+    font-size: 1.1em;
+    font-weight: bold;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+
+#start-server-btn:hover, #start-btn:not(:disabled):hover {
+    background: #27ae60;
+    color: #ffffff;
+    box-shadow: 0 0 25px rgba(46, 204, 113, 0.5);
+}
+
+#start-btn:disabled {
+    background: #444;
+    color: #888;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 /* Code d'accès généré dans le Lobby pour lier les téléphones */
 .lobby-code { 
-    font-size: 2.5em; 
+    font-size: 3em; 
     color: #f1c40f; 
-    background: #000; 
-    padding: 5px 20px; 
+    background: rgba(0, 0, 0, 0.8); 
+    padding: 10px 30px; 
     border: 2px solid #f1c40f; 
     display: inline-block; 
-    margin: 10px;
-    letter-spacing: 5px; 
+    margin: 15px;
+    letter-spacing: 8px; 
+    text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+    box-shadow: inset 0 0 15px rgba(241, 196, 15, 0.2);
 }
 
 
@@ -28,27 +149,26 @@ body {
    2. INTERFACES ET COMPTEURS SYSTÈME (HAUT DE PAGE)
    ========================================================================== */
 
-/* Conteneur principal de la jauge d'Oxygène */
 #oxy-bar { 
     height: 25px; 
-    background: #333; 
+    background: #111; 
     border-radius: 15px; 
-    border: 2px solid #555; 
+    border: 2px solid #2ecc71; 
     overflow: hidden; 
     width: 80%; 
-    margin: 10px auto; 
-    position: relative; /* Sert d'ancre pour le texte absolu par-dessus */
+    margin: 10px auto 30px auto; 
+    position: relative;
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.2);
 }
 
-/* Barre de progression bleue de l'oxygène */
 #oxy-level { 
     height: 100%; 
     background: #3498db; 
     width: 100%; 
     transition: 1s; 
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.3);
 }
 
-/* Texte informatif centralisé par-dessus la jauge d'oxygène */
 #oxy-text-central { 
     position: absolute;
     top: 50%;
@@ -58,15 +178,16 @@ body {
     font-weight: bold;
     font-size: 0.85em;
     letter-spacing: 2px;
-    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; /* Assure la lisibilité sur le bleu ou le gris */
+    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; 
     pointer-events: none; 
 }
 
-/* Alerte critique : fait clignoter la jauge en rouge si l'oxygène est <= 1 */
 .critical { 
     animation: blink 1s infinite; 
-    background: #e74c3c !important; 
+    border-color: #e74c3c !important;
+    box-shadow: 0 0 20px rgba(231, 76, 60, 0.5) !important;
 }
+.critical #oxy-level { background: #e74c3c !important; }
 
 @keyframes blink { 
     0% { opacity: 1; } 
@@ -74,16 +195,15 @@ body {
     100% { opacity: 1; } 
 }
 
-/* Blocs d'informations (Dernier Conseil, Conseil Actuel, Composition) */
 .info-box {
-    background: #111;
+    background: rgba(17, 17, 17, 0.85);
     border: 2px solid;
     border-radius: 8px;
     padding: 10px;
     min-height: 100px;
+    backdrop-filter: blur(5px);
 }
 
-/* Résumé textuel de l'état du vote en cours sous le Conseil Actuel */
 #vote-summary {
     white-space: pre-line; 
     line-height: 1.4;      
@@ -95,17 +215,15 @@ body {
    3. CONFIGURATION ET EMPLACEMENTS DES PLATEAUX DE JEU
    ========================================================================== */
 
-/* Structure d'alignement des 3 plateaux de décrets */
 .main-layout { 
     display: flex; 
     justify-content: space-around; 
-    align-items: stretch; /* Aligne la hauteur de tous les plateaux uniformément */
+    align-items: stretch; 
     margin-bottom: 30px; 
 }
 
-/* Style générique d'un plateau de décrets */
 .board { 
-    background: #2d2d2d; 
+    background: rgba(26, 26, 26, 0.85); 
     padding: 15px; 
     border-radius: 10px; 
     border: 1px solid #555; 
@@ -114,24 +232,19 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between; 
+    backdrop-filter: blur(5px);
 }
 
-/* Titres des plateaux (ajustés pour éviter les décalages de hauteur) */
 .board h4 {
     margin-top: 0;
     margin-bottom: 15px;
+    color: #e0e0e0;
 }
 
-/* Répartition des largeurs : Survie (37%) | Suffrage (16%) | Crise (37%) */
 .main-layout .board:first-child,
-.main-layout .board:last-child {
-    width: 37%;
-}
-.main-layout .board:nth-child(2) {
-    width: 16%;
-}
+.main-layout .board:last-child { width: 37%; }
+.main-layout .board:nth-child(2) { width: 16%; }
 
-/* Emplacement physique d'une carte décret sur un plateau (Slot pointillé) */
 .slot { 
     width: 40px; 
     height: 60px; 
@@ -141,31 +254,25 @@ body {
     border-radius: 4px; 
 }
 
-/* Coloration des slots quand un décret est posé */
-.filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; } /* Survie : Bleu */
-.filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; } /* Crise : Rouge */
-.filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; } /* Suffrage : Gris */
+.filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; } 
+.filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; } 
+.filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; } 
 
-/* Indicateurs textuels de l'état de la Pioche et de la Défausse */
 .deck-counters {
     text-align: center;
     font-size: 0.9em;
     letter-spacing: 2px;
     margin-top: 15px;
-    margin-bottom: 5px;
+    margin-bottom: 15px;
     color: #888;
-    font-family: 'Courier New', monospace;
 }
-.deck-counters b {
-    font-size: 1.1em;
-}
+.deck-counters b { font-size: 1.1em; }
 
 
 /* ==========================================================================
-   4. GESTION DU PERSONNEL & ÉTIQUETTES DES JOUEURS (LOBBY & JEU)
+   4. GESTION DU PERSONNEL & ÉTIQUETTES DES JOUEURS
    ========================================================================== */
 
-/* Alignement des étiquettes des joueurs connectés */
 #player-list, #active-player-list {
     display: flex;
     flex-wrap: wrap;
@@ -175,9 +282,8 @@ body {
     margin: 0 auto;
 }
 
-/* Blocs des joueurs en phase de Lobby (avec animation d'entrée) */
 #player-list div {
-    background: #333; 
+    background: rgba(17, 17, 17, 0.9); 
     color: #2ecc71; 
     padding: 10px 20px; 
     border: 1px solid #2ecc71; 
@@ -192,16 +298,14 @@ body {
     to { opacity: 1; transform: translateY(0); } 
 }
 
-/* Modificateur pour réduire la taille des étiquettes dans la liste du Lobby */
 #player-list .player-tag {
     min-width: 100px;
     padding: 5px 10px;
     font-size: 0.8em;
 }
 
-/* État persistant d'une étiquette joueur sur l'écran de jeu actif */
 .player-tag {
-    background: #333;
+    background: rgba(17, 17, 17, 0.9);
     color: #2ecc71;
     padding: 5px 15px;
     border: 1px solid #2ecc71;
@@ -216,57 +320,29 @@ body {
     flex-grow: 0;     
 }
 
-.p-name { font-size: 1.1em; margin-bottom: 2px; }
+.p-name { font-size: 1.1em; margin-bottom: 2px; color: #fff;}
 .p-job  { letter-spacing: 1px; text-transform: uppercase; }
 
 /* _______________________________Étiquette du Prophète __________________________________________*/
-
 .prophete-style {
-    /* Fond blanc immaculé */
     background: #ffffff !important;
     border-color: #ffffff !important;
-    
-    /* L'AURA DIVINE : rayonne en blanc autour de l'étiquette */
     box-shadow: 
         0 0 10px rgba(255, 255, 255, 0.5),   
         0 0 20px rgba(255, 255, 255, 0.3),   
         0 0 40px rgba(255, 255, 255, 0.1),   
-        inset 0 0 10px rgba(0, 0, 0, 0.05); /* Ombre interne ultra légère pour le relief */
-
+        inset 0 0 10px rgba(0, 0, 0, 0.05); 
     animation: divineGlow 4s ease-in-out infinite;
     position: relative;
     z-index: 1;
 }
 
-/* Texte en noir absolu pour le contraste */
-.prophete-style .p-name {
-    color: #000000 !important;
-    text-shadow: none !important; /* Pas d'ombre, on veut de la lisibilité pure */
-    font-weight: 900 !important;
-}
+.prophete-style .p-name { color: #000000 !important; text-shadow: none !important; font-weight: 900 !important; }
+.prophete-style .p-job { color: #333333 !important; font-weight: bold !important; }
 
-/* Gris très foncé pour le métier pour hiérarchiser l'info */
-.prophete-style .p-job {
-    color: #333333 !important;
-    font-weight: bold !important;
-}
-
-/* Animation de pulsation de l'aura blanche */
 @keyframes divineGlow {
-    0%, 100% {
-        box-shadow: 
-            0 0 15px rgba(255, 255, 255, 0.6),
-            0 0 25px rgba(255, 255, 255, 0.4),
-            0 0 50px rgba(255, 255, 255, 0.2),
-            inset 0 0 12px rgba(0, 0, 0, 0.05);
-    }
-    50% {
-        box-shadow: 
-            0 0 10px rgba(255, 255, 255, 0.4),
-            0 0 20px rgba(255, 255, 255, 0.2),
-            0 0 35px rgba(255, 255, 255, 0.1),
-            inset 0 0 8px rgba(0, 0, 0, 0.02);
-    }
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 25px rgba(255, 255, 255, 0.4), 0 0 50px rgba(255, 255, 255, 0.2), inset 0 0 12px rgba(0, 0, 0, 0.05); }
+    50% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.2), 0 0 35px rgba(255, 255, 255, 0.1), inset 0 0 8px rgba(0, 0, 0, 0.02); }
 }
 
 
@@ -274,13 +350,11 @@ body {
    5. ETATS DE VOTE DES JOUEURS & LOGS INTERFACES
    ========================================================================== */
 
-/* Changement de couleur des étiquettes selon la validation du scrutin */
 .voted-oui { background: #2ecc71 !important; color: #000 !important; border-color: #FFF !important; }
 .voted-non { background: #e74c3c !important; color: #fff !important; border-color: #FFF !important; }
 
-/* Mode Chambre Noire : Look rétro-néon ultra-sombre pour préserver l'anonymat */
 .voted-secret { 
-    background: #0d0514 !important;      
+    background: #0d0514 !important;     
     border-color: #8e44ad !important;     
     color: #dfa6ff !important;            
     box-shadow: 0 0 15px rgba(142, 68, 173, 0.6), inset 0 0 10px rgba(142, 68, 173, 0.4) !important;
@@ -288,30 +362,24 @@ body {
     transition: all 0.5s ease;
 }
 
-/* --- Ajustements dynamiques du texte des voix (Poids de vote) --- */
-
-/* Contraste sur étiquette verte (OUI) : texte et métier passent en noir */
 .voted-oui .p-weight span { color: #000000 !important; font-weight: bold !important; }
 .voted-oui .p-job { color: rgba(0, 0, 0, 0.7) !important; }
-
-/* Contraste sur étiquette rouge (NON) : texte et métier passent en blanc brillant */
 .voted-non .p-weight span { color: #ffffff !important; font-weight: bold !important; }
 .voted-non .p-job { color: rgba(255, 255, 255, 0.7) !important; }
-
-/* Contraste en Chambre Noire : Le compteur brille en rose/magenta électrique */
 .voted-secret .p-weight span { color: #ff00ff !important; text-shadow: 0 0 5px rgba(255, 0, 255, 0.8) !important; }
 
-/* Log système (défilement des actions en bas de l'écran central) */
 #log { 
-    background: #000; 
-    color: #00ff00; 
-    padding: 10px; 
-    height: 80px; 
+    background: rgba(0, 0, 0, 0.8); 
+    color: #2ecc71; 
+    padding: 15px; 
+    height: 120px; 
     overflow-y: auto; 
-    width: 90%; 
+    width: 80%; 
     margin: 10px auto; 
     text-align: left; 
-    font-size: 0.8em; 
+    font-size: 0.9em; 
+    border: 1px solid #2ecc71;
+    box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.1);
 }
 
 
@@ -319,12 +387,11 @@ body {
    6. ÉCRAN DE FIN DE PARTIE & REVELATION DES ROLES
    ========================================================================== */
 
-/* Fond d'écran de victoire (noir opaque couvrant le plateau) */
 #end-screen { 
     position: fixed; 
     top: 0; left: 0; 
     width: 100%; height: 100%; 
-    background: rgba(0,0,0,0.98); 
+    background: rgba(0,0,0,0.95); 
     display: none; 
     flex-direction: column; 
     justify-content: center; 
@@ -333,7 +400,6 @@ body {
     padding: 20px;
 }
 
-/* Zone d'alignement des cartes d'identité révélées */
 #role-reveal-zone {
     display: flex;
     flex-wrap: wrap;
@@ -344,7 +410,6 @@ body {
     z-index: 1001; 
 }
 
-/* Carte d'identité de fin de partie d'un membre du personnel */
 .reveal-card {
     background: #1a1a1a;
     border: 1px solid #444;
@@ -353,14 +418,15 @@ body {
     min-width: 160px;
     text-align: left;
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    color: #fff;
 }
 
-/* Bordure latérale thématique selon l'allégeance finale révélée */
-.rev-S  { border-left: 5px solid #3498db !important; }  /* Survivant : Bleu */
-.rev-I  { border-left: 5px solid #e74c3c !important; }  /* Infecté : Rouge */
-.rev-A  { border-left: 5px solid #9400d3 !important; }  /* Alpha : Violet */
-.rev-M  { border-left: 5px solid #1b4d3e !important; }  /* Mycologue : Vert foncé */
-.rev-IM { border-left: 5px solid #d4af37 !important; }  /* Immunisé : Jaune doré */
+.rev-S  { border-left: 5px solid #3498db !important; }  
+.rev-I  { border-left: 5px solid #e74c3c !important; }  
+.rev-A  { border-left: 5px solid #9400d3 !important; }  
+.rev-M  { border-left: 5px solid #1b4d3e !important; }  
+.rev-IM { border-left: 5px solid #d4af37 !important; }  
+
 
 /* ==========================================================================
    7. DESIGN DU PANNEAU DES DIRECTIVES PERMANENTES ACTIVES
@@ -368,18 +434,19 @@ body {
 
 #active-rules-panel {
     margin: 20px auto;
-    background: #111;
-    border: 2px solid #555;
+    background: rgba(17, 17, 17, 0.85);
+    border: 1px solid #2ecc71;
     border-radius: 8px;
     padding: 15px;
     width: 90%;
     box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
 }
 
 #active-rules-panel h3 {
     text-transform: uppercase;
     font-size: 1.1em;
-    color: #fff;
+    color: #2ecc71;
     border-bottom: 1px solid #444;
     padding-bottom: 8px;
     margin-top: 0;
@@ -394,14 +461,13 @@ body {
 
 .rules-column {
     flex: 1;
-    background: #1a1a1a;
+    background: rgba(0, 0, 0, 0.5);
     border: 1px solid #444;
     padding: 12px;
     border-radius: 4px;
     text-align: left;
 }
 
-/* Couleurs thématiques des bordures de colonnes */
 .blue-column { border-top: 4px solid #3498db; }
 .red-column { border-top: 4px solid #e74c3c; }
 .grey-column { border-top: 4px solid #7f8c8d; }
@@ -413,13 +479,10 @@ body {
     letter-spacing: 1px;
     display: flex;
     justify-content: space-between;
+    color: #e0e0e0;
 }
 
-.rules-column ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
+.rules-column ul { list-style: none; padding: 0; margin: 0; }
 
 .rules-column li {
     font-size: 0.75em;
@@ -428,10 +491,8 @@ body {
     background: #0d0d0d;
     border: 1px solid #333;
     border-radius: 4px;
-    color: #e0e0e0;
+    color: #aaa;
     line-height: 1.3;
 }
 
-.rules-column li strong {
-    color: #fff;
-}
+.rules-column li strong { color: #fff; }
