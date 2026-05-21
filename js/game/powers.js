@@ -233,13 +233,15 @@ export function checkCasePower(caseNumber) {
 
     switch (power) {
         case 'TEST':
+            state.pendingPowerAction = { action: 'REQUEST_BLOOD_TEST', title: 'ANALYSE BIOLOGIQUE' };
             gardien.conn.send({ 
                 type: 'FORCE_POWER_SELECT', 
                 action: 'REQUEST_BLOOD_TEST', 
-                title: 'ANALYSE BIOLOGIQUE (DÉCRET)' 
+                title: 'ANALYSE BIOLOGIQUE' 
             });
             break;
         case 'CENSURE':
+            state.pendingPowerAction = { action: 'REQUEST_CENSURE', title: 'PROTOCOLE DE CENSURE' };
             gardien.conn.send({ 
                 type: 'FORCE_POWER_SELECT', 
                 action: 'REQUEST_CENSURE', 
@@ -247,10 +249,11 @@ export function checkCasePower(caseNumber) {
             });
             break;
         case 'EXEC':
+            state.pendingPowerAction = { action: 'REQUEST_EXECUTION', title: 'EXÉCUTION ARBITRAIRE' };
             gardien.conn.send({ 
                 type: 'FORCE_POWER_SELECT', 
                 action: 'REQUEST_EXECUTION', 
-                title: 'EXÉCUTION SOMMAIRE' 
+                title: 'EXÉCUTION ARBITRAIRE' 
             });
             break;
     }
@@ -376,6 +379,7 @@ export function executeDecreetPower(cardId) {
 
         case 'censure':
             state.currentPowerActive = true; 
+            state.pendingPowerAction = { action: 'REQUEST_CENSURE', title: 'CENSURE GOUVERNEMENTALE (DÉCRET)' };
             Logger.add(`🚫 DÉCRET DE CENSURE : Protocole activé. En attente de la cible du Gardien (${gardien.name}).`);
             
             // 1. On force le Gardien actuel à choisir sa cible
@@ -400,6 +404,7 @@ export function executeDecreetPower(cardId) {
 
         case 'test_sanguin':
             state.currentPowerActive = true; // On bloque la transition automatique de tour
+            state.pendingPowerAction = { action: 'REQUEST_BLOOD_TEST', title: 'ANALYSE BIOLOGIQUE (DÉCRET)' };
             Logger.add(`🩸 DÉCRET TEST SANGUIN : Protocole d'analyse activé. En attente du choix du Gardien (${gardien.name}).`);
             
             // 1. On ouvre le sélecteur sur le téléphone du Gardien
@@ -425,6 +430,7 @@ export function executeDecreetPower(cardId) {
         case 'neutralisation_ciblee':
         case 'execution_sommaire':
             state.currentPowerActive = true; 
+            state.pendingPowerAction = { action: 'REQUEST_EXECUTION', title: 'EXÉCUTION (DÉCRET)' };
             Logger.add(`☠️ DÉCRET D'ÉLIMINATION : Protocole activé. En attente de la cible du Gardien (${gardien.name}).`);
             
             // 1. On force le Gardien actuel à choisir sa cible
@@ -449,6 +455,7 @@ export function executeDecreetPower(cardId) {
 
         case 'purge':
             state.currentPowerActive = true;
+            state.pendingPowerAction = { action: 'REQUEST_PURGE', title: 'PURGE DES SYSTÈMES (DÉCRET)' };
             Logger.add(`🧹 DÉCRET PURGE DES SYSTÈMES : Protocole activé. Le Gardien (${gardien.name}) va nettoyer une directive de crise.`);
             
             if (gardien && gardien.conn && gardien.conn.open) {
@@ -493,6 +500,7 @@ export function executeDecreetPower(cardId) {
 
         case 'coup_etat':
             state.currentPowerActive = true; 
+            state.pendingPowerAction = { action: 'REQUEST_COUP_ETAT', title: 'COUP D\'ÉTAT (DÉCRET)' };
             Logger.add(`🚨 DÉCRET COUP D'ÉTAT : Instabilité politique ! Le Gardien (${gardien.name}) va nommer son successeur.`);
             
             if (gardien && gardien.conn && gardien.conn.open) {
@@ -532,6 +540,7 @@ export function executeDecreetPower(cardId) {
 
         case 'reorganisation':
             state.currentPowerActive = true; 
+            state.pendingPowerAction = { action: 'REQUEST_REORGANISATION', title: 'RÉORGANISATION BIOLOGIQUE (DÉCRET)' };
             Logger.add(`🔄 DÉCRET RÉORGANISATION : Protocole activé. En attente du choix du Gardien (${gardien.name}).`);
             
             if (gardien && gardien.conn && gardien.conn.open) {
@@ -555,6 +564,7 @@ export function executeDecreetPower(cardId) {
 
         case 'licenciement':
             state.currentPowerActive = true; 
+            state.pendingPowerAction = { action: 'REQUEST_LICENCIEMENT', title: 'LICENCIEMENT ADMINISTRATIF' };
             Logger.add(`📉 DÉCRET LICENCIEMENT : Protocole activé. Le Gardien (${gardien.name}) choisit sa cible.`);
             
             if (gardien && gardien.conn && gardien.conn.open) {
