@@ -670,10 +670,6 @@ export function showLicenciementAlert() {
              <h2 style="color: #e67e22;">📉 LICENCIEMENT</h2>
              <p style="color:#e0e0e0;">Le Gardien a révoqué toutes vos accréditations gouvernementales.</p>
              <p style="font-size: 0.9em; margin-top: 15px; color: #fff;">Vous perdez définitivement vos capacités spéciales.</p>
-             <button class="btn" id="btn-ok-lic" style="margin-top: 15px; width: 50%; background: #e67e22; color: #000; border-color: #000;">COMPRIS</button>
+             <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">En attente de la console centrale...</p>
         </div>`;
-    
-    document.getElementById('btn-ok-lic').onclick = () => {
-         mobileState.conn.send({ type: 'SYNC_REQUEST' });
-    };
 }
