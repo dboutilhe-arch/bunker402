@@ -673,3 +673,17 @@ export function showLicenciementAlert() {
              <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">En attente de la console centrale...</p>
         </div>`;
 }
+
+export function showLobbyWaitingUI() {
+    const ui = document.getElementById('main-ui');
+    ui.innerHTML = `
+        <div style="margin-top: 40px; border: 1px solid #2ecc71; padding: 20px; border-radius: 8px; background: rgba(46, 204, 113, 0.05); box-shadow: inset 0 0 15px rgba(46, 204, 113, 0.1);">
+            <h2 style="color: #2ecc71; letter-spacing: 2px; text-transform: uppercase;">Accréditation Valide</h2>
+            <p style="color: #e0e0e0; font-size: 0.9em; margin-bottom: 25px;">Liaison sécurisée avec le réseau local du Bunker.</p>
+            
+            <div class="loader" style="margin: 0 auto 25px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 40px; height: 40px; animation: spin 1.5s linear infinite; box-shadow: 0 0 10px rgba(46, 204, 113, 0.2);"></div>
+            
+            <p style="font-size: 0.85em; color: #888; letter-spacing: 1px; font-family: monospace;">[ EN ATTENTE DU DÉPLOIEMENT DU PERSONNEL ]</p>
+            <p style="font-size: 0.7em; color: #555; margin-top: 15px;">Veuillez patienter jusqu'à l'initialisation de la console centrale par le Gardien.</p>
+        </div>`;
+}
