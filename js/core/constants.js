@@ -44,10 +44,10 @@ export const POWER_MAP = {
 //export const JOBS_LIST = ['Technicien', 'Psychologue', 'Contrebandier', 'Éclaireur', 'Scientifique', 'Ingénieur', 'Pilote'];
 
 // Déjà implémenté :
-//export const JOBS_LIST = ['Militaire', 'Docteur', 'Intendant', 'Shérif', 'Fossoyeur', 'Journaliste', 'Archiviste', 'Vigile']
+export const JOBS_LIST = ['Militaire', 'Docteur', 'Intendant', 'Shérif', 'Fossoyeur', 'Journaliste', 'Archiviste', 'Vigile']
 
 //TEST
-export const JOBS_LIST = ['Militaire', 'Fossoyeur']
+//export const JOBS_LIST = ['Militaire', 'Fossoyeur']
 
 export const DEFAULT_JOB = "Sans emploi";
 
