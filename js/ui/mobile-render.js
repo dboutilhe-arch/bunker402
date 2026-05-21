@@ -400,7 +400,7 @@ export function showBloodResult(data) {
             <p style="color: #e0e0e0; margin: 10px 0;">Statut : <b style="color: ${cardColor}; font-size: 1.2em; letter-spacing: 1px;">${data.result}</b></p>
             <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%;">OK</button>
         </div>`;
-    document.getElementById('btn-ok').onclick = () => mobileState.conn.send({ type: 'SYNC_REQUEST' });
+    document.getElementById('btn-ok').onclick = () => mobileState.conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
 }
 
 export function showExecutionResult(data) {
