@@ -137,6 +137,7 @@ export function nextTurn() {
 
         // 🔮 INTERCEPTION PROPHÈTE PENDANT LA RÉÉLECTION
         if (state.propheteIdx !== -1) {
+            state.currentPhase = "LÉGISLATION_PROPHETE";
             const activeProphete = players[state.propheteIdx];
             Logger.add(`🔮 PROPHÉTIE : Le Prophète ${activeProphete.name} intercepte la pioche de la Réélection et tire 4 cartes !`);
             
@@ -236,6 +237,7 @@ export function resolveVote() {
         
         // 🔮 INTERCEPTION PROPHÈTE : S'il y a un prophète actif en jeu
         if (state.propheteIdx !== -1) {
+            state.currentPhase = "LÉGISLATION_PROPHETE";
             const activeProphete = players[state.propheteIdx];
             Logger.add(`🔮 PROPHÉTIE : Le Prophète ${activeProphete.name} intercepte la pioche législative et tire 4 cartes !`);
             
@@ -328,6 +330,12 @@ export function resolveVote() {
  * Restauration de l'interface d'un joueur après reconnexion
  */
 export function restorePlayerAction(player) {
+    // SÉCURITÉ FIN DE PARTIE
+    if (state.gameOver) {
+        player.conn.send({ type: 'CLEAN_UI', choice: 'PARTIE TERMINÉE' });
+        return;
+    }
+
     if (!player.isAlive) {
         const revealResult = ['A', 'I', 'IM'].includes(player.role) ? "INFECTÉ" : "SAIN";
         player.conn.send({ type: 'YOU_ARE_DEAD', reveal: revealResult });
@@ -367,7 +375,10 @@ export function restorePlayerAction(player) {
                     player.conn.send({ type: 'WAIT_PROPHETE_VOTE', g: currentGName, s: currentSName }); 
             } else {
                 const aDejaVote = state.votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
-                if (aDejaVote) player.conn.send({ type: 'CLEAN_UI' }); 
+                if (aDejaVote) {
+                    const oldVote = state.votes.list.find(v => v.name.toLowerCase() === player.name.toLowerCase());
+                    player.conn.send({ type: 'CLEAN_UI', choice: oldVote?.choice }); 
+                }
                 else player.conn.send({ type: 'VOTE_START', g: players[state.curG].name.toUpperCase(), s: state.currentProposedS.toUpperCase() }); 
             }
             break;
@@ -402,6 +413,14 @@ export function restorePlayerAction(player) {
             if (isSentinelle) player.conn.send({ type: 'SENTINELLE_493_PICK', cards: state.currentLegislativeCards });
             else if (isGardien) player.conn.send({ type: 'GARDIEN_493_VIEW', cards: state.currentLegislativeCards });
             else player.conn.send({ type: 'WAIT_LEGISLATION', step: 'CHOIX FINAL SENTINELLE (49.3)' });
+            break;
+
+        case "LÉGISLATION_PROPHETE":
+            if (players.indexOf(player) === state.propheteIdx) {
+                player.conn.send({ type: 'PROPHETE_PICK', cards: state.currentLegislativeCards });
+            } else {
+                player.conn.send({ type: 'WAIT_LEGISLATION', step: `PROPHÈTE (${players[state.propheteIdx].name})` });
+            }
             break;
         
         default:
