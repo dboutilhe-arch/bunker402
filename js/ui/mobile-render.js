@@ -153,6 +153,11 @@ export function showGardienUI(eligible) {
 }
 
 export function showVoteUI(data) {
+    if (mobileState.hasVoted) {
+        showCleanUI(mobileState.lastChoice);
+        return;
+    }
+    
     const ui = document.getElementById('main-ui');
     ui.innerHTML = `<h3>VOTE CONSEIL</h3>`;
     if (mobileState.myName === data.g) ui.innerHTML += `<p style="background: #f1c40f; color: black; padding: 5px;">⚠️ VOUS ÊTES LE GARDIEN</p>`;
@@ -161,21 +166,24 @@ export function showVoteUI(data) {
     ui.innerHTML += `<p>Approuvez-vous ce Conseil ?<br><b>${data.g} & ${data.s}</b></p>`;
     
     const btnOui = document.createElement('button');
-    btnOui.className = "btn"; btnOui.style.background = "#2ecc71"; btnOui.style.color = "#000"; btnOui.style.borderColor = "#000"; btnOui.innerText = "ACCEPTER";
+    btnOui.className = "btn"; btnOui.style.background = "#2ecc71"; btnOui.style.color = "#000"; btnOui.innerText = "ACCEPTER";
+    
+    const btnNon = document.createElement('button');
+    btnNon.className = "btn"; btnNon.style.background = "#e74c3c"; btnNon.style.color = "#000"; btnNon.innerText = "REFUSER";
+
     btnOui.onclick = () => {
+        mobileState.hasVoted = true;
+        mobileState.lastChoice = 'OUI';
         showCleanUI('OUI');
         mobileState.conn.send({ type: 'VOTE_DONE', choice: 'OUI', playerName: mobileState.myName });
     };
 
-    const btnNon = document.createElement('button');
-    btnNon.className = "btn"; btnNon.style.background = "#e74c3c"; btnNon.style.color = "#000"; btnNon.style.borderColor = "#000"; btnNon.innerText = "REFUSER";
     btnNon.onclick = () => {
-        showCleanUI('NON'); // ✨ Et ici
+        mobileState.hasVoted = true;
+        mobileState.lastChoice = 'NON';
+        showCleanUI('NON');
         mobileState.conn.send({ type: 'VOTE_DONE', choice: 'NON', playerName: mobileState.myName });
     };
-
-    ui.appendChild(btnOui);
-    ui.appendChild(btnNon);
 
     ui.appendChild(btnOui);
     ui.appendChild(btnNon);
