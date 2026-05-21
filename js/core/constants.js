@@ -60,13 +60,15 @@ export const DECREETS_DATABASE = {
     // --- PROTOCOLES DE SURVIE (BLEU) ---
     'test_sanguin': { name: "Test Sanguin", type: "S", symbol: "⚡", desc: "Le Gardien actuel vérifie secrètement la carte de Test Sanguin d'un joueur." },
     'reorganisation': { name: "Réorganisation", type: "S", symbol: "⚡", desc: "Le Gardien force 2 joueurs à échanger leur carte Test Sanguin (y compris lui-même). N'impacte pas l'allégeance initiale." },
-    'commission': { name: "Commission", type: "S", symbol: "⚡", desc: "La Sentinelle regarde la défausse de la partie pour voir ce qui a été jeté." },
     'purge': { name: "Purge des Systèmes", type: "S", symbol: "⚡", desc: "Le Gardien défausse la carte Décret de son choix sur le plateau des Directives de Crise. Son effet permanent s'arrête." },
+    'neutralisation_ciblee': { name: "Neutralisation Ciblée", type: "S", symbol: "⚡", desc: "Le Gardien exécute immédiatement un joueur de son choix." },
     'presse': { name: "Liberté de la Presse", type: "S", symbol: "♾️", desc: "Le Gardien doit montrer la carte qu'il défausse avant de donner les 2 autres à la Sentinelle." },
     'rebellion': { name: "Rébellion", type: "S", symbol: "♾️", desc: "L'Alpha ne peut pas gagner par élection. S'annule dès qu'un Décret Directives de Crise est voté." },
-    'transparence': { name: "Transparence", type: "S", symbol: "♾️", desc: "La Sentinelle doit annoncer à haute voix les deux cartes reçues avant d'en défausser une." },
     'contre_pouvoir': { name: "Contre-Pouvoir", type: "S", symbol: "♾️", desc: "C’est la Sentinelle qui pioche les 3 premières cartes, en défausse une, et donne les 2 restantes au Gardien." },
     'fuite_air_s': { name: "Fuite d'Air", type: "S", symbol: "♾️", desc: "L'Oxygène est par défaut à -1. Il ne peut plus monter au-dessus du Niveau 2 (ou Niveau 1 si double Fuite)." },
+    'propagande_s': { name: "Propagande Positive", type: "S", symbol: "♾️", desc: "N'a aucun effet mécanique. Maintient artificiellement le moral du personnel." },
+    //'transparence': { name: "Transparence", type: "S", symbol: "♾️", desc: "La Sentinelle doit annoncer à haute voix les deux cartes reçues avant d'en défausser une." },
+    //'commission': { name: "Commission", type: "S", symbol: "⚡", desc: "La Sentinelle regarde la défausse de la partie pour voir ce qui a été jeté." },
 
     // --- DIRECTIVES DE CRISE (ROUGE) ---
     'censure': { name: "Censure", type: "C", symbol: "⚡", desc: "Le Gardien désigne un joueur qui ne pourra pas voter au prochain tour." },
@@ -76,11 +78,13 @@ export const DECREETS_DATABASE = {
     'coup_etat': { name: "Coup d'État", type: "C", symbol: "⚡", desc: "Le Gardien choisit le prochain Gardien (hors lui-même). Le prochain tour sera extraordinaire." },
     'court_circuit': { name: "Court-Circuit", type: "C", symbol: "⚡", desc: "Défaussez la carte de Suffrage active. Si aucune active, réduire l'Oxygène de 1." },
     'licenciement': { name: "Licenciement", type: "C", symbol: "⚡", desc: "Le Gardien cible un joueur qui ne pourra plus utiliser son pouvoir de carte Métier." },
-    'silence': { name: "Code de Silence", type: "C", symbol: "♾️", desc: "Le Gardien interdit un mot. Si un joueur le prononce, il perd son vote au tour suivant." },
+    'execution_sommaire': { name: "Exécution Sommaire", type: "C", symbol: "⚡", desc: "Le Gardien exécute immédiatement un joueur de son choix." },
     'prophete': { name: "Prophète", type: "C", symbol: "♾️", desc: "Le Gardien devient Prophète. Il gère la pioche (4 cartes) mais ne vote plus. S'annule si Survie votée ou Prophète tué." },
     'talion': { name: "Loi du Talion", type: "C", symbol: "♾️", desc: "Si un vote échoue, le joueur qui devait être Gardien est privé de vote au tour suivant." },
     'fuite_air_c': { name: "Fuite d'Air", type: "C", symbol: "♾️", desc: "L'Oxygène est par défaut à -1. Il ne peut plus monter au-dessus du Niveau 2." },
-    'secret_etat': { name: "Secret d’État", type: "C", symbol: "♾️", desc: "Tous les pouvoirs de type 'Regarder la pioche' ou 'Regarder la défausse' sont annulés." },
+    'climat_terreur': { name: "Climat de Terreur", type: "C", symbol: "♾️", desc: "N'a aucun effet mécanique. Rappelle simplement au personnel qui dirige." },
+    //'secret_etat': { name: "Secret d’État", type: "C", symbol: "♾️", desc: "Tous les pouvoirs de type 'Regarder la pioche' ou 'Regarder la défausse' sont annulés." },
+    //'silence': { name: "Code de Silence", type: "C", symbol: "♾️", desc: "Le Gardien interdit un mot. Si un joueur le prononce, il perd son vote au tour suivant." },
 
     // --- SUFFRAGE (GRIS) ---
     'conseil_restreint': { name: "Conseil Restreint", type: "F", symbol: "🗳️", desc: "Les votes du Gardien et de la Sentinelle comptent double." },
@@ -94,17 +98,15 @@ export const DECREETS_DATABASE = {
  */
 export const INITIAL_DECK_LIST = [
     //TEST
-    'conseil_restreint', 'greve_zele', 'chambre_noire', 'prophete', 'reelection', 'contre_pouvoir', 'coup_etat', 'presse'
-    /*
+    //'conseil_restreint', 'greve_zele', 'chambre_noire', 'prophete', 'reelection', 'contre_pouvoir', 'coup_etat', 'presse'
+    
     // 10 Bleues
-    'test_sanguin', 'test_sanguin', 'fuite_air_s', 'rebellion', 'purge', 'reorganisation', 'presse', 'contre_pouvoir',
-    // A venir: 'commission', 'transparence',
+    'test_sanguin', 'test_sanguin', 'fuite_air_s', 'rebellion', 'purge', 'reorganisation', 'presse', 'contre_pouvoir', 'propagande_s', 'neutralisation_ciblee'
     
     // 15 Rouges
-    'censure', 'censure', 'censure', 'sabotage', 'fuite_air_c', 'court_circuit', 'coup_etat', 'loi_493', 'loi_493', 'reelection', 'prophete', 'talion', 'licenciement',
-    // A venir : 'silence', 'secret_etat',
+    'censure', 'censure', 'censure', 'sabotage', 'fuite_air_c', 'court_circuit', 'coup_etat', 'loi_493', 'loi_493', 'reelection', 'prophete', 'talion', 'licenciement', 'execution_sommaire', 'climat_terreur'
     
     // 4 Grises
     'conseil_restreint', 'greve_zele', 'chambre_noire', 'insurrection_populaire'
-    */
+    
 ];
