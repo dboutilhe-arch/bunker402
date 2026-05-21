@@ -245,17 +245,34 @@ export function updateTagsWithJobs() {
 }
 
 export function resetLobbyVisuals() {
+    const lobbyList = document.getElementById('player-list');
+    const activeList = document.getElementById('active-player-list');
+    
+    // 1. On vide intégralement les anciens éléments HTML
+    if (lobbyList) lobbyList.innerHTML = "";
+    if (activeList) activeList.innerHTML = "";
+    
+    // 2. On recrée des étiquettes neuves pour chaque joueur toujours dans la partie
     players.forEach(p => {
-        const tags = document.querySelectorAll(`[id="tag-${p.name.toLowerCase()}"]`);
-        tags.forEach(tag => {
-            tag.className = 'player-tag';
-            tag.style = ""; 
-            tag.innerHTML = `
-                <div class="p-name">${p.name.toUpperCase()}</div>
-                <div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal; color: #00e5ff;"></div>
-            `;
-        });
+        const nameTag = document.createElement('div');
+        nameTag.className = 'player-tag'; 
+        nameTag.id = `tag-${p.name.toLowerCase()}`;
+        nameTag.innerHTML = `
+            <div class="p-name">${p.name.toUpperCase()}</div>
+            <div class="p-job" style="font-size: 0.6em; opacity: 0.8; font-weight: normal; color: #00e5ff;"></div>
+        `;
+        
+        // Ajout dans le lobby
+        if (lobbyList) lobbyList.appendChild(nameTag);
+        
+        // Ajout dans la zone de jeu (cachée pour le moment)
+        const activeTag = nameTag.cloneNode(true);
+        if (activeList) activeList.appendChild(activeTag);
     });
+
+    // 3. On met à jour le compteur global
+    const countEl = document.getElementById('count');
+    if (countEl) countEl.innerText = players.length;
 }
 
 export function triggerWin(team, reason) {

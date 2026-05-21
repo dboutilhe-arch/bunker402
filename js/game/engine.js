@@ -111,9 +111,15 @@ export function nextTurn() {
     document.getElementById('g-name').innerText = activeG.name.toUpperCase();
     document.getElementById('s-name').innerText = state.curSIdx !== -1 ? state.currentProposedS.toUpperCase() : "?";
 
-    players.filter(p => p.isAlive).forEach(p => p.conn.send({ type: 'CLEAN_UI' }));
-    players.filter(p => p.isAlive).forEach((p, index) => {
-        if(index !== state.curG) p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: activeG.name.toUpperCase() });
+    players.forEach(p => {
+        if (p.isAlive) p.conn.send({ type: 'CLEAN_UI' });
+    });
+    
+    // On boucle sur TOUT le monde pour garder le vrai index, et on ignore les morts
+    players.forEach((p, index) => {
+        if (p.isAlive && index !== state.curG) {
+            p.conn.send({ type: 'WAIT_SENTINELLE', gardienName: activeG.name.toUpperCase() });
+        }
     });
 
     let eligiblePlayers = players.filter(p => p.isAlive).map(p => p.name).filter(name => {
@@ -463,6 +469,7 @@ export function globalReset() {
     document.getElementById('game-info-row').style.display = 'none';
     document.getElementById('setup-zone').style.display = 'block';
     document.getElementById('lobby-active').style.display = 'block';
+    document.getElementById('players-container').style.display = 'block';
     document.getElementById('start-btn').disabled = (players.length < 5);
     document.getElementById('count').innerText = players.length;
     resetLobbyVisuals();
@@ -507,7 +514,10 @@ export function showGov(g, s) {
 
     syncTerminals();
     
-    players.filter(p => p.isAlive).forEach((p, idx) => {
+    players.forEach((p, idx) => {
+        // On stoppe net si le joueur est décédé
+        if (!p.isAlive) return;
+
         // --- ENFORCEMENT TALION ---
         if (state.talionBanned.includes(p.name)) {
             p.conn.send({ type: 'TALION_ALERT' });
@@ -515,6 +525,7 @@ export function showGov(g, s) {
         else if (p.isCensored) {
             p.conn.send({ type: 'CENSORED_ALERT', by: p.censoredBy });
         } 
+        // L'index idx correspond maintenant bien à state.propheteIdx
         else if (idx === state.propheteIdx) {
             p.conn.send({ type: 'WAIT_PROPHETE_VOTE', g: g.toUpperCase(), s: s.toUpperCase() });
         } 

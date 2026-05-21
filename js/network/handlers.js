@@ -206,10 +206,19 @@ function handleFinalChoice(data) {
     const cardData = DECREETS_DATABASE[cardId];
     if (!cardData) return;
     
-    const discardedByCouncil = state.currentLegislativeCards.find(id => id !== cardId);
-    if (discardedByCouncil) {
-        state.discard.push(discardedByCouncil);
+    let remainingCards = [...state.currentLegislativeCards];
+    const playedIdx = remainingCards.indexOf(cardId);
+    
+    if (playedIdx !== -1) {
+        remainingCards.splice(playedIdx, 1); // On retire l'exemplaire joué
     }
+    
+    // On met tout le reste dans la défausse
+    remainingCards.forEach(id => state.discard.push(id));
+    
+    // SÉCURITÉ CRITIQUE : On vide la main du Conseil pour éviter la duplication 
+    // en cas d'exécution d'un dirigeant juste après !
+    state.currentLegislativeCards = [];
     
     // On ajuste le log si c'était le Gardien sous 49.3
     if (state.currentPhase === "LÉGISLATION_493") {
