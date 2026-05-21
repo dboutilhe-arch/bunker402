@@ -1,5 +1,3 @@
- 
-// js/network/peer-manager.js
 import { handlePlayerData, handlePlayerDisconnect } from './handlers.js';
 import { generateLobbyQR } from '../main.js';
 
@@ -9,12 +7,16 @@ export function startServer() {
     const customId = document.getElementById('custom-id').value.trim();
     if (!customId) return alert("Veuillez saisir un code !");
     
+    // Initialisation
     peer = new Peer(customId, { config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
     
     peer.on('open', id => {
+        // UI : Switch lobby
         document.getElementById('server-creation').style.display = 'none';
         document.getElementById('lobby-active').style.display = 'block';
         document.getElementById('display-id').innerText = id;
+        
+        // APPEL DE LA GÉNÉRATION DU QR CODE
         generateLobbyQR(id);
     });
 
@@ -27,9 +29,8 @@ export function startServer() {
     
     peer.on('connection', (conn) => {
         conn.on('open', () => {
-            // On redirige vers les handlers pour le traitement des données
+            // Traitement des données et déconnexion via tes handlers existants
             conn.on('data', data => handlePlayerData(conn, data));
-            // On redirige vers les handlers pour la déconnexion
             conn.on('close', () => handlePlayerDisconnect(conn));
         });
     });
