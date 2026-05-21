@@ -8,7 +8,7 @@ import {
     showPurgeResult, showReorganisationResult, showBloodSwappedAlert,
     showWaitSentinelleUI, showWaitLegislationUI, showWaitPowerUI, 
     showDeadUI, showCensoredAlertUI, showCleanUI, showWaitPropheteVoteUI, showTalionUI,
-    showLicenciementResult, showLicenciementAlert, showLobbyWaitingUI
+    showLicenciementResult, showLicenciementAlert, showLobbyWaitingUI, showArchivisteConfirmUI
 } from '../ui/mobile-render.js';
 
 // Conteneur d'état dynamique partagé par référence entre les modules
@@ -297,11 +297,7 @@ function handleSyncStateAction(stateData) {
             }
     
             btnPower.onclick = () => {
-                if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
-                btnPower.disabled = true; btnPower.style.opacity = "0.3"; btnPower.style.pointerEvents = "none";
-                btnPower.innerText = "📜 PROTOCOLE ENCLENCHÉ...";
-                mobileState.hasUsedPower = true;
-                mobileState.conn.send({ type: 'USE_ARCHIVISTE_POWER' });
+                showArchivisteConfirmUI();
             };
             jobZone.appendChild(btnPower);
         }
