@@ -89,8 +89,8 @@ export function executePlayer(requester, targetName) {
 
         if (totalJoueursAyantVote === eligibleCount) {
             Logger.add("SYSTÈME : La mort du dernier votant attendu clôture le scrutin.");
-            resolveVote();
-            return; // On coupe court pour éviter le double appel en bas
+            // On lance la résolution en différé pour laisser l'exécution se terminer
+            setTimeout(() => { resolveVote(); }, 500); 
         }
     }
 
@@ -270,6 +270,12 @@ export function purgeCriseCard(requester, cardId) {
     
     // 2. On envoie la carte purgée dans la défausse
     state.discard.push(cardId);
+
+    // Nettoyage de l'effet permanent en mémoire
+    state.activeEffectsC = state.activeEffectsC.filter(id => id !== cardId);
+    if (cardId === 'prophete') {
+        state.propheteIdx = -1; // Sécurité si on purge le Prophète
+    }
     
     Logger.add(`🧹 PURGE : ${requester.name} a purgé le décret '${cardId.toUpperCase()}' du plateau.`);
     Logger.add(`SYSTÈME : La jauge de Crise recule et passe à ${state.crise}/6.`);
