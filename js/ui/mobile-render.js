@@ -105,10 +105,7 @@ export function setupIdentity(data) {
         btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "EXTRACTION DOSSIERS";
         if (mobileState.hasUsedPower) jobUi.style.opacity = "0.3";
         btn.onclick = () => {
-            if (!confirm("Forcer le Gardien à piocher 4 dossiers lors du prochain vote ?")) return;
-            btn.disabled = true; btn.style.opacity = "0.3"; btn.style.pointerEvents = "none"; btn.innerText = "EXTRACTION EN COURS...";
-            mobileState.hasUsedPower = true;
-            mobileState.conn.send({ type: 'USE_ARCHIVISTE_POWER' });
+            showArchivisteConfirmUI();
         };
         jobUi.appendChild(btn);
     }
@@ -676,4 +673,59 @@ export function showLobbyWaitingUI() {
             <p style="color: #b2ebf2; font-size: 0.85em;">En attente des données médicales centrales.</p>
             <div class="loader"></div>
         </div>`;
+}
+
+export function showArchivisteConfirmUI() {
+    const ui = document.getElementById('main-ui');
+    
+    // On efface le contenu actuel pour afficher la demande de confirmation
+    ui.innerHTML = `
+        <h3 style="color:#d500f9;">PROTOCOLE D'EXTRACTION</h3>
+        <p style="font-size:0.85em; color:#b2ebf2; margin-bottom: 20px;">
+            Voulez-vous vraiment forcer le Gardien à piocher 4 dossiers lors du prochain vote approuvé ?<br><br>
+            <i style="color:#5c8a99;">(Cette action est à usage unique)</i>
+        </p>
+    `;
+
+    const container = document.createElement('div');
+    container.className = "theme-power";
+
+    const controls = document.createElement('div');
+    controls.className = "action-controls";
+
+    // Bouton ANNULER (Rouge)
+    const btnCancel = document.createElement('button');
+    btnCancel.className = "btn-action cancel";
+    btnCancel.innerText = "ANNULER";
+    btnCancel.onclick = () => {
+        // En demandant un SYNC, le serveur va rafraîchir l'écran et remettre l'interface normale
+        mobileState.conn.send({ type: 'SYNC_REQUEST' });
+    };
+
+    // Bouton CONFIRMER (Vert/Cyan médical)
+    const btnValidate = document.createElement('button');
+    btnValidate.className = "btn-action validate ready"; // Le 'ready' force l'opacité et la couleur cliquable
+    btnValidate.innerText = "CONFIRMER";
+    btnValidate.onclick = () => {
+        const btnPower = document.getElementById('btn-power');
+        if (btnPower) {
+            btnPower.disabled = true;
+            btnPower.style.opacity = "0.3";
+            btnPower.style.pointerEvents = "none";
+            btnPower.innerText = "📜 PROTOCOLE ENCLENCHÉ...";
+        }
+        mobileState.hasUsedPower = true;
+        mobileState.conn.send({ type: 'USE_ARCHIVISTE_POWER' });
+        
+        ui.innerHTML = "<div style='margin-top:40px; color:#5c8a99;'>[ TRANSMISSION EN COURS... ]</div>";
+    };
+
+    controls.appendChild(btnCancel);
+    controls.appendChild(btnValidate);
+    container.appendChild(controls);
+    ui.appendChild(container);
+    
+    // Petit flash violet pour le côté "Terminal corrompu/spécial"
+    document.body.style.backgroundColor = "#1a001a";
+    setTimeout(() => { document.body.style.backgroundColor = "#03080c"; }, 300);
 }
