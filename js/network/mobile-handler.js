@@ -94,6 +94,7 @@ function handleData(data) {
             break;
 
         case 'VOTE_START':
+            mobileState.hasVoted = false;
             showVoteUI(data);
             break;
 
@@ -138,11 +139,11 @@ function handleData(data) {
             break;
             
         case 'GARDIEN_493_VIEW':
-            showView493(data.cards, "SENTINELLE"); // On affiche que la Sentinelle choisit
+            showView493(data.cards, "SENTINELLE"); 
             break;
             
         case 'SENTINELLE_493_VIEW':
-            showView493(data.cards, "GARDIEN"); // On affiche que le Gardien choisit
+            showView493(data.cards, "GARDIEN"); 
             break;
 
         case 'BLOOD_TEST_RESULT':
@@ -197,7 +198,7 @@ function handleData(data) {
             break;
 
         case 'CLEAN_UI':
-            showCleanUI();
+            showCleanUI(data.choice);
             break;
         
         case 'REFRESH_INTERFACE':
