@@ -19,7 +19,8 @@ export let mobileState = {
     currentHand: [],
     allPlayers: [],
     hasUsedPower: false,
-    serverState: {}
+    serverState: {},
+    hasVoted: false,
 };
 
 // --- INITIALISATION AU CHARGEMENT ---
