@@ -149,6 +149,10 @@ h1 {
     gap: 15px;
 }
 
+#setup-zone, #players-container, #game-zone {
+    transition: opacity 0.5s ease;
+}
+
 
 /* ==========================================================================
    2. INTERFACES ET COMPTEURS SYSTÈME (HAUT DE PAGE)
