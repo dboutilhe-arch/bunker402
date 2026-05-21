@@ -46,6 +46,7 @@ export let state = {
     currentProposedS: null,      
     currentLegislativeCards: [], // Contient les 3 (ou 2) cartes en main du Conseil
     currentPowerActive: false,
+    pendingPowerAction: null,
 
     // Variable de métier
     archivistePowerActive: false
@@ -77,6 +78,7 @@ export function resetGameState() {
     state.currentProposedS = null;
     state.currentLegislativeCards = [];
     state.currentPowerActive = false;
+    state.pendingPowerAction = null;
     state.rebellionActive = false;
     state.archivistePowerActive = false;
     state.nextNormalGardien = null;
