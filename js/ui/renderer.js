@@ -162,11 +162,14 @@ export function render() {
             
             if (idx === state.propheteIdx) {
                 tag.classList.add('prophete-style');
-                if (nameDiv && !nameDiv.innerHTML.includes("🔮")) {
-                    nameDiv.innerHTML = `🔮 ${p.name.toUpperCase()} [PROPHÈTE]`;
+                if (nameDiv) {
+                    nameDiv.innerHTML = p.name.toUpperCase(); 
                 }
             } else {
                 tag.classList.remove('prophete-style');
+                if (nameDiv) {
+                    nameDiv.innerHTML = p.name.toUpperCase(); 
+                }
             }
 
             let weightDiv = tag.querySelector('.p-weight');
