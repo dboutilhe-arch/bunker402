@@ -104,7 +104,8 @@ export const INITIAL_DECK_LIST = [
     'test_sanguin', 'test_sanguin', 'fuite_air_s', 'rebellion', 'purge', 'reorganisation', 'presse', 'contre_pouvoir', 'propagande_s', 'neutralisation_ciblee'
     
     // 15 Rouges
-    'censure', 'censure', 'censure', 'sabotage', 'fuite_air_c', 'court_circuit', 'coup_etat', 'loi_493', 'loi_493', 'reelection', 'prophete', 'talion', 'licenciement', 'execution_sommaire', 'climat_terreur'
+    'censure', 'censure', 'censure', 'sabotage', 'fuite_air_c', 'court_circuit', 'coup_etat', 'loi_493', 'loi_493', 'reelection', 'prophete', 'talion', 
+    'licenciement', 'execution_sommaire', 'climat_terreur',
     
     // 4 Grises
     'conseil_restreint', 'greve_zele', 'chambre_noire', 'insurrection_populaire'
