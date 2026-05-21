@@ -68,6 +68,7 @@ export async function initGame() {
     updateTagsWithJobs();
     displayComposition(roles);
     document.getElementById('setup-zone').style.display = 'none';
+    document.getElementById('players-container').style.display = 'none';
     document.getElementById('game-info-row').style.display = 'flex';
     document.getElementById('game-zone').style.display = 'block';
     nextTurn();
