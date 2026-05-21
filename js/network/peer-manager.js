@@ -10,15 +10,13 @@ export function startServer() {
     // Initialisation
     peer = new Peer(customId, { config: {'iceServers': [{ url: 'stun:stun.l.google.com:19302' }]} });
     
-    peer.on('open', id => {
-        // UI : Switch lobby
-        document.getElementById('server-creation').style.display = 'none';
-        document.getElementById('lobby-active').style.display = 'block';
-        document.getElementById('display-id').innerText = id;
-        
-        // APPEL DE LA GÉNÉRATION DU QR CODE
-        generateLobbyQR(id);
-    });
+peer.on('open', id => {
+    document.getElementById('server-creation').style.display = 'none';
+    document.getElementById('lobby-active').style.display = 'block';
+    document.getElementById('players-container').style.display = 'block';
+    document.getElementById('display-id').innerText = id;
+    generateLobbyQR(id);
+});
 
     document.getElementById('admin-reset').style.display = 'block';
     
