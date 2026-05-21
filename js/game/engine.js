@@ -463,6 +463,7 @@ export function globalReset() {
     document.getElementById('game-info-row').style.display = 'none';
     document.getElementById('setup-zone').style.display = 'block';
     document.getElementById('lobby-active').style.display = 'block';
+    document.getElementById('players-container').style.display = 'block';
     document.getElementById('start-btn').disabled = (players.length < 5);
     document.getElementById('count').innerText = players.length;
     resetLobbyVisuals();
