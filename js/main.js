@@ -1,27 +1,27 @@
 import { startServer } from './network/peer-manager.js'; 
 import { initGame, globalReset } from './game/engine.js';
 
-// Génération du QR Code
-const qrContainer = document.getElementById("qrcode");
-qrContainer.innerHTML = ""; // On nettoie au cas où il y en a déjà un
+// Fonction exportée pour générer le QR Code dynamiquement
+export function generateLobbyQR(lobbyCode) {
+    const qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = ""; // Nettoyage
 
-// On fabrique l'URL vers le téléphone en remplaçant index.html par joueur.html et en passant le code en paramètre
-const baseUrl = window.location.href.split('?')[0].replace('index.html', '').replace(/\/$/, "");
-const joinUrl = `${baseUrl}/joueur.html?code=${lobbyCode}`;
+    // Construction de l'URL de connexion (adapté à ton structure)
+    const baseUrl = window.location.href.split('?')[0].replace('index.html', '').replace(/\/$/, "");
+    const joinUrl = `${baseUrl}/joueur.html?code=${lobbyCode}`;
 
-// On dessine le QR Code
-new QRCode(qrContainer, {
-    text: joinUrl,
-    width: 160,
-    height: 160,
-    colorDark: "#000000", // Noir pour un bon contraste de scan
-    colorLight: "#ffffff", // Blanc pour un bon contraste de scan
-    correctLevel: QRCode.CorrectLevel.M // Tolérance moyenne aux erreurs de scan
-});
+    // Génération via la bibliothèque qrcode.min.js chargée dans index.html
+    new QRCode(qrContainer, {
+        text: joinUrl,
+        width: 160,
+        height: 160,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+    });
+}
 
-// Écouteurs d'événements (remplacent les onclick="")
 document.addEventListener('DOMContentLoaded', () => {
-    
     // Bouton Créer Serveur
     const startServerBtn = document.getElementById('start-server-btn');
     if (startServerBtn) {
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startBtn.addEventListener('click', initGame);
     }
 
-    // Boutons Reset (Admin et Fin de partie)
+    // Boutons Reset
     const adminReset = document.getElementById('admin-reset');
     const endReset = document.getElementById('end-reset-btn');
     
@@ -42,4 +42,3 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btn) btn.addEventListener('click', globalReset);
     });
 });
-
