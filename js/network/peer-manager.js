@@ -1,6 +1,7 @@
  
 // js/network/peer-manager.js
 import { handlePlayerData, handlePlayerDisconnect } from './handlers.js';
+import { generateLobbyQR } from '../main.js';
 
 let peer = null;
 
@@ -14,6 +15,7 @@ export function startServer() {
         document.getElementById('server-creation').style.display = 'none';
         document.getElementById('lobby-active').style.display = 'block';
         document.getElementById('display-id').innerText = id;
+        generateLobbyQR(id);
     });
 
     document.getElementById('admin-reset').style.display = 'block';
