@@ -15,18 +15,18 @@
     <h1>BUNKER 402 - SYSTÈME CENTRAL</h1>
 
     <div id="setup-zone">
-        <div id="server-creation" style="margin: 20px 0;">
-            <input type="text" id="custom-id" placeholder="NOM DE LA PARTIE (ex: BUNKER-402)" 
-                   style="padding: 15px; width: 300px; background: #000; color: #f1c40f; border: 2px solid #444; font-family: 'Courier New';">
-            <button id="start-server-btn" style="padding: 15px 25px; background: #444; color: white; cursor: pointer; border: none; font-weight: bold;">CRÉER LE SERVEUR</button>
+        <div id="server-creation">
+            <p style="color: #27ae60; font-size: 0.9em; letter-spacing: 2px; margin-bottom: 15px;">[ ACCÈS ADMINISTRATEUR REQUIS ]</p>
+            <input type="text" id="custom-id" placeholder="NOM DE LA PARTIE (ex: BUNKER-402)">
+            <button id="start-server-btn">CRÉER LE SERVEUR</button>
         </div>
     
         <div id="lobby-active" style="display: none;">
-            <p style="color: #7f8c8d; letter-spacing: 2px; margin-bottom: 5px;">CODE CONSOLE :</p>
-            <div class="lobby-code" id="display-id" style="margin-top: 0;"></div>
-            <p>Joueurs connectés : <span id="count">0</span> / 100</p>
-            <div id="player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 20px auto; max-width: 95%;"></div>
-            <button id="start-btn" disabled style="padding:15px 30px; background:#2ecc71; cursor:pointer; font-weight:bold; border-radius:10px; border:none;">INITIALISER LA PARTIE</button>
+            <p style="color: #27ae60; letter-spacing: 2px; margin-bottom: 5px; font-size: 0.9em;">CODE CONSOLE SÉCURISÉ :</p>
+            <div class="lobby-code" id="display-id"></div>
+            <p style="color: #e0e0e0; margin-top: 10px;">Joueurs connectés : <span id="count" style="color: #2ecc71; font-weight: bold;">0</span> / 100</p>
+            <div id="player-list"></div>
+            <button id="start-btn" disabled>INITIALISER LA PARTIE</button>
         </div>
     </div>
 
@@ -36,10 +36,10 @@
             <div id="oxy-text-central">NIVEAU D'OXYGÈNE : 3 / 3</div>
         </div>
     
-        <div id="game-info-row" style="display: none; justify-content: space-around; gap: 10px; margin-bottom: 20px;">
+        <div id="game-info-row" style="display: flex; justify-content: space-around; gap: 10px; margin-bottom: 20px;">
             <div class="info-box" style="border-color: #e74c3c; width: 25%;">
                 <h4 style="color: #e74c3c; margin: 5px 0;">DERNIER CONSEIL</h4>
-                <div id="last-council-display" style="font-size: 0.9em; color: #888;">Aucun</div>
+                <div id="last-council-display" style="font-size: 0.9em; color: #aaa;">Aucun</div>
             </div>
             <div class="info-box" style="border-color: #f1c40f; width: 45%;">
                 <h4 style="color: #f1c40f; margin: 5px 0;">CONSEIL ACTUEL</h4>
@@ -48,17 +48,17 @@
             </div>
             <div class="info-box" style="border-color: #2ecc71; width: 25%;">
                 <h4 style="color: #2ecc71; margin: 5px 0;">COMPOSITION</h4>
-                <div id="composition-display" style="text-align: left; font-size: 0.85em; padding-left: 15px;"></div>
+                <div id="composition-display" style="text-align: left; font-size: 0.85em; padding-left: 15px; color: #e0e0e0;"></div>
             </div>
         </div>
 
         <div class="deck-counters">
             <span>[ PIOCHE : <b id="deck-count" style="color: #f1c40f;">0</b> CARTES ]</span>
-            <span style="color: #555;">|</span>
+            <span style="color: #555; margin: 0 10px;">|</span>
             <span>[ DÉFAUSSE : <b id="discard-count" style="color: #7f8c8d;">0</b> CARTES ]</span>
         </div>
     
-        <div class="main-layout" style="margin-bottom: 30px;">
+        <div class="main-layout">
             <div class="board"><h4>PROTOCOLES DE SURVIE</h4><div id="slots-s"></div></div>
             <div class="board"><h4>ORDRE DU JOUR</h4><div id="slots-f"></div></div>
             <div class="board"><h4>DIRECTIVES DE CRISE</h4><div id="slots-c"></div></div>
@@ -82,23 +82,23 @@
             </div>
         </div>
     
-        <div style="border-top: 1px solid #444; padding-top: 20px;">
-            <h4 style="color: #7f8c8d; margin-bottom: 15px; letter-spacing: 2px;">PERSONNEL DU BUNKER</h4>
-            <div id="active-player-list" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 95%; margin: 0 auto;"></div>
+        <div style="border-top: 1px solid #444; padding-top: 20px; margin-top: 20px;">
+            <h4 style="color: #2ecc71; margin-bottom: 15px; letter-spacing: 2px;">PERSONNEL DU BUNKER</h4>
+            <div id="active-player-list"></div>
         </div>
 
         <div id="log-zone" style="margin-top: 30px; border-top: 1px solid #444; padding-top: 20px;">
-            <h4 style="color: #7f8c8d; letter-spacing: 2px;">LOG SYSTÈME - BUNKER 402</h4>
-            <div id="log" style="background: #000; color: #2ecc71; padding: 15px; height: 120px; overflow-y: auto; width: 80%; margin: 10px auto; text-align: left; font-family: 'Courier New', monospace; font-size: 0.9em; border: 1px solid #333;">
+            <h4 style="color: #2ecc71; letter-spacing: 2px; margin-bottom: 10px;">LOG SYSTÈME - BUNKER 402</h4>
+            <div id="log">
                 [INITIALISATION DU SYSTÈME RÉUSSIE]...
             </div>
         </div>
 
         <div id="end-screen">
-            <h1 id="victory-title" style="font-size: 3.5em; margin-bottom:10px;"></h1>
+            <h1 id="victory-title" style="font-size: 3.5em; margin-bottom:10px; color: #fff;"></h1>
             <h2 id="victory-reason" style="color: #f1c40f; margin-bottom:20px; font-size: 1.2em;"></h2>
             <div id="role-reveal-zone"></div>
-            <button id="end-reset-btn" style="padding: 15px 30px; background: #2ecc71; border: none; cursor: pointer; font-weight: bold; border-radius:10px; margin-top: 20px;">
+            <button id="end-reset-btn" style="padding: 15px 30px; background: #2ecc71; color: #000; border: none; cursor: pointer; font-weight: bold; font-family: 'Courier New', monospace; letter-spacing: 2px; border-radius:4px; margin-top: 30px; font-size: 1.1em;">
                 REINITIALISER LE SYSTÈME
             </button>
         </div>
