@@ -100,12 +100,17 @@ export const INITIAL_DECK_LIST = [
     //TEST
     //'conseil_restreint', 'greve_zele', 'chambre_noire', 'prophete', 'reelection', 'contre_pouvoir', 'coup_etat', 'presse'
     
-    // 10 Bleues
-    'test_sanguin', 'test_sanguin', 'fuite_air_s', 'rebellion', 'purge', 'reorganisation', 'presse', 'contre_pouvoir', 'propagande_s', 'neutralisation_ciblee'
+    //--- 10 Bleues ---
+    // Eclairs
+    'test_sanguin', 'test_sanguin', 'purge', 'reorganisation', 'neutralisation_ciblee',
+    // Permanents
+    'fuite_air_s', 'rebellion', 'presse', 'propagande_s', 'contre_pouvoir',
     
-    // 15 Rouges
-    'censure', 'censure', 'censure', 'sabotage', 'fuite_air_c', 'court_circuit', 'coup_etat', 'loi_493', 'loi_493', 'reelection', 'prophete', 'talion', 
-    'licenciement', 'execution_sommaire', 'climat_terreur',
+    //--- 15 Rouges ---
+    // Eclairs
+    'censure', 'censure', 'censure', 'loi_493', 'loi_493', 'sabotage', 'court_circuit', 'coup_etat', 'reelection', 'execution_sommaire', 'licenciement',
+    // Permanents
+    'climat_terreur', 'talion', 'fuite_air_c', 'prophete',
     
     // 4 Grises
     'conseil_restreint', 'greve_zele', 'chambre_noire', 'insurrection_populaire'
