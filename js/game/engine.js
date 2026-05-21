@@ -339,17 +339,19 @@ export function restorePlayerAction(player) {
     switch(state.currentPhase) {
         case "VOTE":
             if (player.isCensored) {
-                    player.conn.send({ type: 'CENSORED_ALERT', by: player.censoredBy }); // Check si censuré
+                    player.conn.send({ type: 'CENSORED_ALERT', by: player.censoredBy }); 
             } 
             else if (state.talionBanned.includes(player.name)) {
-                    player.conn.send({ type: 'TALION_ALERT' }); // Check si puni par Talion
+                    player.conn.send({ type: 'TALION_ALERT' }); 
             }
             else if (players.indexOf(player) === state.propheteIdx) {
-                    player.conn.send({ type: 'WAIT_PROPHETE_VOTE', g: g.toUpperCase(), s: s.toUpperCase() }); // Check si Prophète 
+                    const currentGName = players[state.curG].name.toUpperCase();
+                    const currentSName = state.currentProposedS.toUpperCase();
+                    player.conn.send({ type: 'WAIT_PROPHETE_VOTE', g: currentGName, s: currentSName }); 
             } else {
                 const aDejaVote = state.votes.list.some(v => v.name.toLowerCase() === player.name.toLowerCase());
-                if (aDejaVote) player.conn.send({ type: 'CLEAN_UI' }); // Check si a déjà voté
-                else player.conn.send({ type: 'VOTE_START', g: players[state.curG].name.toUpperCase(), s: state.currentProposedS.toUpperCase() }); // Sinon on remet le vote
+                if (aDejaVote) player.conn.send({ type: 'CLEAN_UI' }); 
+                else player.conn.send({ type: 'VOTE_START', g: players[state.curG].name.toUpperCase(), s: state.currentProposedS.toUpperCase() }); 
             }
             break;
 
@@ -477,7 +479,7 @@ export function showGov(g, s) {
             p.conn.send({ type: 'CENSORED_ALERT', by: p.censoredBy });
         } 
         else if (idx === state.propheteIdx) {
-            // ... (logique prophète)
+            p.conn.send({ type: 'WAIT_PROPHETE_VOTE', g: g.toUpperCase(), s: s.toUpperCase() });
         } 
         else {
             p.conn.send({ type: 'VOTE_START', g: g.toUpperCase(), s: s.toUpperCase() });
