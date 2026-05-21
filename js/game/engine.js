@@ -336,6 +336,23 @@ export function restorePlayerAction(player) {
     const isGardien = (players[state.curG] === player);
     const isSentinelle = (state.curSIdx !== -1 && players[state.curSIdx] === player);
 
+    // INTERCEPTION POUR LE CIBLAGE DES POUVOIRS
+    if (state.currentPowerActive && state.pendingPowerAction) {
+        if (isGardien) {
+            player.conn.send({
+                type: 'FORCE_POWER_SELECT',
+                action: state.pendingPowerAction.action,
+                title: state.pendingPowerAction.title
+            });
+        } else {
+            player.conn.send({
+                type: 'WAIT_POWER',
+                gardienName: players[state.curG].name.toUpperCase(),
+                title: state.pendingPowerAction.title
+            });
+        }
+        return; // 🛑 On coupe ici, on ne rentre pas dans le switch des phases !
+    }
     switch(state.currentPhase) {
         case "VOTE":
             if (player.isCensored) {
