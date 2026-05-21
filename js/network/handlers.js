@@ -309,13 +309,22 @@ export function handlePlayerDisconnect(closedConn) {
 function handleActionConfirmed() {
     if (state.currentPowerActive) {
         state.currentPowerActive = false;
+        
+        // On avance le Gardien de 1, SAUF si c'était un Coup d'État
+        // (car le Coup d'État a déjà forcé curG sur la cible)
+        const isCoupEtat = state.pendingPowerAction && state.pendingPowerAction.action === 'REQUEST_COUP_ETAT';
+        
+        if (!isCoupEtat) {
+            state.curG = (state.curG + 1) % players.length;
+        }
+
+        // On nettoie la mémoire tampon proprement
+        state.pendingPowerAction = null;
+
         syncTerminals();
         setTimeout(() => {
-            // ✨ Comme le Coup d'État a déjà déplacé state.curG sur la bonne cible,
-            // on ne fait un "+1" QUE si aucun pouvoir interactif n'était en cours.
-            // Vu qu'on vient de résoudre un pouvoir (Coup d'état, Censure, Exec), on ne touche à RIEN et on lance !
             state.isProcessingAction = false;
-            nextTurn();
+            nextTurn(); // nextTurn s'occupera tout seul de sauter les morts et le Prophète
         }, 500); 
     }
 }
