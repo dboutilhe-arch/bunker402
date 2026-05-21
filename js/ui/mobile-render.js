@@ -531,10 +531,10 @@ export function resetAffichageJ() {
     if (document.getElementById('blood-status')) document.getElementById('blood-status').innerHTML = "";
     if (document.getElementById('win-cond')) document.getElementById('win-cond').innerHTML = "";
     
-    document.getElementById('role-display').innerText = "RÔLE : EN ATTENTE...";
+    document.getElementById('role-display').innerText = "RÔLE :    ";
     document.getElementById('role-display').style.color = "#2ecc71";
     document.getElementById('role-display').parentElement.style.borderColor = "#2ecc71";
-    document.getElementById('metier-display').innerText = "MÉTIER : ???";
+    document.getElementById('metier-display').innerText = "MÉTIER :    ";
 
     ui.innerHTML = `
         <div style="margin-top: 50px;">
