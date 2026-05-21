@@ -422,6 +422,31 @@ export function executeDecreetPower(cardId) {
             });
             return true;
 
+        case 'neutralisation_ciblee':
+        case 'execution_sommaire':
+            state.currentPowerActive = true; 
+            Logger.add(`☠️ DÉCRET D'ÉLIMINATION : Protocole activé. En attente de la cible du Gardien (${gardien.name}).`);
+            
+            // 1. On force le Gardien actuel à choisir sa cible
+            if (gardien && gardien.conn && gardien.conn.open) {
+                gardien.conn.send({ 
+                    type: 'FORCE_POWER_SELECT', 
+                    action: 'REQUEST_EXECUTION', 
+                    title: 'EXÉCUTION (DÉCRET)' 
+                });
+            }
+            // 2. On met tous les AUTRES joueurs en attente avec l'écran d'immersion
+            players.forEach(p => {
+                if (p.isAlive && p.name.toLowerCase() !== gardien.name.toLowerCase() && p.conn && p.conn.open) {
+                    p.conn.send({ 
+                        type: 'WAIT_POWER', 
+                        gardienName: gardien.name, 
+                        title: 'ÉLIMINATION GOUVERNEMENTALE' 
+                    });
+                }
+            });
+            return true;
+
         case 'purge':
             state.currentPowerActive = true;
             Logger.add(`🧹 DÉCRET PURGE DES SYSTÈMES : Protocole activé. Le Gardien (${gardien.name}) va nettoyer une directive de crise.`);
