@@ -1,4 +1,4 @@
-// logger.js
+// js/ui/logger.js
 
 export const Logger = { 
     add: (message) => {
@@ -11,42 +11,41 @@ export const Logger = {
             second: '2-digit' 
         });
         
-        // --- LOGIQUE DE COLORATION ---
-        let color = "#2ecc71"; // Vert terminal par défaut (neutre)
+        // --- LOGIQUE DE COLORATION CLINIQUE ---
+        let color = "#00e5ff"; // Cyan médical par défaut
         
         switch (true) {
-            // Rouge pour le réseau et les pannes de signal
-            case /SIGNAL PERDU|RECONNEXION|SORTIE LOBBY|PANNE DE SIGNAL/.test(message):
-                color = "#ff5555";
+            // Rouge Sang pour les urgences, alertes, purges, morts
+            case /SIGNAL PERDU|RECONNEXION|SORTIE LOBBY|PANNE DE SIGNAL|MORT|ÉLIMINÉ|PURGE|SABOTAGE/.test(message):
+                color = "#ff1744";
                 break;
                 
-            // Jaune pour le Conseil, les scrutins et les votes
-            case /CONSEIL|SCRUTIN|VOTE/.test(message):
-                color = "#f1c40f";
+            // Jaune/Or Warning pour les changements de conseils, scrutins, coup d'état
+            case /CONSEIL|SCRUTIN|VOTE|COUP D'ÉTAT|RÉÉLECTION/.test(message):
+                color = "#ffea00";
                 break;
                 
-            // Violet Magenta pour les capacités spéciales de métiers ou événements de cases
-            case /POUVOIR|EXÉCUTION|CENSURE/.test(message):
-                color = "#ff00ff";
+            // Violet Toxique/Mystique pour l'Alpha, le Mycologue, le Prophète ou les pouvoirs
+            case /POUVOIR|EXÉCUTION|CENSURE|PROPHÉTIE|PROPHÈTE/.test(message):
+                color = "#d500f9";
                 break;
                 
-            // Bleu pour la législation et les décrets du système
-            case /LÉGISLATION|URGENCE/.test(message):
-                color = "#3498db";
+            // Vert d'eau apaisant pour les réussites et la législation bleue
+            case /LÉGISLATION|URGENCE|RÉORGANISATION/.test(message):
+                color = "#1de9b6";
                 break;
                 
-            // Blanc brillant pour la clôture de la partie
-            case /FIN DE PARTIE/.test(message):
+            // Blanc éclatant pour le système et la fin de partie
+            case /FIN DE PARTIE|SYSTÈME/.test(message):
                 color = "#ffffff";
                 break;
                 
             default:
-                color = "#2ecc71"; // Sécurité : retour au vert par défaut
+                color = "#00e5ff"; // Cyan
         }
         
         const entry = document.createElement('div');
-        // L'heure reste discrète en gris opaque, le message prend la couleur du filtre
-        entry.innerHTML = `<span style="opacity: 0.4; color: #e0e0e0;">[${time}]</span> <span style="color: ${color};">> ${message}</span>`;
+        entry.innerHTML = `<span style="opacity: 0.5; color: #5c8a99;">[${time}]</span> <span style="color: ${color};">> ${message}</span>`;
         
         log.appendChild(entry);
         log.scrollTop = log.scrollHeight; // Scroll automatique
@@ -54,6 +53,6 @@ export const Logger = {
     
     clear: () => {
         const log = document.getElementById('log');
-        if (log) log.innerHTML = "<div>[SYSTÈME] : Redémarrage d'urgence effectué.</div>";
+        if (log) log.innerHTML = "<div style='color:#00e5ff;'>[SYSTÈME] : Moniteur réinitialisé. En attente de données patient.</div>";
     }
 };
