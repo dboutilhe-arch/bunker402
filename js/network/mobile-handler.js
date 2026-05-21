@@ -23,6 +23,18 @@ export let mobileState = {
     hasVoted: false,
 };
 
+// Récupère le paramètre 'code' dans l'URL si on vient d'un scan de QR Code
+const urlParams = new URLSearchParams(window.location.search);
+const roomCodeFromUrl = urlParams.get('code');
+
+if (roomCodeFromUrl) {
+    // Remplace 'input-code' par le vrai ID de l'input où le joueur tape le code de la partie
+    const codeInput = document.getElementById('input-code'); 
+    if (codeInput) {
+        codeInput.value = roomCodeFromUrl;
+    }
+}
+
 // --- INITIALISATION AU CHARGEMENT ---
 document.addEventListener('DOMContentLoaded', () => {
     const connectBtn = document.getElementById('connect-btn');
