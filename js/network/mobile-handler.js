@@ -236,17 +236,6 @@ function handleData(data) {
 // --- CENTRALISATION DE LA SYNCHRONISATION DE L'ÉTAT ---
 function handleSyncStateAction(stateData) {
     mobileState.serverState = stateData;
-
-    // VÉRIFICATION : Est-ce que j'ai déjà voté dans cet état serveur ?
-    if (stateData.currentPhase === "VOTE") {
-        const dejaVote = stateData.votes.list.some(v => v.name.toLowerCase() === mobileState.myName.toLowerCase());
-        if (dejaVote) {
-            mobileState.hasVoted = true;
-            // Pas besoin de refaire showCleanUI ici, il est peut-être déjà affiché
-            return; 
-        }
-    }
-    
     updateMiniBoard(stateData);
     
     const ui = document.getElementById('main-ui');
