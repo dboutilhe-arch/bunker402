@@ -4,9 +4,19 @@ import { DECREETS_DB_LOCAL } from '../core/mobile-constants.js';
 import { mobileState, sendPowerAction } from '../network/mobile-handler.js';
 
 export function updateMiniBoard(state) {
-    document.getElementById('oxy-mini').style.width = (state.oxy / 3 * 100) + "%";
-    document.getElementById('oxy-mini').style.background = state.oxy <= 1 ? "#e74c3c" : "#3498db";
-    document.getElementById('oxy-text-mini').innerText = `NIVEAU D'OXYGENE: ${state.oxy}/3`;
+    const oxyEl = document.getElementById('oxy-mini');
+    oxyEl.style.width = (state.oxy / 3 * 100) + "%";
+    // Si oxy <= 1, l'ECG passe au rouge sang et clignote
+    if (state.oxy <= 1) {
+        oxyEl.style.background = "#ff1744";
+        oxyEl.style.boxShadow = "0 0 10px #ff1744";
+        oxyEl.style.animation = "pulse 0.5s infinite";
+    } else {
+        oxyEl.style.background = "#00e5ff";
+        oxyEl.style.boxShadow = "0 0 8px #00e5ff";
+        oxyEl.style.animation = "none";
+    }
+    document.getElementById('oxy-text-mini').innerText = `SpO2: ${state.oxy}/3`;
     
     document.getElementById('m-s').innerHTML = Array(5).fill(0).map((_, i) => `<div class="dot ${i < state.survie ? 'f-s' : ''}"></div>`).join('');
     document.getElementById('m-c').innerHTML = Array(6).fill(0).map((_, i) => `<div class="dot ${i < state.crise ? 'f-c' : ''}"></div>`).join('');
@@ -21,25 +31,28 @@ export function setupIdentity(data) {
     memo.style.display = "block";
     mDisplay.innerText = "MÉTIER : " + data.metier;
 
+    // NOUVELLES COULEURS CLINIQUES
     const roles = {
-        'S':  { label: "SURVIVANT", color: "#3498db", goal: "Rétablir les protocoles de survie.", win: "5 décrets BLEUS ou éliminer l'Alpha.", blood: "SAIN", bColor: "#2ecc71" },
-        'I':  { label: "INFECTÉ", color: "#e74c3c", goal: "Propager l'infection.", win: "6 décrets ROUGES ou Alpha élu Sentinelle avec 3 décrets ROUGES.", blood: "INFECTÉ", bColor: "#e74c3c" },
-        'A':  { label: "ALPHA", color: "#9400d3", goal: "Propager l'infection.", win: "6 décrets ROUGES ou être élu Sentinelle avec 3 décrets ROUGES.", blood: "INFECTÉ", bColor: "#e74c3c" },
-        'M':  { label: "MYCOLOGUE", color: "#1b4d3e", goal: "Propager l'infection (Infiltré).", win: "6 décrets ROUGES ou Alpha élu Sentinelle avec 3 décrets ROUGES.", blood: "SAIN", bColor: "#2ecc71" },
-        'IM': { label: "IMMUNISÉ", color: "#d4af37", goal: "Rétablir les protocoles (Résistant).", win: "5 décrets BLEUS ou éliminer l'Alpha.", blood: "INFECTÉ", bColor: "#e74c3c" }
+        'S':  { label: "SURVIVANT", color: "#00e5ff", goal: "Rétablir les protocoles de survie.", win: "5 décrets BLEUS ou éliminer l'Alpha.", blood: "SAIN", bColor: "#1de9b6" },
+        'I':  { label: "INFECTÉ", color: "#ff1744", goal: "Propager l'infection.", win: "6 décrets ROUGES ou Alpha élu Sentinelle avec 3 décrets ROUGES.", blood: "INFECTÉ", bColor: "#ff1744" },
+        'A':  { label: "ALPHA", color: "#d500f9", goal: "Propager l'infection.", win: "6 décrets ROUGES ou être élu Sentinelle avec 3 décrets ROUGES.", blood: "INFECTÉ", bColor: "#ff1744" },
+        'M':  { label: "MYCOLOGUE", color: "#00bfa5", goal: "Propager l'infection (Infiltré).", win: "6 décrets ROUGES ou Alpha élu Sentinelle avec 3 décrets ROUGES.", blood: "SAIN", bColor: "#1de9b6" },
+        'IM': { label: "IMMUNISÉ", color: "#ffea00", goal: "Rétablir les protocoles (Résistant).", win: "5 décrets BLEUS ou éliminer l'Alpha.", blood: "INFECTÉ", bColor: "#ff1744" }
     };
 
     const config = roles[data.role];
     rDisplay.innerText = "RÔLE : " + config.label;
     rDisplay.style.color = config.color;
     rDisplay.parentElement.style.borderColor = config.color;
+    rDisplay.parentElement.style.boxShadow = `inset 0 0 15px ${config.color}20`; // Lueur de fond légère
     
-    document.getElementById('team-goal').innerText = "🎯 OBJECTIF : " + config.goal;
+    document.getElementById('team-goal').innerText = "OBJECTIF : " + config.goal;
     document.getElementById('win-cond').innerText = "Conditions : " + config.win;
-    document.getElementById('blood-status').innerHTML = `🩸 SANG : <span style="color: ${config.bColor}">${config.blood}</span>`;
+    document.getElementById('blood-status').innerHTML = `ANALYSE BIOLOGIQUE : <span style="color: ${config.bColor}">${config.blood}</span>`;
+    document.getElementById('blood-status').style.borderColor = config.bColor;
 
     if (data.alphaName && (data.role === 'I' || data.role === 'M')) {
-        document.getElementById('alpha-info').innerHTML = `☣️ ALPHA : <span style="color: #9400d3;">${data.alphaName.toUpperCase()}</span>`;
+        document.getElementById('alpha-info').innerHTML = `SOUCHE ALPHA DÉTECTÉE : <span>${data.alphaName.toUpperCase()}</span>`;
     } else {
         document.getElementById('alpha-info').innerHTML = "";
     }
@@ -47,23 +60,24 @@ export function setupIdentity(data) {
     jobUi.innerHTML = "";
     jobUi.style.opacity = "1";
  
+    // Logique de création des boutons (inchangée, mais le CSS gère le look médical)
     if (data.metier === 'Docteur') {
         const btn = document.createElement('button');
-        btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "TEST SANGUIN";
+        btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "PRÉLÈVEMENT SANGUIN";
         if (mobileState.hasUsedPower) jobUi.style.opacity = "0.3";
         btn.onclick = () => openTargetSelector('REQUEST_BLOOD_TEST', 'ANALYSE BIOLOGIQUE');
         jobUi.appendChild(btn);
     }
     if (data.metier === 'Militaire') {
        const btn = document.createElement('button');
-       btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "EXÉCUTER UN INDIVIDU";
+       btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "PROTOCOLE LÉTHAL";
        if (mobileState.hasUsedPower) jobUi.style.opacity = "0.3";
        btn.onclick = () => openTargetSelector('REQUEST_EXECUTION', "PROTOCOLE D'ÉLIMINATION");
        jobUi.appendChild(btn);
    }
    if (data.metier === 'Intendant') {
           const btn = document.createElement('button');
-          btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "VERROUILLER UN TERMINAL (CENSURE)";
+          btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "VERROUILLAGE SYSTÈME (CENSURE)";
           if (mobileState.hasUsedPower) jobUi.style.opacity = "0.3";
           btn.onclick = () => openTargetSelector('REQUEST_CENSURE', 'PROTOCOLE DE CENSURE');
           jobUi.appendChild(btn);
@@ -71,28 +85,28 @@ export function setupIdentity(data) {
    if (data.metier === 'Shérif') {
         const btn = document.createElement('button');
         btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "PASSIF: VOTE DOUBLE";
-        btn.disabled = true; btn.style.opacity = "0.6"; btn.style.background = "#4a004a"; btn.style.borderColor = "#ff00ff"; btn.style.color = "#ff00ff"; btn.style.pointerEvents = "none";
+        btn.disabled = true; btn.style.opacity = "0.5"; btn.style.pointerEvents = "none";
         jobUi.appendChild(btn);
    }
    if (data.metier === 'Journaliste') {
         const btn = document.createElement('button');
         btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "PASSIF: IMMUNITÉ CENSURE";
-        btn.disabled = true; btn.style.opacity = "0.6"; btn.style.background = "#002b36"; btn.style.borderColor = "#00ffff"; btn.style.color = "#00ffff"; btn.style.pointerEvents = "none";
+        btn.disabled = true; btn.style.opacity = "0.5"; btn.style.pointerEvents = "none";
         jobUi.appendChild(btn);
    }
    if (data.metier === 'Fossoyeur') {
         const btn = document.createElement('button');
         btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "NÉCROLOGIE : +0 VOIX (0 MORT)";
-        btn.disabled = true; btn.style.opacity = "0.7"; btn.style.background = "#1a1105"; btn.style.borderColor = "#964b00"; btn.style.color = "#d2b48c"; btn.style.pointerEvents = "none";
+        btn.disabled = true; btn.style.opacity = "0.5"; btn.style.pointerEvents = "none";
         jobUi.appendChild(btn);
    }
    if (data.metier === 'Archiviste') {
         const btn = document.createElement('button');
-        btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "📜 ARCHIVER LE PROCHAIN VOTE";
+        btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "EXTRACTION DOSSIERS";
         if (mobileState.hasUsedPower) jobUi.style.opacity = "0.3";
         btn.onclick = () => {
-            if (!confirm("Forcer le Gardien à piocher 4 cartes lors du prochain vote valide ?")) return;
-            btn.disabled = true; btn.style.opacity = "0.3"; btn.style.pointerEvents = "none"; btn.innerText = "📜 PROTOCOLE ENCLENCHÉ...";
+            if (!confirm("Forcer le Gardien à piocher 4 dossiers lors du prochain vote ?")) return;
+            btn.disabled = true; btn.style.opacity = "0.3"; btn.style.pointerEvents = "none"; btn.innerText = "EXTRACTION EN COURS...";
             mobileState.hasUsedPower = true;
             mobileState.conn.send({ type: 'USE_ARCHIVISTE_POWER' });
         };
@@ -100,7 +114,7 @@ export function setupIdentity(data) {
     }
     if (data.metier === 'Vigile') {
         const btn = document.createElement('button');
-        btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "🛑 SÉCURISER UN INDIVIDU (BAN SENTINELLE)";
+        btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "RÉVOCATION ACCÈS (BAN SENTINELLE)";
         if (mobileState.hasUsedPower) jobUi.style.opacity = "0.3";
         btn.onclick = () => openTargetSelector('REQUEST_VIGILE_BAN', 'CONTRÔLE DES ACCÈS');
         jobUi.appendChild(btn);
@@ -109,7 +123,7 @@ export function setupIdentity(data) {
 
 export function showGardienUI(eligible) {
     const ui = document.getElementById('main-ui');
-    ui.innerHTML = `<h3>TOUR DU GARDIEN</h3><p>Désignez votre Sentinelle :</p>`;
+    ui.innerHTML = `<h3 style="color:#00e5ff; border-bottom:1px solid #00e5ff; padding-bottom:5px;">AUTORISATION GARDIEN</h3><p style="font-size:0.85em;">Sélectionnez le sujet Sentinelle :</p>`;
     
     const container = document.createElement('div');
     container.className = "theme-sentinelle";
@@ -119,7 +133,7 @@ export function showGardienUI(eligible) {
     
     const btnValidate = document.createElement('button');
     btnValidate.className = "btn-action validate";
-    btnValidate.innerText = "NOMMER LA SENTINELLE";
+    btnValidate.innerText = "VALIDER SUJET";
     controls.appendChild(btnValidate);
     container.appendChild(controls);
 
@@ -146,7 +160,7 @@ export function showGardienUI(eligible) {
     btnValidate.onclick = () => {
         if (!selectedSentinelle) return;
         mobileState.conn.send({ type: 'SENTINELLE_CHOISIE', gardienName: mobileState.myName, sentinelleName: selectedSentinelle });
-        ui.innerHTML = `<div style="margin-top:40px;">Transmission des codes d'accès...</div>`;
+        ui.innerHTML = `<div style="margin-top:40px; color:#5c8a99; font-size:0.85em;">[ CRYPTAGE ET TRANSMISSION EN COURS... ]</div>`;
     };
 
     ui.appendChild(container);
@@ -154,50 +168,54 @@ export function showGardienUI(eligible) {
 
 export function showVoteUI(data) {
     const ui = document.getElementById('main-ui');
-    ui.innerHTML = `<h3>VOTE CONSEIL</h3>`;
-    if (mobileState.myName === data.g) ui.innerHTML += `<p style="background: #f1c40f; color: black; padding: 5px;">⚠️ VOUS ÊTES LE GARDIEN</p>`;
-    else if (mobileState.myName === data.s) ui.innerHTML += `<p style="background: #3498db; color: white; padding: 5px;">⚠️ VOUS ÊTES LA SENTINELLE</p>`;
-
-    ui.innerHTML += `<p>Approuvez-vous ce Conseil ?<br><b>${data.g} & ${data.s}</b></p>`;
+    ui.innerHTML = `<h3 style="color:#b2ebf2;">VOTE DU CONSEIL</h3>`;
     
+    if (mobileState.myName === data.g) ui.innerHTML += `<p style="border:1px solid #ffea00; color:#ffea00; padding:4px; font-size:0.8em; border-radius:2px;">[ STATUT ACTUEL : GARDIEN ]</p>`;
+    else if (mobileState.myName === data.s) ui.innerHTML += `<p style="border:1px solid #00e5ff; color:#00e5ff; padding:4px; font-size:0.8em; border-radius:2px;">[ STATUT ACTUEL : SENTINELLE ]</p>`;
+
+    ui.innerHTML += `<p style="font-size:0.9em; margin:15px 0;">Validation des sujets :<br><b style="color:#fff; font-size:1.1em;">${data.g} & ${data.s}</b></p>`;
+    
+    const actionBox = document.createElement('div');
+    actionBox.style.display = "flex"; actionBox.style.justifyContent = "center"; actionBox.style.gap = "10px";
+
     const btnOui = document.createElement('button');
-    btnOui.className = "btn"; btnOui.style.background = "#2ecc71"; btnOui.style.color = "#000"; btnOui.style.borderColor = "#000"; btnOui.innerText = "ACCEPTER";
+    btnOui.className = "btn"; btnOui.style.borderColor = "#1de9b6"; btnOui.style.color = "#1de9b6"; btnOui.innerText = "APPROUVER";
+    btnOui.onmousedown = () => { btnOui.style.background = "#1de9b6"; btnOui.style.color = "#000"; };
     btnOui.onclick = () => {
-        showCleanUI('OUI');
+        showCleanUI('APPROUVÉ');
         mobileState.conn.send({ type: 'VOTE_DONE', choice: 'OUI', playerName: mobileState.myName });
     };
 
     const btnNon = document.createElement('button');
-    btnNon.className = "btn"; btnNon.style.background = "#e74c3c"; btnNon.style.color = "#000"; btnNon.style.borderColor = "#000"; btnNon.innerText = "REFUSER";
+    btnNon.className = "btn"; btnNon.style.borderColor = "#ff1744"; btnNon.style.color = "#ff1744"; btnNon.innerText = "REJETER";
+    btnNon.onmousedown = () => { btnNon.style.background = "#ff1744"; btnNon.style.color = "#000"; };
     btnNon.onclick = () => {
-        showCleanUI('NON'); // ✨ Et ici
+        showCleanUI('REJETÉ'); 
         mobileState.conn.send({ type: 'VOTE_DONE', choice: 'NON', playerName: mobileState.myName });
     };
 
-    ui.appendChild(btnOui);
-    ui.appendChild(btnNon);
-
-    ui.appendChild(btnOui);
-    ui.appendChild(btnNon);
+    actionBox.appendChild(btnOui);
+    actionBox.appendChild(btnNon);
+    ui.appendChild(actionBox);
 }
 
 export function showLegislativeUI(role, cards) {
     const ui = document.getElementById('main-ui');
     mobileState.currentHand = cards;
-    ui.innerHTML = `<h3>LÉGISLATION : ${role}</h3>`;
+    ui.innerHTML = `<h3 style="color:#00e5ff; border-bottom:1px dashed #00e5ff; padding-bottom:5px;">LÉGISLATION : ${role}</h3>`;
     
-    let descAction = 'SÉLECTIONNEZ LE DÉCRET À PROMULGUER';
-    if (role === 'PROPHÈTE') descAction = 'SÉLECTIONNEZ LE DÉCRET À ÉCARTER (3 RESTANTS)';
-    else if (role === 'GARDIEN' || role === 'SENTINELLE (DÉFAUSSE)') descAction = 'SÉLECTIONNEZ LE DÉCRET À DÉFAUSSER';
+    let descAction = 'SÉLECTIONNEZ LE DOSSIER À PROMULGUER';
+    if (role === 'PROPHÈTE') descAction = 'SÉLECTIONNEZ LE DOSSIER À ÉCARTER';
+    else if (role === 'GARDIEN' || role === 'SENTINELLE (DÉFAUSSE)') descAction = 'SÉLECTIONNEZ LE DOSSIER À DÉFAUSSER';
     
-    ui.innerHTML += `<p style="font-size:0.85em; color:#888;">${descAction}</p>`;
+    ui.innerHTML += `<p style="font-size:0.75em; color:#5c8a99;">[ ${descAction} ]</p>`;
     
     const controls = document.createElement('div');
-    controls.className = "action-controls theme-power";
+    controls.className = "action-controls theme-power"; // Utilise le style de validation vert
     const btnValidate = document.createElement('button');
     btnValidate.className = "btn-action validate";
     
-    btnValidate.innerText = (role === 'PROPHÈTE' || role === 'GARDIEN' || role === 'SENTINELLE (DÉFAUSSE)') ? "DÉFAUSSER" : "PROMULGUER";
+    btnValidate.innerText = (role === 'PROPHÈTE' || role === 'GARDIEN' || role === 'SENTINELLE (DÉFAUSSE)') ? "DÉFAUSSER LE DOSSIER" : "VALIDER LE DOSSIER";
     
     controls.appendChild(btnValidate);
     ui.appendChild(controls);
@@ -229,15 +247,14 @@ export function showLegislativeUI(role, cards) {
         `;
         
         cardElement.onclick = () => {
-            cardsElements.forEach(el => el.style.boxShadow = "");
+            cardsElements.forEach(el => el.style.boxShadow = `inset 0 0 20px rgba(255,255,255,0.05)`);
             selectedCardId = cardId;
             selectedCardIndex = i;
-            // Si c'est le prophète, on fait briller la carte sélectionnée en violet magique, sinon en blanc standard
-            if (role === 'PROPHÈTE') {
-                cardElement.style.boxShadow = "0 0 20px #9b59b6, inset 0 0 10px #9b59b6";
-            } else {
-                cardElement.style.boxShadow = "0 0 20px #ffffff, inset 0 0 10px #ffffff";
-            }
+            
+            // Halo de sélection médical
+            const glowColor = data.type === 'S' ? '#00e5ff' : (data.type === 'C' ? '#ff1744' : '#b0bec5');
+            cardElement.style.boxShadow = `0 0 15px ${glowColor}, inset 0 0 10px ${glowColor}50`;
+            
             btnValidate.classList.add('ready');
         };
         cardContainer.appendChild(cardElement);
@@ -250,27 +267,27 @@ export function showLegislativeUI(role, cards) {
             let remaining = [...mobileState.currentHand];
             remaining.splice(selectedCardIndex, 1);
             mobileState.conn.send({ type: 'PROPHETE_DISCARD_DONE', discardedCardId: selectedCardId, remaining: remaining });
-            ui.innerHTML = `<div style="margin-top:40px; color:#9b59b6;">🔮 Alignement Prophétique transmis...<br>Génération des choix suivants.</div>`;
+            ui.innerHTML = `<div style="margin-top:40px; color:#d500f9;">[ PROPHÉTIE CODÉE ET TRANSMISE ]</div>`;
             
         } else if (role === 'GARDIEN' || role === 'SENTINELLE (DÉFAUSSE)') {
             let remaining = [...mobileState.currentHand]; 
             remaining.splice(selectedCardIndex, 1);
             mobileState.conn.send({ type: 'DISCARD_DONE', discardedCardId: selectedCardId, remaining: remaining });
-            ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
+            ui.innerHTML = `<div style="margin-top:40px; color:#5c8a99;">[ TRANSFERT DES DOSSIERS RESTANTS ]</div>`;
             
         } else {
             mobileState.conn.send({ type: 'FINAL_CHOICE', card: selectedCardId });
-            ui.innerHTML = `<div style="margin-top:40px;">Transmission des données cryptées...</div>`;
+            ui.innerHTML = `<div style="margin-top:40px; color:#5c8a99;">[ PROMULGATION EN COURS... ]</div>`;
         }
     };
     ui.appendChild(cardContainer);
 }
 
 export function openTargetSelector(actionType, title, isForced = false) {
-    if (!isForced && mobileState.hasUsedPower) return alert("Capacité déjà utilisée.");
+    if (!isForced && mobileState.hasUsedPower) return alert("Action déjà effectuée.");
         
     const ui = document.getElementById('main-ui');
-    ui.innerHTML = `<h3>${title}</h3><p>Sélectionnez une ou plusieurs cibles :</p>`;
+    ui.innerHTML = `<h3 style="color:#d500f9;">${title}</h3><p style="font-size:0.85em; color:#b2ebf2;">Sélectionnez le(s) sujet(s) :</p>`;
 
     const container = document.createElement('div');
     container.className = "theme-power";
@@ -286,7 +303,7 @@ export function openTargetSelector(actionType, title, isForced = false) {
     }
 
     const btnValidate = document.createElement('button');
-    btnValidate.className = "btn-action validate"; btnValidate.innerText = "VALIDER L'ACTION";
+    btnValidate.className = "btn-action validate"; btnValidate.innerText = "EXÉCUTER";
     controls.appendChild(btnValidate);
     container.appendChild(controls);
 
@@ -295,15 +312,15 @@ export function openTargetSelector(actionType, title, isForced = false) {
     const targetLimit = isReorganisation ? 2 : 1;
 
     const updateValidationButtonText = () => {
-        btnValidate.innerText = isReorganisation ? `ÉCHANGE (${selectedTargets.length}/2)` : "VALIDER L'ACTION";
+        btnValidate.innerText = isReorganisation ? `ÉCHANGER (${selectedTargets.length}/2)` : "EXÉCUTER PROCÉDURE";
     };
     updateValidationButtonText();
 
     if (actionType === 'REQUEST_PURGE') {
         const crisesActives = mobileState.serverState?.slotsCriseCards || [];
         if (crisesActives.length === 0) {
-            ui.innerHTML += "<p style='color:#888;'>Aucun décret de crise actif sur le plateau.</p>";
-            btnValidate.innerText = "CONFIRMER (PLATEAU VIDE)"; btnValidate.classList.add('ready');
+            ui.innerHTML += "<p style='color:#5c8a99;'>[ AUCUNE INFECTION SYSTÈME À PURGER ]</p>";
+            btnValidate.innerText = "CLÔTURER"; btnValidate.classList.add('ready');
             btnValidate.onclick = () => mobileState.conn.send({ type: 'ACTION_CONFIRMED' });
             ui.appendChild(container); return;
         }
@@ -337,22 +354,18 @@ export function openTargetSelector(actionType, title, isForced = false) {
     listToUse.forEach(name => {
         if (name.toLowerCase() === mobileState.myName.toLowerCase()) return;
         
-        // 1. Sécurité Métier : Censure de l'Intendant
         if (actionType === 'REQUEST_CENSURE') {
             if (mobileState.serverState?.censoredNames?.includes(name)) return;
             if (mobileState.serverState?.journalisteNames?.includes(name)) return;
         }
 
-        // 2. Sécurité Licenciement : Ignorer les Civils
         if (actionType === 'REQUEST_LICENCIEMENT') {
             if (mobileState.serverState?.civilianNames?.includes(name)) return; 
         }
         
-        // 🔮 3. SÉCURITÉ PROPHÈTE : On masque son bouton si c'est un Coup d'État
-        // On récupère l'index du joueur pour vérifier s'il est le prophète actif
         const pIdx = mobileState.allPlayers.findIndex(plName => plName.toUpperCase() === name.toUpperCase());
         if (actionType === 'REQUEST_COUP_ETAT' && pIdx === mobileState.serverState?.propheteIdx) {
-            return; // On saute ce joueur, son bouton ne sera pas créé !
+            return;
         }
         
         const btn = document.createElement('button');
@@ -391,60 +404,64 @@ export function openTargetSelector(actionType, title, isForced = false) {
     ui.appendChild(container);
 }
 
+// --- RÉSULTATS CLINIQUES ---
+
 export function showBloodResult(data) {
-    const cardColor = data.result === "SAIN" ? "#2ecc71" : "#e74c3c";
+    const isSain = data.result === "SAIN";
+    const cardColor = isSain ? "#1de9b6" : "#ff1744";
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid ${cardColor}; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: ${cardColor}; margin-top: 0; letter-spacing: 1px;">RÉSULTAT D'ANALYSE</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Sujet : <b>${data.target.toUpperCase()}</b></p>
-            <p style="color: #e0e0e0; margin: 10px 0;">Statut : <b style="color: ${cardColor}; font-size: 1.2em; letter-spacing: 1px;">${data.result}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%;">OK</button>
+        <div style="border: 1px solid ${cardColor}; padding: 15px; border-radius: 4px; background: rgba(0,0,0,0.6); box-shadow: 0 0 15px ${cardColor}40;">
+            <h3 style="color: ${cardColor}; margin-top: 0; font-size:1.1em; border-bottom:1px solid ${cardColor}50; padding-bottom:5px;">RAPPPORT DE LABORATOIRE</h3>
+            <p style="color: #b2ebf2; margin: 15px 0; font-size:0.9em;">SUJET : <b style="color:#fff;">${data.target.toUpperCase()}</b></p>
+            <p style="color: #b2ebf2; margin: 15px 0; font-size:0.9em;">ANALYSE : <b style="color: ${cardColor}; font-size: 1.3em; display:block; margin-top:5px; text-shadow: 0 0 5px ${cardColor};">[ ${data.result} ]</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 60%; border-color:${cardColor}; color:${cardColor};">CLÔTURER DOSSIER</button>
         </div>`;
     document.getElementById('btn-ok').onclick = () => mobileState.conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
 }
 
 export function showExecutionResult(data) {
-    const color = data.result === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+    const isSain = data.result === "SAIN";
+    const cardColor = isSain ? "#1de9b6" : "#ff1744";
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid #e74c3c; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #e74c3c; margin-top: 0; letter-spacing: 1px;">RAPPORT D'ÉLIMINATION</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Sujet exécuté : <b>${data.target.toUpperCase()}</b></p>
-            <p style="color: #e0e0e0; margin: 10px 0;">Registre biologique : <b style="color: ${color}; font-size: 1.1em;">${data.result}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #e74c3c; color: #000; border-color: #000;">OK</button>
+        <div class="corrupted-panel" style="padding: 15px; border-radius: 4px;">
+            <h3 style="margin-top: 0; border-bottom:1px solid #ff1744; padding-bottom:5px;">CERTIFICAT DE DÉCÈS</h3>
+            <p style="margin: 15px 0; font-size:0.9em; color:#fff;">SUJET ÉLIMINÉ : <b>${data.target.toUpperCase()}</b></p>
+            <p style="margin: 15px 0; font-size:0.9em;">AUTOPSIE : <b style="color: ${cardColor}; font-size: 1.2em; display:block; margin-top:5px;">[ ${data.result} ]</b></p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 60%; border-color:#ff1744; color:#ff1744;">CONFIRMER DÉCÈS</button>
         </div>`;
     document.getElementById('btn-ok').onclick = () => mobileState.conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
 }
 
 export function showCensureResult(data) {
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid #ff00ff; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #ff00ff; margin-top: 0; letter-spacing: 1px;">TERMINAL VERROUILLÉ</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de restriction a été appliqué avec succès.</p>
-            <p style="color: #f1c40f; margin: 10px 0;">Cible : <b>${data.target.toUpperCase()}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #ff00ff; color: #000; border-color: #000;">OK</button>
+        <div style="border: 1px solid #b0bec5; padding: 15px; border-radius: 4px; background: rgba(176, 190, 197, 0.1);">
+            <h3 style="color: #b0bec5; margin-top: 0;">SYSTÈME VERROUILLÉ</h3>
+            <p style="color: #b2ebf2; font-size:0.85em;">Accès au vote révoqué pour :</p>
+            <p style="color: #fff; font-weight:bold; font-size:1.1em;">${data.target.toUpperCase()}</p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 60%; border-color:#b0bec5; color:#b0bec5;">OK</button>
         </div>`;
     document.getElementById('btn-ok').onclick = () => mobileState.conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
 }
 
 export function showCoupEtatResult(data) {
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid #ff5722; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #ff5722; margin-top: 0; letter-spacing: 1px;">📢 ORDRE EXTRAORDINAIRE</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de transition forcée a été injecté.</p>
-            <p style="color: #f1c40f; margin: 10px 0;">Prochain Gardien : <b>${data.target.toUpperCase()}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #ff5722; color: #000; border-color: #000;">OK</button>
+        <div style="border: 1px solid #ffea00; padding: 15px; border-radius: 4px; background: rgba(255, 234, 0, 0.1); box-shadow: 0 0 15px rgba(255, 234, 0, 0.3);">
+            <h3 style="color: #ffea00; margin-top: 0;">ORDRE EXTRAORDINAIRE</h3>
+            <p style="color: #b2ebf2; font-size:0.85em;">Passation de pouvoir forcée vers :</p>
+            <p style="color: #fff; font-weight:bold; font-size:1.2em;">${data.target.toUpperCase()}</p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 60%; border-color:#ffea00; color:#ffea00;">CONFIRMER</button>
         </div>`;
     document.getElementById('btn-ok').onclick = () => mobileState.conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
 }
 
 export function showEndGame(data) {
     const isWin = data.personalResult === "MISSION RÉUSSIE";
-    const color = isWin ? "#2ecc71" : "#e74c3c";
+    const color = isWin ? "#1de9b6" : "#ff1744";
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid ${color}; padding: 20px; border-radius: 10px;">
-            <h1 style="color:${color}">${data.personalResult}</h1>
-            <p>Les <b>${data.team}</b> ont gagné.</p>
-            <p style="font-size:0.8em; font-style:italic;">"${data.reason}"</p>
+        <div style="border: 1px solid ${color}; padding: 20px; border-radius: 4px; background: rgba(0,0,0,0.8); box-shadow: 0 0 20px ${color}40;">
+            <h2 style="color:${color}; text-shadow: 0 0 10px ${color};">${data.personalResult}</h2>
+            <p style="color:#fff; font-size:0.9em;">Victoire du camp : <b style="color:${color};">${data.team}</b></p>
+            <p style="font-size:0.75em; color:#5c8a99; margin-top:15px;">[ ${data.reason} ]</p>
         </div>`;
 }
 
@@ -458,15 +475,12 @@ export function showView493(cards, decisionMaker) {
 
         const cardElement = document.createElement('div');
         cardElement.className = `decree-card card-type-${data.type}`;
-        cardElement.style.opacity = "0.85"; cardElement.style.cursor = "not-allowed";
+        cardElement.style.opacity = "0.7"; cardElement.style.cursor = "not-allowed";
         
         let typeText = data.type === 'S' ? "SURVIE" : (data.type === 'C' ? "CRISE" : "SUFFRAGE");
 
         cardElement.innerHTML = `
-            <div class="card-header card-header-${data.type}">
-                <span>${typeText}</span>
-                <span>${data.symbol}</span>
-            </div>
+            <div class="card-header card-header-${data.type}"><span>${typeText}</span><span>${data.symbol}</span></div>
             <div class="card-title">${data.name}</div>
             <div class="card-desc">${data.desc}</div>
         `;
@@ -474,43 +488,43 @@ export function showView493(cards, decisionMaker) {
     });
 
     const ui = document.getElementById('main-ui');
-    ui.innerHTML = `<h3>👁️ VISUEL TERMINAL (49.3)</h3><p style="font-size:0.85em; color:#ff3333; font-weight:bold;">[LECTURE SEULE] ${decisionMaker} SÉLECTIONNE LE DÉCRET FINAL...</p>`;
+    ui.innerHTML = `<h3 style="color:#b0bec5; font-size:1em;">VISUEL DOSSIERS (49.3)</h3><p style="font-size:0.75em; color:#ffea00; font-weight:bold;">[ EN ATTENTE CHOIX DE ${decisionMaker} ]</p>`;
     ui.appendChild(cardContainer);
 }
 
 export function showPurgeResult(data) {
     const cardName = DECREETS_DB_LOCAL[data.cardId]?.name || data.cardId;
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid #2ecc71; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #2ecc71; margin-top: 0; letter-spacing: 1px;">⚙️ PURGE DU PLATEAU</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Le protocole de nettoyage de la mémoire centrale a été exécuté.</p>
-            <p style="color: #f1c40f; margin: 10px 0;">Directive supprimée : <b style="text-transform: uppercase;">${cardName}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #2ecc71; color: #000; border-color: #000;">OK</button>
+        <div style="border: 1px solid #1de9b6; padding: 15px; border-radius: 4px; background: rgba(29, 233, 182, 0.1);">
+            <h3 style="color: #1de9b6; margin-top: 0;">PURGE COMPLÈTE</h3>
+            <p style="color: #b2ebf2; font-size:0.85em;">Infection supprimée du système :</p>
+            <p style="color: #fff; font-weight:bold;">${cardName.toUpperCase()}</p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 60%; border-color:#1de9b6; color:#1de9b6;">OK</button>
         </div>`;
     document.getElementById('btn-ok').onclick = () => mobileState.conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
 }
 
 export function showReorganisationResult(data) {
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid #3498db; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #3498db; margin-top: 0; letter-spacing: 1px;">🔄 RÉORGANISATION EFFECTUÉE</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Les bases de données biologiques ont été permutées.</p>
-            <p style="color: #f1c40f; margin: 10px 0;"><b>${data.targetA.toUpperCase()}</b> ⇄ <b>${data.targetB.toUpperCase()}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #3498db; color: #000; border-color: #000;">OK</button>
+        <div style="border: 1px solid #00e5ff; padding: 15px; border-radius: 4px; background: rgba(0, 229, 255, 0.1);">
+            <h3 style="color: #00e5ff; margin-top: 0;">ÉCHANGE RÉUSSI</h3>
+            <p style="color: #b2ebf2; font-size:0.85em;">Dossiers permutés :</p>
+            <p style="color: #fff; font-weight:bold;">${data.targetA.toUpperCase()} ⇄ ${data.targetB.toUpperCase()}</p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 60%; border-color:#00e5ff; color:#00e5ff;">OK</button>
         </div>`;
     document.getElementById('btn-ok').onclick = () => mobileState.conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
 }
 
 export function showBloodSwappedAlert(data) {
-    const bColor = data.newBlood === "SAIN" ? "#2ecc71" : "#e74c3c";
-    document.getElementById('blood-status').innerHTML = `🩸 SANG : <span style="color: ${bColor}">${data.newBlood}</span>`;
+    const bColor = data.newBlood === "SAIN" ? "#1de9b6" : "#ff1744";
+    document.getElementById('blood-status').innerHTML = `ANALYSE BIOLOGIQUE : <span style="color: ${bColor}">${data.newBlood}</span>`;
+    document.getElementById('blood-status').style.borderColor = bColor;
+    
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid #3498db; padding: 20px; border-radius: 10px; background: rgba(52, 152, 219, 0.1);">
-            <h2 style="color: #3498db; letter-spacing: 1px;">⚠️ DOSSIER INTERVERTI</h2>
-            <p style="color: #e0e0e0;">Le Gardien a réorganisé les archives médicales.</p>
-            <p style="color: #fff;">Votre dossier biologique a été échangé avec celui de : <b style="color: #f1c40f;">${data.withPlayer.toUpperCase()}</b></p>
-            <p style="font-size: 0.9em; margin-top: 15px; color: #aaa;">Votre nouveau statut sanguin est : <b style="color: ${bColor}">${data.newBlood}</b></p>
-            <p style="font-size: 0.75em; color: #555; margin-top: 20px;">[SYNCHRONISATION DES TERMINAUX TERMINÉE]</p>
+        <div style="border: 1px solid #00e5ff; padding: 20px; border-radius: 4px; background: rgba(0, 229, 255, 0.1); box-shadow: 0 0 20px rgba(0,229,255,0.2);">
+            <h3 style="color: #00e5ff;">AVIS DE MODIFICATION</h3>
+            <p style="color: #b2ebf2; font-size:0.85em;">Le Gardien a réassigné votre dossier avec celui de : <b style="color: #fff;">${data.withPlayer.toUpperCase()}</b></p>
+            <p style="font-size: 0.9em; margin-top: 15px; color: #5c8a99;">NOUVELLE ANALYSE : <b style="color: ${bColor}; font-size:1.1em;">[ ${data.newBlood} ]</b></p>
         </div>`;
 }
 
@@ -532,158 +546,134 @@ export function resetAffichageJ() {
     if (document.getElementById('win-cond')) document.getElementById('win-cond').innerHTML = "";
     
     document.getElementById('role-display').innerText = "RÔLE :    ";
-    document.getElementById('role-display').style.color = "#2ecc71";
-    document.getElementById('role-display').parentElement.style.borderColor = "#2ecc71";
+    document.getElementById('role-display').style.color = "#00e5ff";
+    document.getElementById('role-display').parentElement.style.borderColor = "#00e5ff";
+    document.getElementById('role-display').parentElement.style.boxShadow = "none";
     document.getElementById('metier-display').innerText = "MÉTIER :    ";
 
     ui.innerHTML = `
         <div style="margin-top: 50px;">
-            <h2 style="color: #f1c40f;">SYSTÈME RÉINITIALISÉ</h2>
-            <p>Connexion maintenue avec le Bunker.</p>
-            <div class="loader" style="margin: 20px auto; border: 4px solid #333; border-top: 4px solid #2ecc71; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;"></div>
-            <p style="font-size: 0.8em; color: #888;">En attente du lancement par le Gardien Principal...</p>
+            <h3 style="color: #ffea00;">RÉINITIALISATION</h3>
+            <p style="font-size:0.8em; color:#b2ebf2;">Moniteur en attente de données patient.</p>
+            <div class="loader"></div>
         </div>`;
 }
 
 export function showWaitSentinelleUI(gardienName) {
     document.getElementById('main-ui').innerHTML = `
         <div style="margin-top: 40px;">
-            <h2 style="color: #f1c40f; text-transform: uppercase;">FORMATION DU CONSEIL</h2>
-            <p style="color: #e0e0e0;">Le Gardien <b>${gardienName}</b> choisit sa Sentinelle...</p>
-            <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #f1c40f; border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite;"></div>
-            <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[ANALYSE DES ACCÈS RÉSEAU EN COURS]</p>
+            <h3 style="color: #ffea00;">SÉLECTION SENTINELLE</h3>
+            <p style="color: #b2ebf2; font-size:0.85em;">Patient d'autorisation du Gardien <b style="color:#fff;">${gardienName}</b>.</p>
+            <div class="loader" style="border-top-color:#ffea00;"></div>
         </div>`;
 }
 
 export function showWaitLegislationUI(step) {
     document.getElementById('main-ui').innerHTML = `
         <div style="margin-top: 40px;">
-            <h2 style="color: #3498db; text-transform: uppercase;">SESSION LÉGISLATIVE</h2>
-            <p style="color: #e0e0e0;">Le Conseil applique les protocoles secrets (Aiguillage : <b>${step}</b>)...</p>
-            <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #3498db; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.5s linear infinite;"></div>
-            <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[CHIFFREMENT DES DÉCRETS DE SÉCURITÉ]</p>
+            <h3 style="color: #00e5ff;">EXAMEN DES DOSSIERS</h3>
+            <p style="color: #b2ebf2; font-size:0.85em;">Responsable actif : <b style="color:#fff;">${step}</b>.</p>
+            <div class="loader"></div>
         </div>`;
 }
 
 export function showWaitPowerUI(gardienName, title) {
     document.getElementById('main-ui').innerHTML = `
-        <div style="margin-top: 40px; ">
-            <h2 style="color: #ff00ff; text-transform: uppercase; letter-spacing: 1px;">PROTOCOLE INTERACTIF</h2>
-            <p style="color: #e0e0e0; font-size: 0.9em;">Le Gardien <b>${gardienName}</b> applique le décret :</p>
-            <p style="color: #ff00ff; font-weight: bold; font-size: 1.1em; text-transform: uppercase;">[ ${title} ]</p>
-            <div class="loader" style="margin: 30px auto; border: 4px solid #111; border-top: 4px solid #ff00ff; border-radius: 50%; width: 35px; height: 35px; animation: spin 1.2s linear infinite; box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);"></div>
-            <p style="font-size: 0.75em; color: #555; letter-spacing: 1px;">[SÉCURISATION DES TERMINAUX DISTANTS EN COURS]</p>
+        <div style="margin-top: 40px;">
+            <h3 style="color: #d500f9;">PROTOCOLE SPÉCIAL</h3>
+            <p style="color: #b2ebf2; font-size:0.85em;">Le Gardien <b style="color:#fff;">${gardienName}</b> exécute :</p>
+            <p style="color: #d500f9; font-weight: bold; font-size: 1em;">[ ${title} ]</p>
+            <div class="loader" style="border-top-color:#d500f9;"></div>
         </div>`;
 }
 
 export function showDeadUI(reveal) {
-    const colReveal = reveal === "INFECTÉ" ? "#e74c3c" : "#2ecc71";
+    const colReveal = reveal === "INFECTÉ" ? "#ff1744" : "#1de9b6";
     document.getElementById('main-ui').innerHTML = `
-        <h1 style="color: #e74c3c;">VOUS ÊTES MORT</h1>
-        <p>Analyse post-mortem : <b style="color: ${colReveal}">${reveal}</b></p>
-        <p style="opacity: 0.6;">Vous ne pouvez plus voter ni participer.</p>
+        <div class="corrupted-panel" style="padding:20px; border-radius:4px; margin-top:20px;">
+            <h2 style="margin:0;">DÉCÈS ENREGISTRÉ</h2>
+            <p style="font-size:0.85em; color:#fff; margin-top:15px;">AUTOPSIE : <b style="color: ${colReveal}">[ ${reveal} ]</b></p>
+            <p style="font-size:0.75em; opacity: 0.6; margin-top:20px;">Fonctions du terminal désactivées.</p>
+        </div>
     `;
     document.getElementById('job-ui').innerHTML = "";
 }
 
 export function showCensoredAlertUI(byPlayer) {
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; background: rgba(231, 76, 60, 0.1);">
-             <h2 style="color: #e74c3c;">🤐 CENSURE ACTIVÉE</h2>
-             <p>Le joueur <b>${byPlayer}</b> a suspendu vos droits de vote pour ce scrutin.</p>
-             <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">Attendez la fin du tour...</p>
+        <div class="corrupted-panel" style="padding:20px; border-radius:4px;">
+             <h3 style="margin:0;">ACCÈS RÉVOQUÉ</h3>
+             <p style="font-size:0.85em; color:#fff; margin-top:15px;">Droits de vote suspendus par <b>${byPlayer}</b>.</p>
         </div>`;
 }
 
 export function showCleanUI(choix) {
-    const colorChoix = choix === 'OUI' ? '#2ecc71' : '#e74c3c';
-    
+    const colorChoix = choix === 'APPROUVÉ' ? '#1de9b6' : '#ff1744';
     document.getElementById('main-ui').innerHTML = `
         <div style="margin-top: 40px;">
-            <h2 style="color: #2ecc71; text-transform: uppercase;">TRANSMISSION REÇUE</h2>
-            <p style="color: #e0e0e0; margin-bottom: 15px;">Votre vote a été enregistré par la console centrale.</p>
-            
-            <div style="display: inline-block; padding: 6px 20px; border: 1px solid ${colorChoix}; border-radius: 5px; background: rgba(0,0,0,0.3); margin-bottom: 20px;">
-                <span style="color: #888; font-size: 0.85em; letter-spacing: 1px;">STATUT :</span> 
-                <b style="color: ${colorChoix}; letter-spacing: 1px; font-size: 1.1em;">${choix}</b>
+            <h3 style="color: #b0bec5;">DÉCISION ENREGISTRÉE</h3>
+            <div style="margin: 20px auto; padding: 10px; border: 1px solid ${colorChoix}; color:${colorChoix}; font-weight:bold; width:60%; box-shadow: 0 0 10px ${colorChoix}30;">
+                [ ${choix} ]
             </div>
-
-            <div class="loader" style="margin: 10px auto 30px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite;"></div>
-            <p style="font-size: 0.8em; color: #666; letter-spacing: 1px;">[SYNCHRONISATION TERMINAL EN ATTENTE DU SCRUTIN]</p>
+            <div class="loader" style="border-top-color:#b0bec5; width:20px; height:20px; border-width:1px;"></div>
         </div>`;
 }
 
 export function showWaitPropheteVoteUI(gardienName, sentinelleName) {
     document.getElementById('main-ui').innerHTML = `
-        <div style="margin-top: 40px; border: 2px solid #ffffff; padding: 20px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); box-shadow: 0 0 20px rgba(255, 255, 255, 0.2), inset 0 0 10px rgba(255, 255, 255, 0.1);">
-            <h2 style="color: #ffffff; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,255,255,0.5);">🔮 VISION PROPHÉTIQUE</h2>
-            <p style="color: #aaaaaa; font-size: 0.9em; margin-top: 15px; font-style: italic;">Vos adeptes se prononcent sur le conseil :</p>
-            <p style="color: #ffffff; font-weight: bold; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; margin: 10px 0;">
-                ⭐ <span style="border-bottom: 1px solid #ffffff; padding-bottom: 2px;">${gardienName}</span> 
-                &nbsp;&amp;&nbsp; 
-                🔷 <span style="border-bottom: 1px solid #ffffff; padding-bottom: 2px;">${sentinelleName}</span>
+        <div style="margin-top: 40px; border: 1px solid #d500f9; padding: 20px; border-radius: 4px; box-shadow: inset 0 0 20px rgba(213,0,249,0.1);">
+            <h3 style="color: #d500f9;">VOIX DIVINE</h3>
+            <p style="color: #b2ebf2; font-size: 0.85em;">Vos adeptes se prononcent sur :</p>
+            <p style="color: #fff; font-weight: bold; font-size: 1em;">
+                ${gardienName} & ${sentinelleName}
             </p>
-            <div class="loader" style="margin: 30px auto; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #ffffff; border-radius: 50%; width: 35px; height: 35px; animation: spin 2s linear infinite; box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);"></div>
-            <p style="font-size: 0.8em; color: rgba(255, 255, 255, 0.6); letter-spacing: 1px; font-weight: bold;">[ CLARIFICATION DE LA LIGNE TEMPORELLE EN COURS ]</p>
+            <div class="loader" style="border-top-color:#d500f9;"></div>
         </div>`;
 }
 
 export function showTalionUI() {
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; background: rgba(231, 76, 60, 0.1);">
-             <h2 style="color: #e74c3c;">⚖️ SANCTION DU TALION</h2>
-             <p>Votre gestion du Conseil ayant échoué, la Loi du Talion a révoqué vos droits pour ce scrutin.</p>
-             <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">Attendez la fin du tour...</p>
+        <div class="corrupted-panel" style="padding:20px; border-radius:4px;">
+             <h3 style="margin:0;">SANCTION SYSTÈME</h3>
+             <p style="font-size:0.85em; color:#fff; margin-top:15px;">Échec gouvernemental détecté. Droits de vote gelés.</p>
         </div>`;
-    // On vide le bouton de pouvoir si besoin
     document.getElementById('job-ui').innerHTML = ""; 
 }
 
 export function showLicenciementResult(data) {
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid #e67e22; padding: 15px; border-radius: 10px; background: rgba(0,0,0,0.5);">
-            <h3 style="color: #e67e22; margin-top: 0; letter-spacing: 1px;">📉 LICENCIEMENT VALIDÉ</h3>
-            <p style="color: #e0e0e0; margin: 10px 0;">Les accréditations du sujet ont été révoquées avec succès.</p>
-            <p style="color: #f1c40f; margin: 10px 0;">Cible civile : <b>${data.target.toUpperCase()}</b></p>
-            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 50%; background: #e67e22; color: #000; border-color: #000;">OK</button>
+        <div style="border: 1px solid #ffea00; padding: 15px; border-radius: 4px; background: rgba(255, 234, 0, 0.1);">
+            <h3 style="color: #ffea00; margin-top: 0;">ACCRÉDITATIONS RÉVOQUÉES</h3>
+            <p style="color: #b2ebf2; font-size:0.85em;">Cible rétrogradée en Civil :</p>
+            <p style="color: #fff; font-weight:bold; font-size:1.1em;">${data.target.toUpperCase()}</p>
+            <button class="btn" id="btn-ok" style="margin-top: 15px; width: 60%; border-color:#ffea00; color:#ffea00;">OK</button>
         </div>`;
-        
-    // Le bouton OK renverra 'ACTION_CONFIRMED' qui fera passer le tour proprement via handleActionConfirmed()
     document.getElementById('btn-ok').onclick = () => mobileState.conn.send({ type: data.isForced ? 'ACTION_CONFIRMED' : 'SYNC_REQUEST' });
 }
 
 export function showLicenciementAlert() {
-    // 1. Destruction immédiate du métier sur l'en-tête du mobile
     const metierEl = document.getElementById('metier-display');
     if (metierEl) metierEl.innerText = "MÉTIER : CIVIL";
     
-    // 2. Suppression du bouton d'action potentiel
     const jobZone = document.getElementById('job-ui');
     if (jobZone) {
-        jobZone.innerHTML = "<p style='color:#e67e22; font-style:italic; border: 1px solid #e67e22; padding: 10px; border-radius: 5px; font-size: 0.85em;'>Accréditations révoquées. Vous êtes désormais CIVIL.</p>";
+        jobZone.innerHTML = "<p style='color:#ffea00; border: 1px dashed #ffea00; padding: 10px; font-size: 0.8em;'>[ FONCTIONS BLOQUÉES ]</p>";
         jobZone.style.opacity = "1";
     }
 
-    // 3. Affichage de la sanction
     document.getElementById('main-ui').innerHTML = `
-        <div style="border: 2px solid #e67e22; padding: 20px; border-radius: 10px; background: rgba(230, 126, 34, 0.1);">
-             <h2 style="color: #e67e22;">📉 LICENCIEMENT</h2>
-             <p style="color:#e0e0e0;">Le Gardien a révoqué toutes vos accréditations gouvernementales.</p>
-             <p style="font-size: 0.9em; margin-top: 15px; color: #fff;">Vous perdez définitivement vos capacités spéciales.</p>
-             <p style="font-size: 0.8em; opacity: 0.6; margin-top: 20px;">En attente de la console centrale...</p>
+        <div style="border: 1px solid #ffea00; padding: 20px; border-radius: 4px; background: rgba(255, 234, 0, 0.1); margin-top:15px;">
+             <h3 style="color: #ffea00; margin:0;">RÉTROGRADATION</h3>
+             <p style="font-size:0.85em; color:#b2ebf2; margin-top:15px;">Vos accès métier ont été supprimés du registre par le Gardien.</p>
         </div>`;
 }
 
 export function showLobbyWaitingUI() {
     const ui = document.getElementById('main-ui');
     ui.innerHTML = `
-        <div style="margin-top: 40px; border: 1px solid #2ecc71; padding: 20px; border-radius: 8px; background: rgba(46, 204, 113, 0.05); box-shadow: inset 0 0 15px rgba(46, 204, 113, 0.1);">
-            <h2 style="color: #2ecc71; letter-spacing: 2px; text-transform: uppercase;">Accréditation Valide</h2>
-            <p style="color: #e0e0e0; font-size: 0.9em; margin-bottom: 25px;">Liaison sécurisée avec le réseau local du Bunker.</p>
-            
-            <div class="loader" style="margin: 0 auto 25px auto; border: 4px solid #111; border-top: 4px solid #2ecc71; border-radius: 50%; width: 40px; height: 40px; animation: spin 1.5s linear infinite; box-shadow: 0 0 10px rgba(46, 204, 113, 0.2);"></div>
-            
-            <p style="font-size: 0.85em; color: #888; letter-spacing: 1px; font-family: monospace;">[ EN ATTENTE DU DÉPLOIEMENT DU PERSONNEL ]</p>
-            <p style="font-size: 0.7em; color: #555; margin-top: 15px;">Veuillez patienter jusqu'à l'initialisation de la console centrale par le Gardien.</p>
+        <div style="margin-top: 40px; border: 1px solid #00e5ff; padding: 20px; border-radius: 4px; box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.05);">
+            <h3 style="color: #00e5ff;">CONNEXION ÉTABLIE</h3>
+            <p style="color: #b2ebf2; font-size: 0.85em;">En attente des données médicales centrales.</p>
+            <div class="loader"></div>
         </div>`;
 }

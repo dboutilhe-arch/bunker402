@@ -1,276 +1,266 @@
 /* ==========================================================================
-   1. DESIGN GLOBAL & INTERFACE DE BASE
+   1. AMBIANCE MONITEUR MÉDICAL (CLINIQUE & CORROMPU)
    ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
-body { background: #000; color: #2ecc71; font-family: monospace; padding: 10px; text-align: center; margin: 0; overflow-x: hidden; }
+body { 
+    background: #03080c; /* Noir très légèrement bleuté */
+    color: #b2ebf2; /* Cyan très pâle / Blanc clinique */
+    font-family: 'Share Tech Mono', 'Courier New', monospace; 
+    padding: 10px; 
+    text-align: center; 
+    margin: 0; 
+    overflow-x: hidden; 
+}
 
-/* En-tête : nom du joueur et oxygène */
+/* Effet de balayage d'écran subtil */
+.scanlines {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 4px, 3px 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.3;
+}
+
+/* ==========================================================================
+   2. EN-TÊTE ET SIGNES VITAUX (SpO2)
+   ========================================================================== */
 .header-ui { 
     display: flex; 
     justify-content: space-between; 
-    border-bottom: 1px solid #333; 
-    padding-bottom: 5px; 
-    margin-bottom: 10px; 
-    font-size: 0.75em;
+    border-bottom: 1px solid #00e5ff; 
+    padding-bottom: 8px; 
+    margin-bottom: 8px; 
+    font-size: 0.85em;
+    text-shadow: 0 0 5px rgba(0, 229, 255, 0.5);
 }
 
-/* Barre d'oxygène miniature sous le nom */
-#oxy-mini { height: 5px; background: #3498db; width: 100%; transition: 0.5s; margin-top: 5px; }
+.patient-name { color: #ffffff; font-weight: bold; letter-spacing: 1px; }
+.vital-text { color: #00e5ff; }
 
-/* Petit plateau de rappel des scores */
-.mini-board { display: flex; justify-content: space-around; background: #111; padding: 5px; border-radius: 5px; margin-bottom: 10px; font-size: 0.7em; }
+/* La jauge d'oxygène devient une fine ligne lumineuse (type ECG) */
+.vital-monitor {
+    background: rgba(0, 20, 30, 0.5);
+    border: 1px solid #003344;
+    height: 4px;
+    border-radius: 2px;
+    margin-bottom: 15px;
+    position: relative;
+    overflow: hidden;
+}
 
-/* Les "dots" de la jauge miniature (Bleu/Rouge) */
-.dot { width: 10px; height: 15px; border: 1px solid #444; margin: 1px; display: inline-block; border-radius: 2px; }
-.f-s { background: #3498db; border-color: #3498db; }
-.f-c { background: #e74c3c; border-color: #e74c3c; }
-
+#oxy-mini { 
+    height: 100%; 
+    background: #00e5ff; 
+    width: 100%; 
+    transition: width 1s ease-in-out, background 0.5s;
+    box-shadow: 0 0 8px #00e5ff;
+}
 
 /* ==========================================================================
-   2. ETATS SECRETS, ROLES & IDENTITÉ
+   3. PLATEAU MINIATURE ET POINTS
    ========================================================================== */
-
-.role-ui { border: 2px solid yellow; color: yellow; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
-
-.role-A { border: 2px solid #9400d3 !important; color: #9400d3 !important; }   /* Alpha */
-.role-M { border: 2px solid #1b4d3e !important; color: #1b4d3e !important; }   /* Mycologue */
-.role-IM { border: 2px solid #d4af37 !important; color: #d4af37 !important; }  /* Immunisé */
-
-.blood-info { 
-    margin-top: 5px; 
-    font-weight: bold; 
-    text-transform: uppercase;
-    font-size: 0.9em;
+.mini-board { 
+    display: flex; 
+    justify-content: space-around; 
+    background: rgba(0, 15, 20, 0.8); 
+    border: 1px solid #003344;
+    padding: 8px; 
+    border-radius: 4px; 
+    margin-bottom: 15px; 
+    font-size: 0.75em; 
+    color: #84cdd5;
 }
 
+.dot-container { display: flex; gap: 3px; margin-top: 4px; justify-content: center;}
+.dot { width: 12px; height: 4px; border: 1px solid #004455; display: inline-block; }
+.f-s { background: #00e5ff; border-color: #00e5ff; box-shadow: 0 0 5px #00e5ff; } /* Survie: Cyan */
+.f-c { background: #ff1744; border-color: #ff1744; box-shadow: 0 0 5px #ff1744; } /* Crise: Rouge Sang */
+
+/* ==========================================================================
+   4. DOSSIER MÉDICAL CLASSIFIÉ (RÔLES ET IDENTITÉ)
+   ========================================================================== */
+.role-ui { 
+    border: 1px solid #00e5ff; 
+    background: rgba(0, 229, 255, 0.03);
+    padding: 12px; 
+    margin-bottom: 15px; 
+    border-radius: 4px; 
+    text-align: left;
+    position: relative;
+}
+
+.dossier-header {
+    font-size: 0.6em;
+    color: #00e5ff;
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    background: #03080c;
+    padding: 0 5px;
+    letter-spacing: 2px;
+}
+
+.role-label { font-size: 1.3em; font-weight: bold; margin-bottom: 4px; text-shadow: 0 0 8px currentColor; }
+.metier-label { font-size: 0.85em; color: #b2ebf2; letter-spacing: 1px; }
+
 .memo-box {
-    background: #0a0a0a;
-    border-left: 3px solid #f1c40f;
-    padding: 10px;
-    margin: 10px 0;
+    background: rgba(0, 0, 0, 0.5);
+    border-left: 3px solid #00e5ff;
+    padding: 12px;
+    margin: 10px 0 20px 0;
     text-align: left;
     font-size: 0.85em;
     display: none;
 }
-.win-condition { color: #888; font-style: italic; margin-top: 5px; }
 
-
-/* ==========================================================================
-   3. SYSTEME DE BOUTONS (LIER, VOTER, METIERS)
-   ========================================================================== */
-
-/* Boutons standards (Lier, Voter...) */
-.btn { 
-    background: #111; 
-    border: 1px solid #2ecc71; 
-    color: #2ecc71; 
-    padding: 15px; 
-    width: 40%;
-    margin: 8px 0; 
-    border-radius: 8px; 
-    font-weight: bold; 
-}
-
-/* Bouton de métier principal */
-.btn-power {
-    display: block;
-    background: #ff00ff !important;
-    border: 2px solid #000 !important;
-    color: #000 !important;
-    padding: 15px;
-    width: 50% !important;
-    margin: 10px auto !important;
-    border-radius: 8px;
-    font-weight: bold;
-    text-transform: uppercase;
-} 
-
+.blood-info { margin-top: 8px; font-weight: bold; font-size: 1em; background: #000; padding: 5px; display: inline-block; border: 1px dashed currentColor; }
+.alpha-alert { color: #d500f9; font-weight: bold; margin-top: 8px; text-shadow: 0 0 5px #d500f9; animation: pulse 2s infinite; }
+.win-condition { color: #5c8a99; font-style: italic; margin-top: 8px; font-size: 0.9em; }
 
 /* ==========================================================================
-   4. ARCHITECTURE & INTÉGRATION DU SÉLECTEUR DE CIBLES
+   5. BOUTONS & INTERFACE MATÉRIEL
    ========================================================================== */
-
-/* Conteneurs parents de cibles forcés en Flex pour garantir l'alignement sur 3 colonnes */
-.theme-sentinelle, .theme-power {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-}
-
-.action-controls {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-    margin-bottom: 15px;
-}
-
-/* Base commune pour les boutons d'action (Valider / Annuler) */
-.btn-action {
-    background: #000 !important;
-    padding: 12px;
-    width: 45% !important;
-    border-radius: 8px;
-    font-weight: bold;
+.btn, .btn-power, .btn-action, .btn-target {
+    background: rgba(0, 30, 40, 0.6);
+    border: 1px solid #00e5ff;
+    color: #00e5ff;
+    font-family: inherit;
     text-transform: uppercase;
-    font-family: monospace;
+    border-radius: 3px;
     cursor: pointer;
     transition: all 0.2s ease;
+    text-shadow: 0 0 5px rgba(0,229,255,0.5);
+    box-shadow: inset 0 0 10px rgba(0,229,255,0.1);
 }
 
-/* Bouton Annuler Universel */
-.btn-action.cancel {
-    border: 2px solid #e74c3c !important;
-    color: #e74c3c !important;
-}
+.btn { padding: 15px; width: 45%; margin: 8px 2%; font-weight: bold; }
+.btn:active { background: #00e5ff; color: #000; }
 
-/* Bouton Valider Générique (Inactif par défaut) */
-.btn-action.validate {
-    opacity: 0.2;
-    pointer-events: none;
-    border: 2px solid #555 !important;
-    color: #555 !important;
-}
-
-/* Grille des boutons de cibles (Joueurs) */
-.btn-target {
-    padding: 12px;
-    width: calc(33.33% - 8px) !important;
-    margin: 4px 0 !important;
-    border-radius: 8px;
+.btn-power {
+    display: block;
+    width: 90% !important;
+    margin: 15px auto !important;
+    padding: 15px;
     font-weight: bold;
-    text-transform: uppercase;
-    font-family: monospace;
-    cursor: pointer;
-    display: inline-block;
-    box-sizing: border-box;
-    transition: all 0.15s ease;
+    letter-spacing: 1px;
+    border-color: #d500f9 !important; /* Violet par défaut pour les actions spéciales */
+    color: #d500f9 !important;
+    text-shadow: 0 0 5px rgba(213, 0, 249, 0.5);
+    box-shadow: inset 0 0 10px rgba(213, 0, 249, 0.1);
 }
+.btn-power:active { background: #d500f9 !important; color: #fff !important; }
 
-/* --- DESIGN DES THÈMES (SENTINELLE VS POUVOIRS) --- */
-
-/* Thème Sentinelle : Bleu Survie */
-.theme-sentinelle .btn-target {
-    background: #000;
-    border: 2px solid #3498db;
-    color: #3498db;
+/* Inputs du Setup */
+input { 
+    background: transparent; 
+    color: #00e5ff; 
+    border: 1px solid #004455; 
+    border-bottom: 2px solid #00e5ff;
+    padding: 15px; 
+    width: 85%; 
+    text-align: center; 
+    margin-bottom: 15px; 
+    font-family: inherit;
+    font-size: 1.1em;
+    outline: none;
 }
-.theme-sentinelle .btn-target.selected {
-    background: #3498db !important;
-    color: #000 !important;
-    border-color: #fff !important;
-    box-shadow: 0 0 10px rgba(52, 152, 219, 0.6);
-}
-.theme-sentinelle .btn-action.validate.ready {
-    opacity: 1;
-    pointer-events: auto;
-    border: 2px solid #3498db !important;
-    background: #3498db !important;
-    color: #000 !important;
-}
-
-/* Thème Pouvoir : Violet Néon */
-.theme-power .btn-target {
-    background: #000;
-    border: 2px solid #ff00ff;
-    color: #ff00ff;
-}
-.theme-power .btn-target.selected {
-    background: #ff00ff !important;
-    color: #000 !important;
-    border-color: #fff !important;
-    box-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
-}
-.theme-power .btn-action.validate.ready {
-    opacity: 1;
-    pointer-events: auto;
-    border: 2px solid #2ecc71 !important; /* Devient vert opérationnel */
-    background: #2ecc71 !important;
-    color: #000 !important;
-}
-
+input:focus { background: rgba(0,229,255,0.05); }
 
 /* ==========================================================================
-   5. VISUEL CARTE DE JEU DE SOCIÉTÉ (LÉGISLATION)
+   6. SÉLECTEUR DE CIBLES (THÈMES CLINIQUES)
    ========================================================================== */
+.action-controls { display: flex; justify-content: center; gap: 10px; width: 100%; margin-bottom: 15px; }
 
-.legislative-container {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
-    margin-top: 20px;
+.btn-action { padding: 12px; width: 45% !important; font-weight: bold; }
+.btn-action.cancel { border-color: #ff1744 !important; color: #ff1744 !important; }
+.btn-action.validate { opacity: 0.3; pointer-events: none; border-color: #5c8a99 !important; color: #5c8a99 !important; }
+
+.theme-sentinelle, .theme-power { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
+
+.btn-target {
+    padding: 12px 5px;
+    width: calc(33.33% - 8px) !important;
+    font-size: 0.9em;
 }
+
+/* Thème Sentinelle : Autorisation Bleu */
+.theme-sentinelle .btn-target { border-color: #00e5ff; color: #00e5ff; }
+.theme-sentinelle .btn-target.selected { background: #00e5ff !important; color: #000 !important; font-weight: bold; box-shadow: 0 0 15px rgba(0, 229, 255, 0.6); }
+.theme-sentinelle .btn-action.validate.ready { opacity: 1; pointer-events: auto; background: #00e5ff !important; color: #000 !important; border-color: #00e5ff !important; }
+
+/* Thème Pouvoir : Protocole Spécial Violet */
+.theme-power .btn-target { border-color: #d500f9; color: #d500f9; }
+.theme-power .btn-target.selected { background: #d500f9 !important; color: #fff !important; font-weight: bold; box-shadow: 0 0 15px rgba(213, 0, 249, 0.6); }
+.theme-power .btn-action.validate.ready { opacity: 1; pointer-events: auto; background: #1de9b6 !important; color: #000 !important; border-color: #1de9b6 !important; }
+
+/* ==========================================================================
+   7. CARTES DE LÉGISLATION (FICHES DE PROTOCOLES)
+   ========================================================================== */
+.legislative-container { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
 
 .decree-card {
-    background: #111;
-    border-radius: 12px;
-    width: 160px;
-    height: 240px;
+    background: rgba(0, 10, 15, 0.8);
+    border-radius: 4px;
+    width: 145px;
+    height: 220px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 12px;
+    padding: 10px;
     box-sizing: border-box;
-    border: 3px solid #555;
+    border: 1px solid #555;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-    font-family: monospace;
 }
 
-.decree-card:hover {
-    transform: translateY(-5px);
-}
+.decree-card:active { transform: scale(0.95); }
 
-.card-type-S { border-color: #3498db !important; box-shadow: 0 0 10px rgba(52, 152, 219, 0.3); }
-.card-type-C { border-color: #e74c3c !important; box-shadow: 0 0 10px rgba(231, 76, 60, 0.3); }
-.card-type-F { border-color: #7f8c8d !important; box-shadow: 0 0 10px rgba(127, 140, 141, 0.3); }
+/* Couleurs cliniques pour les cartes */
+.card-type-S { border-color: #00e5ff !important; box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.05); }
+.card-type-C { border-color: #ff1744 !important; box-shadow: inset 0 0 20px rgba(255, 23, 68, 0.05); }
+.card-type-F { border-color: #b0bec5 !important; box-shadow: inset 0 0 20px rgba(176, 190, 197, 0.05); }
 
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    font-size: 0.85em;
-    border-bottom: 1px solid #333;
-    padding-bottom: 4px;
-}
-.card-header-S { color: #3498db; }
-.card-header-C { color: #e74c3c; }
-.card-header-F { color: #7f8c8d; }
+.card-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.75em; border-bottom: 1px dashed currentColor; padding-bottom: 4px; }
+.card-header-S { color: #00e5ff; }
+.card-header-C { color: #ff1744; }
+.card-header-F { color: #b0bec5; }
 
-.card-title {
-    font-size: 0.9em;
-    font-weight: bold;
-    color: #fff;
-    text-align: center;
-    margin: 10px 0;
-    text-transform: uppercase;
-}
-
-.card-desc {
-    font-size: 0.65em;
-    color: #aaa;
-    text-align: left;
-    line-height: 1.3;
-    background: rgba(0, 0, 0, 0.4);
-    padding: 6px;
-    border-radius: 4px;
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-}
-
+.card-title { font-size: 0.85em; font-weight: bold; color: #fff; text-align: center; margin: 10px 0; }
+.card-desc { font-size: 0.7em; color: #84cdd5; text-align: left; background: rgba(0, 0, 0, 0.6); padding: 8px; border-radius: 2px; flex-grow: 1; border-left: 2px solid currentColor; }
 
 /* ==========================================================================
-   6. UTILITAIRES & ANIMATIONS
+   8. UTILITAIRES & ANIMATIONS DE CORRUPTION
    ========================================================================== */
-
 .hidden { display: none; }
-input { background: #111; color: #2ecc71; border: 1px solid #2ecc71; padding: 15px; width: 85%; text-align: center; margin-bottom: 10px; }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* Effet glitch/corrompu utilisé par le JS pour les morts/censures */
+.corrupted-panel {
+    border: 1px solid #ff1744 !important;
+    background: rgba(255, 23, 68, 0.1) !important;
+    box-shadow: inset 0 0 15px rgba(255, 23, 68, 0.3) !important;
+    color: #ff1744 !important;
+    animation: jitter 0.3s infinite;
+}
+
+@keyframes jitter {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(1px, 1px); }
+    50% { transform: translate(-1px, 0); }
+    75% { transform: translate(0, -1px); }
+    100% { transform: translate(0, 0); }
+}
+
+.loader {
+    border: 2px solid rgba(0, 229, 255, 0.1);
+    border-top: 2px solid #00e5ff;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
 }

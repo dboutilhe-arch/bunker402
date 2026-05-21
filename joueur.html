@@ -3,40 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal Joueur - Bunker 402</title>
+    <title>Moniteur Médical - Bunker 402</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="css/mobile.css">
 </head>
 <body>
-    <div id="setup">
-        <h2>TERMINAL BUNKER</h2>
-        <input type="text" id="p-name" placeholder="NOM (MAX 12)" maxlength="12" pattern="^[a-zA-Z0-9àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ\-_ ]+$" style="text-transform: uppercase;">
-        <input type="text" id="r-code" placeholder="CODE CONSOLE">
-        <button id="connect-btn" class="btn" style="background:#2ecc71; color:#000;">LIER LE TERMINAL</button>
+    <div class="scanlines"></div>
+
+    <div id="setup" class="panel">
+        <h2 class="sys-title">MONITEUR DE SURVIE</h2>
+        <p class="sys-subtitle">[ IDENTIFICATION REQUISE ]</p>
+        <input type="text" id="p-name" placeholder="NOM DU SUJET (MAX 12)" maxlength="12" pattern="^[a-zA-Z0-9àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ\-_ ]+$" style="text-transform: uppercase;">
+        <input type="text" id="r-code" placeholder="CODE DE LIAISON">
+        <button id="connect-btn" class="btn btn-primary">INITIALISER LE DOSSIER</button>
     </div>
 
     <div id="game" class="hidden">
         <div class="header-ui">
-            <span id="display-name" style="color: #f1c40f; font-weight:bold;">NOM</span>
-            <span id="oxy-text-mini">NIVEAU D'OXYGENE: 3/3</span>
+            <span id="display-name" class="patient-name">NOM</span>
+            <span id="oxy-text-mini" class="vital-text">SpO2: 3/3</span>
         </div>
-        <div id="oxy-mini"></div>
+        
+        <div class="vital-monitor">
+            <div id="oxy-mini" class="ekg-line"></div>
+        </div>
+
         <div class="mini-board">
-            <div>SURVIE: <div id="m-s"></div></div>
-            <div>CRISE: <div id="m-c"></div></div>
+            <div>PROTOCOLES : <div id="m-s" class="dot-container"></div></div>
+            <div>INFECTIONS : <div id="m-c" class="dot-container"></div></div>
         </div>
+
         <div class="role-ui">
-            <div id="role-display" style="font-size: 1.2em;">RÔLE :    </div>
-            <div id="metier-display" style="color:#2ecc71; font-size:0.8em;">MÉTIER :    </div>
+            <div class="dossier-header">DOSSIER MÉDICAL CLASSIFIÉ</div>
+            <div id="role-display" class="role-label">RÔLE :    </div>
+            <div id="metier-display" class="metier-label">MÉTIER :    </div>
         </div>
+
         <div id="memo-box" class="memo-box">
-            <div id="team-goal"></div>
             <div id="blood-status" class="blood-info"></div>
-            <div id="alpha-info" style="color: #e74c3c; font-weight: bold; margin-top: 5px;"></div>
+            <div id="alpha-info" class="alpha-alert"></div>
+            <div id="team-goal" class="goal-text"></div>
             <div class="win-condition" id="win-cond"></div>
         </div>
-        <div id="job-ui" style="margin-bottom: 10px;"></div>
-        <div id="main-ui"></div>
+
+        <div id="job-ui" class="job-container"></div>
+        <div id="main-ui" class="action-panel"></div>
     </div>
 
     <script type="module" src="js/network/mobile-handler.js"></script>
