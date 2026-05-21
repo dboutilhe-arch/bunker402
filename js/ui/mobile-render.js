@@ -111,7 +111,7 @@ export function setupIdentity(data) {
     }
     if (data.metier === 'Vigile') {
         const btn = document.createElement('button');
-        btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "RÉVOCATION ACCÈS (BAN SENTINELLE)";
+        btn.id = "btn-power"; btn.className = "btn-power"; btn.innerText = "RÉVOCATION ACCÈS SENTINELLE";
         if (mobileState.hasUsedPower) jobUi.style.opacity = "0.3";
         btn.onclick = () => openTargetSelector('REQUEST_VIGILE_BAN', 'CONTRÔLE DES ACCÈS');
         jobUi.appendChild(btn);
