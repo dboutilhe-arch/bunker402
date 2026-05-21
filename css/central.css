@@ -1,31 +1,40 @@
 /* ==========================================================================
-   1. ARCHITECTURE GLOBALE & DESIGN DE BASE (STYLE TERMINAL CRT)
+   1. ARCHITECTURE GLOBALE & DESIGN CLINIQUE / MÉDICAL
    ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body { 
-    background-color: #0a0b0d;
-    background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9)), 
-                      url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    color: #2ecc71; /* Vert terminal par défaut */
-    font-family: 'Courier New', monospace; 
+    background-color: #03080c; /* Noir légèrement bleuté */
+    /* On retire l'image Unsplash pour un fond chirurgical et immersif */
+    background-image: radial-gradient(circle at 50% 50%, rgba(0, 30, 45, 0.4), rgba(3, 8, 12, 1));
+    color: #b2ebf2; /* Blanc clinique / cyan très pâle */
+    font-family: 'Share Tech Mono', 'Courier New', monospace; 
     text-align: center; 
     margin: 0; 
     padding: 10px; 
     min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Effet de balayage d'écran subtil */
+.scanlines {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 4px, 3px 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.3;
 }
 
 h1 {
     font-size: 2.2em;
     letter-spacing: 5px;
     text-transform: uppercase;
-    text-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+    color: #00e5ff;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
     margin-top: 20px;
     margin-bottom: 30px;
 }
@@ -33,20 +42,19 @@ h1 {
 /* ==========================================================================
    1.5. ECRAN D'INITIALISATION (SETUP ZONE)
    ========================================================================== */
-
 #setup-zone {
-    background: rgba(7, 12, 9, 0.9);
-    border: 2px solid #2ecc71;
+    background: rgba(0, 10, 15, 0.8);
+    border: 1px solid #00e5ff;
     border-radius: 4px;
     padding: 40px;
     width: 90%;
     max-width: 600px;
     margin: 40px auto;
-    box-shadow: 0 0 35px rgba(46, 204, 113, 0.15), inset 0 0 20px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 0 35px rgba(0, 229, 255, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.9);
     position: relative;
 }
 
-/* Voyant matériel */
+/* Voyant matériel de monitoring */
 #setup-zone::after {
     content: "";
     position: absolute;
@@ -54,44 +62,45 @@ h1 {
     right: 20px;
     width: 8px;
     height: 8px;
-    background-color: #2ecc71;
+    background-color: #00e5ff;
     border-radius: 50%;
-    box-shadow: 0 0 8px #2ecc71;
+    box-shadow: 0 0 10px #00e5ff;
     animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-    0% { opacity: 0.4; }
-    50% { opacity: 1; box-shadow: 0 0 12px #2ecc71; }
-    100% { opacity: 0.4; }
+@keyframes pulse { 
+    0% { opacity: 0.4; box-shadow: 0 0 5px #00e5ff; } 
+    50% { opacity: 1; box-shadow: 0 0 15px #00e5ff; } 
+    100% { opacity: 0.4; box-shadow: 0 0 5px #00e5ff; } 
 }
 
 #custom-id {
     width: 80%;
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid #27ae60;
+    background: rgba(0, 20, 30, 0.6);
+    border: 1px solid #003344;
+    border-bottom: 2px solid #00e5ff;
     padding: 15px;
-    color: #2ecc71;
+    color: #00e5ff;
     font-family: inherit;
     font-size: 1.1em;
     letter-spacing: 1px;
     outline: none;
     text-transform: uppercase;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
     margin-bottom: 20px;
     text-align: center;
+    transition: all 0.2s;
 }
 
 #custom-id:focus {
-    border-color: #2ecc71;
-    box-shadow: 0 0 15px rgba(46, 204, 113, 0.3), inset 0 0 5px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 229, 255, 0.05);
+    box-shadow: 0 5px 15px rgba(0, 229, 255, 0.1);
 }
 
 #start-server-btn, #start-btn {
     width: 80%;
-    background: #2ecc71;
-    color: #050806;
-    border: none;
+    background: rgba(0, 229, 255, 0.1);
+    color: #00e5ff;
+    border: 1px solid #00e5ff;
     padding: 15px;
     font-family: inherit;
     font-size: 1.1em;
@@ -99,287 +108,227 @@ h1 {
     letter-spacing: 3px;
     text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+    box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.2);
     transition: all 0.2s ease;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 #start-server-btn:hover, #start-btn:not(:disabled):hover {
-    background: #27ae60;
-    color: #ffffff;
-    box-shadow: 0 0 25px rgba(46, 204, 113, 0.5);
+    background: #00e5ff;
+    color: #000;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
 }
 
 #start-btn:disabled {
-    background: #444;
-    color: #888;
+    background: transparent;
+    border-color: #333;
+    color: #555;
     cursor: not-allowed;
     box-shadow: none;
 }
 
-/* Code d'accès généré dans le Lobby pour lier les téléphones */
 .lobby-code { 
     font-size: 1.8em; 
-    color: #f1c40f; 
-    background: rgba(0, 0, 0, 0.8); 
+    color: #ffea00; 
+    background: rgba(255, 234, 0, 0.05); 
     padding: 10px 30px; 
-    border: 2px solid #f1c40f; 
+    border: 1px dashed #ffea00; 
     display: inline-block; 
     margin: 15px;
     letter-spacing: 8px; 
-    text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
-    box-shadow: inset 0 0 15px rgba(241, 196, 15, 0.2);
+    text-shadow: 0 0 10px rgba(255, 234, 0, 0.5);
 }
 
-/* Conteneur large pour les joueurs */
 #players-container {
-    width: 95%;
-    max-width: 1200px; /* Très large pour accueillir beaucoup de monde */
-    margin: 30px auto;
-    padding: 20px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid #2ecc71;
-    border-radius: 8px;
+    width: 95%; max-width: 1200px;
+    margin: 30px auto; padding: 20px;
+    background: rgba(0, 10, 15, 0.6);
+    border: 1px solid #003344;
+    border-radius: 4px;
     text-align: center;
 }
 
-/* On s'assure que la liste est bien centrée dans ce large cadre */
-#player-list {
-    margin-top: 15px;
-    gap: 15px;
-}
+#player-list { margin-top: 15px; gap: 15px; }
 
-#setup-zone, #players-container, #game-zone {
-    transition: opacity 0.5s ease;
-}
-
+#setup-zone, #players-container, #game-zone { transition: opacity 0.5s ease; }
 
 /* ==========================================================================
-   2. INTERFACES ET COMPTEURS SYSTÈME (HAUT DE PAGE)
+   2. INTERFACES ET COMPTEURS SYSTÈME (SpO2)
    ========================================================================== */
 
 #oxy-bar { 
-    height: 25px; 
-    background: #111; 
-    border-radius: 15px; 
-    border: 2px solid #2ecc71; 
+    height: 6px; /* Très fin, type ligne d'électrocardiogramme */
+    background: rgba(0, 30, 45, 0.5); 
+    border-radius: 3px; 
+    border: 1px solid #003344; 
     overflow: hidden; 
     width: 80%; 
     margin: 10px auto 30px auto; 
     position: relative;
-    box-shadow: 0 0 15px rgba(46, 204, 113, 0.2);
 }
 
 #oxy-level { 
     height: 100%; 
-    background: #3498db; 
+    background: #00e5ff; 
     width: 100%; 
-    transition: 1s; 
-    box-shadow: inset 0 0 10px rgba(255,255,255,0.3);
+    transition: 1s cubic-bezier(0.4, 0, 0.2, 1); 
+    box-shadow: 0 0 10px #00e5ff;
 }
 
 #oxy-text-central { 
     position: absolute;
-    top: 50%;
+    top: -25px; /* On remonte le texte au dessus de la fine ligne */
     left: 50%;
-    transform: translate(-50%, -50%); 
-    color: #ffffff;
-    font-weight: bold;
-    font-size: 0.85em;
+    transform: translateX(-50%); 
+    color: #b2ebf2;
+    font-weight: normal;
+    font-size: 0.8em;
     letter-spacing: 2px;
-    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; 
     pointer-events: none; 
 }
 
+/* L'alerte critique devient un battement cardiaque affolé et rouge sang */
 .critical { 
-    animation: blink 1s infinite; 
-    border-color: #e74c3c !important;
-    box-shadow: 0 0 20px rgba(231, 76, 60, 0.5) !important;
+    border-color: #ff1744 !important;
 }
-.critical #oxy-level { background: #e74c3c !important; }
+.critical #oxy-level { 
+    background: #ff1744 !important; 
+    box-shadow: 0 0 15px #ff1744 !important;
+    animation: ekg-panic 0.6s infinite;
+}
 
-@keyframes blink { 
-    0% { opacity: 1; } 
-    50% { opacity: 0.5; } 
-    100% { opacity: 1; } 
+@keyframes ekg-panic { 
+    0%, 100% { opacity: 1; transform: scaleX(1); } 
+    50% { opacity: 0.6; transform: scaleX(0.98); } 
 }
 
 .info-box {
-    background: rgba(17, 17, 17, 0.85);
-    border: 2px solid;
-    border-radius: 8px;
+    background: rgba(0, 15, 20, 0.85);
+    border: 1px solid;
+    border-radius: 4px;
     padding: 10px;
     min-height: 100px;
     backdrop-filter: blur(5px);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
 }
 
-#vote-summary {
-    white-space: pre-line; 
-    line-height: 1.4;      
-    margin-top: 10px;
-}
-
+#vote-summary { white-space: pre-line; line-height: 1.4; margin-top: 10px; }
 
 /* ==========================================================================
    3. CONFIGURATION ET EMPLACEMENTS DES PLATEAUX DE JEU
    ========================================================================== */
 
-.main-layout { 
-    display: flex; 
-    justify-content: space-around; 
-    align-items: stretch; 
-    margin-bottom: 30px; 
-}
+.main-layout { display: flex; justify-content: space-around; align-items: stretch; margin-bottom: 30px; }
 
 .board { 
-    background: rgba(26, 26, 26, 0.85); 
+    background: rgba(0, 10, 15, 0.85); 
     padding: 15px; 
-    border-radius: 10px; 
-    border: 1px solid #555; 
+    border-radius: 4px; 
+    border: 1px solid #003344; 
     min-height: 140px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-between; 
-    backdrop-filter: blur(5px);
 }
 
-.board h4 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    color: #e0e0e0;
-}
+.board h4 { margin-top: 0; margin-bottom: 15px; color: #b2ebf2; font-weight: normal; letter-spacing: 1px; border-bottom: 1px solid #003344; padding-bottom: 5px;}
 
-.main-layout .board:first-child,
-.main-layout .board:last-child { width: 37%; }
+.main-layout .board:first-child, .main-layout .board:last-child { width: 37%; }
 .main-layout .board:nth-child(2) { width: 16%; }
 
 .slot { 
-    width: 40px; 
-    height: 60px; 
-    border: 2px dashed #555; 
+    width: 45px; height: 65px; 
+    border: 1px dashed #004455; 
     display: inline-block; 
     margin: 5px; 
-    border-radius: 4px; 
+    border-radius: 2px; 
 }
 
-.filled-s { background: #3498db; border-style: solid; box-shadow: 0 0 10px #3498db; } 
-.filled-c { background: #e74c3c; border-style: solid; box-shadow: 0 0 10px #e74c3c; } 
-.filled-f { background: #7f8c8d; border-style: solid; box-shadow: 0 0 10px #7f8c8d; } 
+/* Slots Remplis - Couleurs Cliniques */
+.filled-s { background: rgba(0, 229, 255, 0.1); border: 1px solid #00e5ff; box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.3); } 
+.filled-c { background: rgba(255, 23, 68, 0.1); border: 1px solid #ff1744; box-shadow: inset 0 0 10px rgba(255, 23, 68, 0.3); } 
+.filled-f { background: rgba(176, 190, 197, 0.1); border: 1px solid #b0bec5; box-shadow: inset 0 0 10px rgba(176, 190, 197, 0.3); } 
 
-.deck-counters {
-    text-align: center;
-    font-size: 0.9em;
-    letter-spacing: 2px;
-    margin-top: 15px;
-    margin-bottom: 15px;
-    color: #888;
-}
-.deck-counters b { font-size: 1.1em; }
-
+.deck-counters { text-align: center; font-size: 0.9em; letter-spacing: 2px; margin-top: 15px; margin-bottom: 15px; color: #5c8a99; }
+.deck-counters b { font-size: 1.1em; text-shadow: 0 0 5px currentColor; }
 
 /* ==========================================================================
    4. GESTION DU PERSONNEL & ÉTIQUETTES DES JOUEURS
    ========================================================================== */
 
-#player-list, #active-player-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    max-width: 95%;
-    margin: 0 auto;
-}
+#player-list, #active-player-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 95%; margin: 0 auto; }
 
 #player-list div {
-    background: rgba(17, 17, 17, 0.9); 
-    color: #2ecc71; 
+    background: rgba(0, 20, 30, 0.9); 
+    color: #00e5ff; 
     padding: 10px 20px; 
-    border: 1px solid #2ecc71; 
-    border-radius: 5px; 
+    border: 1px solid #00e5ff; 
+    border-radius: 3px; 
     font-weight: bold; 
-    box-shadow: 0 0 10px rgba(46, 204, 113, 0.2); 
+    box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.1); 
     animation: fadeIn 0.5s ease-out forwards;
 }
 
-@keyframes fadeIn { 
-    from { opacity: 0; transform: translateY(10px); } 
-    to { opacity: 1; transform: translateY(0); } 
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-#player-list .player-tag {
-    min-width: 100px;
-    padding: 5px 10px;
-    font-size: 0.8em;
-}
+#player-list .player-tag { min-width: 100px; padding: 5px 10px; font-size: 0.8em; }
 
 .player-tag {
-    background: rgba(17, 17, 17, 0.9);
-    color: #2ecc71;
-    padding: 5px 15px;
-    border: 1px solid #2ecc71;
-    border-radius: 5px;
-    font-weight: bold;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 100px; 
-    line-height: 1.1;  
+    background: rgba(0, 15, 20, 0.9);
+    color: #b2ebf2;
+    padding: 8px 15px;
+    border: 1px solid #004455;
+    border-radius: 3px;
+    display: flex; flex-direction: column; justify-content: center;
+    min-width: 110px;  
+    line-height: 1.2;  
     transition: all 0.3s ease;
     flex-grow: 0;     
 }
 
-.p-name { font-size: 1.1em; margin-bottom: 2px; color: #fff;}
-.p-job  { letter-spacing: 1px; text-transform: uppercase; }
+.p-name { font-size: 1.1em; font-weight: bold; margin-bottom: 2px; color: #fff;}
+.p-job  { letter-spacing: 1px; text-transform: uppercase; color: #5c8a99; }
 
-/* _______________________________Étiquette du Prophète __________________________________________*/
+/* L'étiquette du Prophète : Blanche et lumineuse pure */
 .prophete-style {
-    background: #ffffff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
     border-color: #ffffff !important;
-    box-shadow: 
-        0 0 10px rgba(255, 255, 255, 0.5),   
-        0 0 20px rgba(255, 255, 255, 0.3),   
-        0 0 40px rgba(255, 255, 255, 0.1),   
-        inset 0 0 10px rgba(0, 0, 0, 0.05); 
-    animation: divineGlow 4s ease-in-out infinite;
-    position: relative;
-    z-index: 1;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2); 
+    animation: divineGlow 3s ease-in-out infinite;
+    position: relative; z-index: 1;
 }
-
-.prophete-style .p-name { color: #000000 !important; text-shadow: none !important; font-weight: 900 !important; }
-.prophete-style .p-job { color: #333333 !important; font-weight: bold !important; }
+.prophete-style .p-name { color: #ffffff !important; text-shadow: 0 0 8px #ffffff !important; }
+.prophete-style .p-job { color: #e0e0e0 !important; }
 
 @keyframes divineGlow {
-    0%, 100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 25px rgba(255, 255, 255, 0.4), 0 0 50px rgba(255, 255, 255, 0.2), inset 0 0 12px rgba(0, 0, 0, 0.05); }
-    50% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.4), 0 0 20px rgba(255, 255, 255, 0.2), 0 0 35px rgba(255, 255, 255, 0.1), inset 0 0 8px rgba(0, 0, 0, 0.02); }
+    0%, 100% { box-shadow: 0 0 15px rgba(255, 255, 255, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.2); }
+    50% { box-shadow: 0 0 25px rgba(255, 255, 255, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.4); }
 }
 
-
 /* ==========================================================================
-   5. ETATS DE VOTE DES JOUEURS & LOGS INTERFACES
+   5. ETATS DE VOTE DES JOUEURS & LOGS
    ========================================================================== */
 
-.voted-oui { background: #2ecc71 !important; color: #000 !important; border-color: #FFF !important; }
-.voted-non { background: #e74c3c !important; color: #fff !important; border-color: #FFF !important; }
+/* Approuvé = Cyan, Rejeté = Rouge Sang */
+.voted-oui { background: rgba(29, 233, 182, 0.15) !important; border-color: #1de9b6 !important; box-shadow: 0 0 10px rgba(29, 233, 182, 0.3) !important; }
+.voted-non { background: rgba(255, 23, 68, 0.15) !important; border-color: #ff1744 !important; box-shadow: 0 0 10px rgba(255, 23, 68, 0.3) !important; }
 
+/* Chambre Noire = Violet Toxique/Sombre */
 .voted-secret { 
-    background: #0d0514 !important;     
-    border-color: #8e44ad !important;     
-    color: #dfa6ff !important;            
-    box-shadow: 0 0 15px rgba(142, 68, 173, 0.6), inset 0 0 10px rgba(142, 68, 173, 0.4) !important;
-    text-shadow: 0 0 8px rgba(223, 166, 255, 0.8), 0 0 2px #8e44ad !important;
+    background: rgba(213, 0, 249, 0.1) !important;     
+    border-color: #aa00ff !important;     
+    box-shadow: inset 0 0 15px rgba(170, 0, 255, 0.3) !important;
     transition: all 0.5s ease;
 }
 
-.voted-oui .p-weight span { color: #000000 !important; font-weight: bold !important; }
-.voted-oui .p-job { color: rgba(0, 0, 0, 0.7) !important; }
-.voted-non .p-weight span { color: #ffffff !important; font-weight: bold !important; }
-.voted-non .p-job { color: rgba(255, 255, 255, 0.7) !important; }
-.voted-secret .p-weight span { color: #ff00ff !important; text-shadow: 0 0 5px rgba(255, 0, 255, 0.8) !important; }
+.voted-oui .p-name { color: #1de9b6 !important; text-shadow: 0 0 5px #1de9b6 !important; }
+.voted-non .p-name { color: #ff1744 !important; text-shadow: 0 0 5px #ff1744 !important; }
+.voted-secret .p-name { color: #d500f9 !important; text-shadow: 0 0 5px #d500f9 !important; }
 
 #log { 
-    background: rgba(0, 0, 0, 0.8); 
-    color: #2ecc71; 
+    background: rgba(0, 10, 15, 0.8); 
+    color: #b2ebf2; 
     padding: 15px; 
     height: 120px; 
     overflow-y: auto; 
@@ -387,55 +336,35 @@ h1 {
     margin: 10px auto; 
     text-align: left; 
     font-size: 0.9em; 
-    border: 1px solid #2ecc71;
-    box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.1);
+    border: 1px solid #003344;
+    border-left: 2px solid #00e5ff;
 }
-
 
 /* ==========================================================================
    6. ÉCRAN DE FIN DE PARTIE & REVELATION DES ROLES
    ========================================================================== */
 
 #end-screen { 
-    position: fixed; 
-    top: 0; left: 0; 
-    width: 100%; height: 100%; 
-    background: rgba(0,0,0,0.95); 
-    display: none; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    z-index: 1000; 
-    padding: 20px;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(3, 8, 12, 0.95); 
+    display: none; flex-direction: column; justify-content: center; align-items: center; 
+    z-index: 1000; padding: 20px;
 }
 
-#role-reveal-zone {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
-    margin: 20px 0;
-    max-width: 900px;
-    z-index: 1001; 
-}
+#role-reveal-zone { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; max-width: 900px; z-index: 1001; }
 
 .reveal-card {
-    background: #1a1a1a;
-    border: 1px solid #444;
-    padding: 15px;
-    border-radius: 8px;
-    min-width: 160px;
-    text-align: left;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    color: #fff;
+    background: rgba(0, 20, 30, 0.8);
+    border: 1px solid #004455;
+    padding: 15px; border-radius: 4px; min-width: 160px; text-align: left;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5); color: #fff;
 }
 
-.rev-S  { border-left: 5px solid #3498db !important; }  
-.rev-I  { border-left: 5px solid #e74c3c !important; }  
-.rev-A  { border-left: 5px solid #9400d3 !important; }  
-.rev-M  { border-left: 5px solid #1b4d3e !important; }  
-.rev-IM { border-left: 5px solid #d4af37 !important; }  
-
+.rev-S  { border-top: 3px solid #00e5ff !important; }  
+.rev-I  { border-top: 3px solid #ff1744 !important; }  
+.rev-A  { border-top: 3px solid #d500f9 !important; }  
+.rev-M  { border-top: 3px solid #00bfa5 !important; }  
+.rev-IM { border-top: 3px solid #ffea00 !important; }  
 
 /* ==========================================================================
    7. DESIGN DU PANNEAU DES DIRECTIVES PERMANENTES ACTIVES
@@ -443,85 +372,41 @@ h1 {
 
 #active-rules-panel {
     margin: 20px auto;
-    background: rgba(17, 17, 17, 0.85);
-    border: 1px solid #2ecc71;
-    border-radius: 8px;
-    padding: 15px;
-    width: 90%;
-    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(5px);
-}
-
-#active-rules-panel h3 {
-    text-transform: uppercase;
-    font-size: 1.1em;
-    color: #2ecc71;
-    border-bottom: 1px solid #444;
-    padding-bottom: 8px;
-    margin-top: 0;
-    letter-spacing: 2px;
-}
-
-.rules-columns {
-    display: flex;
-    gap: 15px;
-    justify-content: space-around;
-}
-
-.rules-column {
-    flex: 1;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid #444;
-    padding: 12px;
+    background: rgba(0, 15, 20, 0.85);
+    border: 1px solid #003344;
     border-radius: 4px;
-    text-align: left;
+    padding: 15px; width: 90%;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
 }
 
-.blue-column { border-top: 4px solid #3498db; }
-.red-column { border-top: 4px solid #e74c3c; }
-.grey-column { border-top: 4px solid #7f8c8d; }
+#active-rules-panel h3 { text-transform: uppercase; font-size: 1em; color: #00e5ff; border-bottom: 1px dashed #004455; padding-bottom: 8px; margin-top: 0; letter-spacing: 2px; }
 
-.rules-column h4 {
-    margin: 0 0 10px 0;
-    font-size: 0.85em;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    display: flex;
-    justify-content: space-between;
-    color: #e0e0e0;
-}
+.rules-columns { display: flex; gap: 15px; justify-content: space-around; }
+
+.rules-column { flex: 1; background: rgba(0, 0, 0, 0.4); border: 1px solid #002233; padding: 12px; border-radius: 2px; text-align: left; }
+
+.blue-column { border-top: 2px solid #00e5ff; }
+.red-column { border-top: 2px solid #ff1744; }
+.grey-column { border-top: 2px solid #b0bec5; }
+
+.rules-column h4 { margin: 0 0 10px 0; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; color: #b2ebf2; }
 
 .rules-column ul { list-style: none; padding: 0; margin: 0; }
-
 .rules-column li {
-    font-size: 0.75em;
-    padding: 8px;
-    margin-bottom: 6px;
-    background: #0d0d0d;
-    border: 1px solid #333;
-    border-radius: 4px;
-    color: #aaa;
-    line-height: 1.3;
+    font-size: 0.75em; padding: 8px; margin-bottom: 6px;
+    background: rgba(0, 10, 15, 0.6);
+    border: 1px solid #003344; border-left: 2px solid currentColor;
+    color: #84cdd5; line-height: 1.3;
 }
-
-.rules-column li strong { color: #fff; }
+.rules-column li strong { color: #fff; display:block; margin-bottom: 3px;}
 
 /* ==========================================================================
    8. ZONE QR CODE (LOBBY)
    ========================================================================== */
 #qr-container {
-    margin: 20px auto;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px dashed #2ecc71;
-    display: inline-block;
-    border-radius: 8px;
-    box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.1);
+    margin: 20px auto; padding: 15px;
+    background: rgba(0, 10, 15, 0.6);
+    border: 1px solid #00e5ff; display: inline-block; border-radius: 4px;
+    box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.1);
 }
-
-#qrcode {
-    background: #ffffff; /* Le fond blanc est OBLIGATOIRE pour que les téléphones arrivent à le scanner facilement */
-    padding: 10px;
-    border-radius: 4px;
-    display: inline-block;
-}
+#qrcode { background: #ffffff; padding: 10px; border-radius: 2px; display: inline-block; }
